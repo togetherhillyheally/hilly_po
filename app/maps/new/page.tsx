@@ -27,9 +27,9 @@ export default function NewMapPage() {
           <Link
             key={opt.href}
             href={opt.href}
-            className="group rounded-2xl border bg-card p-6 transition-all hover:border-foreground/30 hover:shadow-md"
+            className="group rounded-2xl border bg-card p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-lg"
           >
-            <opt.icon className="h-8 w-8 text-muted-foreground transition-colors group-hover:text-foreground" />
+            <opt.icon className="h-8 w-8 text-muted-foreground transition-colors group-hover:text-[#DC2F55]" />
             <p className="mt-4 text-lg font-semibold">{opt.title}</p>
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
               {opt.description}

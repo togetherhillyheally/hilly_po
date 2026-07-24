@@ -12,7 +12,7 @@ import {
 } from "./trailTypes"
 
 const TRAIL_SELECT =
-  "id, name, day, gpx_storage_bucket, gpx_storage_path, distance_km, total_ascent_m, bounds, center, coordinates, sort_order, created_by, source, map_type, stamp_order_mode, activity_types, series_name, course_summary, thumbnail_path, start_lat, start_lng, end_lat, end_lng"
+  "id, name, day, gpx_storage_bucket, gpx_storage_path, distance_km, total_ascent_m, bounds, center, coordinates, sort_order, created_by, source, map_type, status, visibility, stamp_order_mode, activity_types, series_name, course_summary, thumbnail_path, start_lat, start_lng, end_lat, end_lng"
 
 export const trailRepo = {
   /** 내가 만든 지도 목록 (최신 생성 순) */
@@ -35,6 +35,33 @@ export const trailRepo = {
       .maybeSingle()
     if (error) throw error
     return data ? parseTrailRow(data as Record<string, unknown>) : null
+  },
+
+  /** 작성중(draft) ↔ 완료(published) 전환. draft 는 앱에서 본인에게만 보임.
+   *  완료 시에는 공개 상태도 함께 초기화 — "완료했는데 안 보임" 방지. */
+  async updateTrailStatus(
+    trailId: string,
+    status: "draft" | "published",
+  ): Promise<void> {
+    const update =
+      status === "published" ? { status, visibility: "public" } : { status }
+    const { error } = await getSupabase()
+      .from(TRAILS_TABLE)
+      .update(update)
+      .eq("id", trailId)
+    if (error) throw error
+  },
+
+  /** 공개(public) ↔ 비공개(private) 전환. 비공개는 본인에게만 보임. */
+  async updateTrailVisibility(
+    trailId: string,
+    visibility: "public" | "private",
+  ): Promise<void> {
+    const { error } = await getSupabase()
+      .from(TRAILS_TABLE)
+      .update({ visibility })
+      .eq("id", trailId)
+    if (error) throw error
   },
 
   /** 제목/시리즈/요약/활동유형 부분 업데이트. undefined 필드는 그대로 둠. */

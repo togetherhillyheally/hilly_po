@@ -64,7 +64,7 @@ export default function NewCoursePage() {
     const next: GpxEntry[] = []
     for (const file of Array.from(files)) {
       if (!file.name.toLowerCase().endsWith(".gpx")) {
-        toast.error(`${file.name} — GPX 파일만 올릴 수 있어요.`)
+        toast.error(`${file.name}: GPX 파일만 올릴 수 있어요.`)
         continue
       }
       try {
@@ -72,7 +72,7 @@ export default function NewCoursePage() {
         const prepared = prepareTrailFromGpxText(gpxText)
         next.push({ fileName: file.name, gpxText, prepared })
       } catch {
-        toast.error(`${file.name} — 트랙 정보를 읽지 못했어요.`)
+        toast.error(`${file.name}: 트랙 정보를 읽지 못했어요.`)
       }
     }
     if (next.length === 0) return
@@ -100,7 +100,9 @@ export default function NewCoursePage() {
         entries,
         displayName,
       })
-      toast.success("코스지도를 만들었어요. 이제 체크포인트를 배치해 보세요.")
+      toast.success(
+        "코스지도를 만들었어요. 완료하기 전까지는 앱에 공개되지 않아요.",
+      )
       router.replace(`/maps/${trail.id}/edit`)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "지도 생성에 실패했어요.")
@@ -203,7 +205,7 @@ export default function NewCoursePage() {
           </div>
 
           <Button
-            className="h-12 w-full text-base"
+            className="h-12 w-full bg-[#DC2F55] text-base text-white hover:bg-[#DC2F55]/90"
             onClick={handleCreate}
             disabled={creating || !name.trim()}
           >

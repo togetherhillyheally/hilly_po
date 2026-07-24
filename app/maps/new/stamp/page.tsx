@@ -52,7 +52,9 @@ export default function NewStampMapPage() {
         created_by: user.id,
         points: [],
       })
-      toast.success("스탬프지도를 만들었어요. 지도를 클릭해 스탬프를 놓아 보세요.")
+      toast.success(
+        "스탬프지도를 만들었어요. 완료하기 전까지는 앱에 공개되지 않아요.",
+      )
       router.replace(`/maps/${trailId}/edit`)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "지도 생성에 실패했어요.")
@@ -111,7 +113,7 @@ export default function NewStampMapPage() {
         </div>
 
         <Button
-          className="h-12 w-full text-base"
+          className="h-12 w-full bg-[#DC2F55] text-base text-white hover:bg-[#DC2F55]/90"
           onClick={handleCreate}
           disabled={creating || !name.trim()}
         >

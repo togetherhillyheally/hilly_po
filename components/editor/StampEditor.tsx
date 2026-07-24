@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import StampMap, { type LatLng } from "@/components/map/StampMap"
+import { PublishBar } from "./PublishBar"
 import { QuizForm, isQuizComplete, type QuizValue } from "./QuizForm"
 import { DEFAULT_RADIUS_M, RadiusControl } from "./RadiusControl"
 import { parseStampTitle, pickUnusedEntry } from "@/lib/stamp-pool"
@@ -143,19 +144,19 @@ export default function StampEditor({
     setDirty(true)
   }
 
-  async function save() {
-    if (saving || points === null) return
+  async function save(): Promise<boolean> {
+    if (saving || points === null) return false
     const trimmedName = name.trim()
     if (!trimmedName) {
       toast.error("지도 이름을 입력해 주세요.")
-      return
+      return false
     }
     for (const p of points) {
       if (p.quiz && !isQuizComplete(p.quiz)) {
         toast.error(
           `"${parseStampTitle(p.title).name}" 스탬프의 퀴즈를 완성해 주세요.`,
         )
-        return
+        return false
       }
     }
     setSaving(true)
@@ -178,8 +179,10 @@ export default function StampEditor({
       })
       setDirty(false)
       toast.success("저장했어요.")
+      return true
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "저장에 실패했어요.")
+      return false
     } finally {
       setSaving(false)
     }
@@ -406,19 +409,15 @@ export default function StampEditor({
         )}
 
         <div className="sticky bottom-0 -mx-4 border-t bg-background/95 p-4 backdrop-blur lg:mx-0 lg:border-0 lg:bg-transparent lg:p-0">
-          <Button
-            className="h-11 w-full"
-            onClick={save}
-            disabled={saving || !dirty}
-          >
-            {saving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : dirty ? (
-              "변경사항 저장"
-            ) : (
-              "저장됨"
-            )}
-          </Button>
+          <PublishBar
+            trail={trail}
+            pointCount={(points ?? []).length}
+            pointNoun="스탬프"
+            dirty={dirty}
+            saving={saving}
+            onSave={save}
+            onBeforePublish={async () => (dirty ? await save() : true)}
+          />
         </div>
       </aside>
     </div>

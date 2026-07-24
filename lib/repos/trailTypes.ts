@@ -43,6 +43,10 @@ export interface Trail {
   created_by: string | null
   source: string | null
   map_type: "adventure" | "stamp"
+  /** 작성중(draft) 지도는 앱에서 본인에게만 보임. 완료 시 published. */
+  status: "draft" | "published"
+  /** 완료한 지도도 비공개(private)로 숨길 수 있음 — 본인에게만 보임 */
+  visibility: "public" | "private"
   stamp_order_mode?: "ordered" | "free" | "random"
   is_multi_route?: boolean
   activity_types: ActivityType[]
@@ -220,6 +224,8 @@ export function parseTrailRow(row: Record<string, unknown>): Trail {
     map_type: (row.map_type === "stamp" ? "stamp" : "adventure") as
       | "adventure"
       | "stamp",
+    status: row.status === "draft" ? "draft" : "published",
+    visibility: row.visibility === "private" ? "private" : "public",
     stamp_order_mode:
       row.stamp_order_mode === "ordered"
         ? "ordered"

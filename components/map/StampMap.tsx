@@ -176,11 +176,8 @@ export default function StampMap({
       // 마커 cleanup
       for (const [, { marker, root }] of markersRef.current) {
         marker.remove();
-        try {
-          root.unmount();
-        } catch {
-          /* noop */
-        }
+        // 렌더 중 동기 unmount 금지 (React 경고) — 다음 태스크로 미룸
+          setTimeout(() => root.unmount(), 0);
       }
       markersRef.current.clear();
       pendingMarkerRef.current?.remove();
@@ -217,11 +214,8 @@ export default function StampMap({
       for (const [id, { marker, root }] of existing) {
         if (!nextIds.has(id)) {
           marker.remove();
-          try {
-            root.unmount();
-          } catch {
-            /* noop */
-          }
+          // 렌더 중 동기 unmount 금지 (React 경고) — 다음 태스크로 미룸
+            setTimeout(() => root.unmount(), 0);
           existing.delete(id);
         }
       }

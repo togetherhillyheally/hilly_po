@@ -18,7 +18,7 @@ import {
 } from "./trailTypes"
 
 const INSERT_SELECT =
-  "id, name, day, gpx_storage_bucket, gpx_storage_path, distance_km, total_ascent_m, bounds, center, coordinates, sort_order, created_by, source, activity_types, series_name"
+  "id, name, day, gpx_storage_bucket, gpx_storage_path, distance_km, total_ascent_m, bounds, center, coordinates, sort_order, created_by, source, status, visibility, activity_types, series_name"
 
 async function nextSortOrder(): Promise<number> {
   const { data, error } = await getSupabase()
@@ -85,6 +85,7 @@ export const trailUploadOps = {
         sort_order: nextSort,
         created_by: userId,
         source: "upload",
+        status: "draft",
         activity_types: activityTypes,
         series_name: seriesName?.trim() || null,
       })
@@ -202,6 +203,7 @@ export const trailUploadOps = {
         sort_order: nextSort,
         created_by: userId,
         source: "upload",
+        status: "draft",
         activity_types: activityTypes,
         series_name: seriesName?.trim() || null,
       })

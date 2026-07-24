@@ -32,7 +32,7 @@ const config: Config = {
           400: "#F5564E",
           500: "#ED316C",
           600: "#FC8821",
-          DEFAULT: "#ED316C",
+          DEFAULT: "#DC2F55",
           foreground: "#fff",
         },
         secondary: {
@@ -48,12 +48,8 @@ const config: Config = {
           foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          100: "#FEEFE6",
-          200: "#FCD7B6",
-          300: "#FCB97E",
-          400: "#FC8821",
-          DEFAULT: "#FC8821",
-          foreground: "#fff",
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",

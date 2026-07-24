@@ -10,7 +10,6 @@ import {
   MapPin,
   MousePointerClick,
   Trash2,
-  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,21 +18,16 @@ import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import CheckpointMap, { type LatLng } from "@/components/map/CheckpointMap"
 import { PhotoUploader } from "./PhotoUploader"
-import { QuizForm, isQuizComplete, type QuizValue } from "./QuizForm"
-import { DEFAULT_RADIUS_M, RadiusControl } from "./RadiusControl"
+import { PublishBar } from "./PublishBar"
 import { extractPhotoExif, resizeToJpeg } from "@/lib/image"
 import { checkpointRepo } from "@/lib/repos/checkpointRepo"
 import { generateAndStoreTrailThumbnail } from "@/lib/repos/trailThumbnail"
 import type { Trail, TrailCheckpoint } from "@/lib/repos/trailTypes"
-
-function quizFromCheckpoint(cp: TrailCheckpoint): QuizValue | null {
-  if (!cp.quiz_question || !cp.quiz_choices) return null
-  return {
-    question: cp.quiz_question,
-    choices: cp.quiz_choices,
-    answerIndex: cp.quiz_answer_index ?? 0,
-  }
-}
+import {
+  CHECKPOINT_MARKERS,
+  CHECKPOINT_MARKER_BG,
+  getMarkerEntry,
+} from "@/lib/checkpoint-markers"
 
 export default function CourseEditor({
   trail,
@@ -46,16 +40,13 @@ export default function CourseEditor({
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [addMode, setAddMode] = useState(false)
-  const [pendingPoint, setPendingPoint] = useState<LatLng | null>(null)
-  const [pendingTitle, setPendingTitle] = useState("")
   const [creating, setCreating] = useState(false)
   const exifInputRef = useRef<HTMLInputElement | null>(null)
 
   // 선택 체크포인트 편집 드래프트
   const [draftTitle, setDraftTitle] = useState("")
   const [draftNote, setDraftNote] = useState("")
-  const [draftRadius, setDraftRadius] = useState<number | null>(null)
-  const [draftQuiz, setDraftQuiz] = useState<QuizValue | null>(null)
+  const [draftIcon, setDraftIcon] = useState("flag-outline")
   const [saving, setSaving] = useState(false)
 
   const selected = useMemo(
@@ -82,37 +73,22 @@ export default function CourseEditor({
     if (!selected) return
     setDraftTitle(selected.title)
     setDraftNote(selected.note ?? "")
-    setDraftRadius(selected.radius_m)
-    setDraftQuiz(quizFromCheckpoint(selected))
+    setDraftIcon(selected.marker_icon ?? "flag-outline")
   }, [selected])
 
-  const radiusCircles = useMemo(() => {
-    if (!selected) return []
-    return [
-      {
-        id: selected.id,
-        lng: selected.lng,
-        lat: selected.lat,
-        radiusM: draftRadius ?? DEFAULT_RADIUS_M,
-      },
-    ]
-  }, [selected, draftRadius])
-
-  async function createFromPending() {
-    if (!pendingPoint || creating) return
-    const title = pendingTitle.trim() || `체크포인트 ${checkpoints.length + 1}`
+  /** 지도 클릭 즉시 체크포인트 생성 — 이름은 기본값, 생성 후 편집 폼 자동 오픈 */
+  async function createAt(point: LatLng) {
+    if (creating) return
     setCreating(true)
     try {
       const cp = await checkpointRepo.createCheckpoint({
         trailId: trail.id,
         userId,
-        title,
-        lng: pendingPoint.lng,
-        lat: pendingPoint.lat,
+        title: `체크포인트 ${checkpoints.length + 1}`,
+        lng: point.lng,
+        lat: point.lat,
       })
       setCheckpoints((prev) => [...prev, cp])
-      setPendingPoint(null)
-      setPendingTitle("")
       setAddMode(false)
       setSelectedId(cp.id)
       generateAndStoreTrailThumbnail(trail.id).catch(() => {})
@@ -160,21 +136,12 @@ export default function CourseEditor({
 
   async function saveSelected() {
     if (!selected || saving) return
-    if (draftQuiz && !isQuizComplete(draftQuiz)) {
-      toast.error("퀴즈의 질문과 선택지를 모두 채워 주세요.")
-      return
-    }
     setSaving(true)
     try {
       const update = {
         title: draftTitle.trim() || selected.title,
         note: draftNote.trim() || null,
-        radius_m: draftRadius,
-        quiz_question: draftQuiz ? draftQuiz.question.trim() : null,
-        quiz_choices: draftQuiz
-          ? draftQuiz.choices.map((c) => c.trim())
-          : null,
-        quiz_answer_index: draftQuiz ? draftQuiz.answerIndex : null,
+        marker_icon: draftIcon,
       }
       await checkpointRepo.updateCheckpoint(selected.id, update)
       setCheckpoints((prev) =>
@@ -236,23 +203,22 @@ export default function CourseEditor({
             lat: c.lat,
             title: c.title,
             sort_order: i + 1,
+            marker_icon:
+              c.id === selectedId ? draftIcon : c.marker_icon,
           }))}
           selectedId={selectedId}
           addMode={addMode}
-          pendingPoint={pendingPoint}
-          radiusCircles={radiusCircles}
-          onMapClick={(p) => setPendingPoint(p)}
+          onMapClick={createAt}
           onMarkerClick={(id) => {
             setSelectedId(id)
             setAddMode(false)
-            setPendingPoint(null)
           }}
           height="100%"
           className="min-h-[420px] lg:h-full"
         />
-        {addMode && !pendingPoint && (
+        {addMode && (
           <div className="pointer-events-none absolute left-1/2 top-8 -translate-x-1/2 rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background shadow-lg">
-            지도를 클릭해 체크포인트 위치를 정해 주세요
+            지도를 클릭하면 체크포인트가 바로 추가돼요
           </div>
         )}
       </div>
@@ -262,7 +228,7 @@ export default function CourseEditor({
         <div>
           <h1 className="truncate text-lg font-bold">{trail.name}</h1>
           <p className="text-xs text-muted-foreground">
-            코스지도 · 체크포인트 {checkpoints.length}개
+            코스지도 · 체크포인트 {checkpoints.length}개 · 변경사항 자동 저장
           </p>
         </div>
 
@@ -273,7 +239,6 @@ export default function CourseEditor({
             className="flex-1"
             onClick={() => {
               setAddMode((v) => !v)
-              setPendingPoint(null)
               setSelectedId(null)
             }}
           >
@@ -303,48 +268,12 @@ export default function CourseEditor({
           />
         </div>
 
-        {/* 미확정 포인트 확정 폼 */}
-        {pendingPoint && (
-          <div className="space-y-3 rounded-xl border border-amber-500/40 bg-amber-500/5 p-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium">새 체크포인트</p>
-              <button
-                type="button"
-                onClick={() => setPendingPoint(null)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <Input
-              value={pendingTitle}
-              onChange={(e) => setPendingTitle(e.target.value)}
-              placeholder={`이름 (기본: 체크포인트 ${checkpoints.length + 1})`}
-              className="h-9"
-              autoFocus
-              onKeyDown={(e) => e.key === "Enter" && createFromPending()}
-            />
-            <Button
-              size="sm"
-              className="w-full"
-              onClick={createFromPending}
-              disabled={creating}
-            >
-              {creating ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "이 위치에 추가"
-              )}
-            </Button>
-          </div>
-        )}
-
         {/* 목록 */}
         {loading ? (
           <div className="flex items-center justify-center py-8 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
           </div>
-        ) : checkpoints.length === 0 && !pendingPoint ? (
+        ) : checkpoints.length === 0 ? (
           <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
             <MapPin className="mx-auto mb-2 h-6 w-6" />
             아직 체크포인트가 없어요.
@@ -365,7 +294,27 @@ export default function CourseEditor({
                     setSelectedId(selectedId === cp.id ? null : cp.id)
                   }
                 >
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-500 text-xs font-bold text-white">
+                  {(() => {
+                    const entry = getMarkerEntry(
+                      cp.id === selectedId ? draftIcon : cp.marker_icon,
+                    )
+                    return (
+                      <span
+                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2"
+                        style={{
+                          background: CHECKPOINT_MARKER_BG,
+                          borderColor: entry.accent,
+                        }}
+                      >
+                        <entry.Icon
+                          className="h-3.5 w-3.5"
+                          style={{ color: entry.accent }}
+                          strokeWidth={2.2}
+                        />
+                      </span>
+                    )
+                  })()}
+                  <span className="w-4 shrink-0 text-xs tabular-nums text-muted-foreground">
                     {i + 1}
                   </span>
                   <span className="min-w-0 flex-1 truncate">{cp.title}</span>
@@ -415,13 +364,37 @@ export default function CourseEditor({
                         rows={3}
                       />
                     </div>
-                    <Separator />
-                    <RadiusControl
-                      value={draftRadius}
-                      onChange={setDraftRadius}
-                    />
-                    <Separator />
-                    <QuizForm value={draftQuiz} onChange={setDraftQuiz} />
+                    <div className="space-y-2">
+                      <Label className="text-sm">아이콘</Label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {CHECKPOINT_MARKERS.map((m) => {
+                          const active = draftIcon === m.icon
+                          return (
+                            <button
+                              key={m.icon}
+                              type="button"
+                              title={m.name}
+                              onClick={() => setDraftIcon(m.icon)}
+                              className="flex h-8 w-8 items-center justify-center rounded-full border-2 transition-transform hover:scale-105"
+                              style={{
+                                background: active
+                                  ? m.accent
+                                  : CHECKPOINT_MARKER_BG,
+                                borderColor: active ? "#fff" : m.accent,
+                              }}
+                            >
+                              <m.Icon
+                                className="h-4 w-4"
+                                style={{
+                                  color: active ? "#fff" : m.accent,
+                                }}
+                                strokeWidth={2.2}
+                              />
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
                     <Separator />
                     <PhotoUploader userId={userId} checkpointId={cp.id} />
                     <div className="flex gap-2 pt-1">
@@ -452,6 +425,14 @@ export default function CourseEditor({
             ))}
           </ul>
         )}
+
+        <div className="sticky bottom-0 -mx-4 border-t bg-background/95 p-4 backdrop-blur lg:mx-0 lg:border-0 lg:bg-transparent lg:p-0">
+          <PublishBar
+            trail={trail}
+            pointCount={checkpoints.length}
+            pointNoun="체크포인트"
+          />
+        </div>
       </aside>
     </div>
   )

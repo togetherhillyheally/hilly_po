@@ -92,6 +92,7 @@ export const stampRepo = {
       stamp_order_mode: params.stamp_order_mode,
       created_by: params.created_by,
       source: "upload",
+      status: "draft",
       series_name: params.series_name?.trim() || null,
       center: hasPoints
         ? [

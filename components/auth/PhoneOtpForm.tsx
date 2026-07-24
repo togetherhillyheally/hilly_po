@@ -108,7 +108,7 @@ export function PhoneOtpForm() {
         />
         <Button
           type="submit"
-          className="h-12 w-full text-base"
+          className="h-12 w-full bg-[#DC2F55] text-base text-white hover:bg-[#DC2F55]/90"
           disabled={!phoneValid || busy}
         >
           {busy ? "전송 중…" : "인증번호 받기"}

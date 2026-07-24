@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { createRoot, type Root } from "react-dom/client";
 import mapboxgl, { type LngLatBoundsLike } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { applyKoreanLabels } from "@/lib/mapbox-locale";
+import {
+  CHECKPOINT_MARKER_BG,
+  getMarkerEntry,
+} from "@/lib/checkpoint-markers";
 import { syncRadiusCircles, type RadiusCircle } from "./radius-layer";
 
 const TRAIL_COLOR = "#DC2F55";
-const CP_COLOR = "#fb923c";
-const CP_SELECTED_COLOR = "#f97316";
 const CP_PENDING_COLOR = "#f59e0b";
 const MAPBOX_STYLE = "mapbox://styles/mapbox/outdoors-v12";
 
@@ -21,6 +24,7 @@ export type Checkpoint = {
   lat: number;
   title: string;
   sort_order: number;
+  marker_icon?: string | null;
 };
 
 export type LatLng = { lat: number; lng: number };
@@ -61,24 +65,47 @@ function toRoutes(coords: Coordinates): Coord[][] {
   return [coords as Coord[]];
 }
 
-function makeCheckpointEl(
-  num: number,
-  bg: string,
-  selected: boolean
-): HTMLDivElement {
-  const el = document.createElement("div");
-  const size = selected ? 32 : 28;
-  el.style.cssText = `
-    width: ${size}px; height: ${size}px; border-radius: 50%;
-    background: ${bg}; color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700;
-    border: 2px solid #fff; box-shadow: 0 1px 5px rgba(0,0,0,0.45);
-    user-select: none; cursor: pointer;
-    transition: transform .15s;
-  `;
-  el.textContent = String(num);
-  return el;
+/** hilly_rn TrailMapScreen 마커와 동일한 칩: 밝은 배경 + 강조 테두리 + 강조 아이콘,
+ *  선택 시 강조 배경 + 흰 테두리 + 흰 아이콘 */
+function MarkerContent({
+  cp,
+  selected,
+}: {
+  cp: Checkpoint;
+  selected: boolean;
+}) {
+  const entry = getMarkerEntry(cp.marker_icon);
+  const size = selected ? 34 : 26;
+  return (
+    <div
+      title={cp.title || `체크포인트 ${cp.sort_order}`}
+      style={{
+        minWidth: size,
+        height: size,
+        paddingLeft: 6,
+        paddingRight: 6,
+        borderRadius: size / 2,
+        background: selected ? entry.accent : CHECKPOINT_MARKER_BG,
+        border: selected
+          ? "3px solid #fff"
+          : `2px solid ${entry.accent}`,
+        boxShadow: "0 1px 5px rgba(0,0,0,0.45)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        transition: "transform .15s",
+        boxSizing: "border-box",
+      }}
+    >
+      <entry.Icon
+        width={selected ? 18 : 14}
+        height={selected ? 18 : 14}
+        color={selected ? "#fff" : entry.accent}
+        strokeWidth={2.2}
+      />
+    </div>
+  );
 }
 
 function makePendingEl(): HTMLDivElement {
@@ -111,7 +138,9 @@ export default function CheckpointMap({
 }: CheckpointMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
+  const markersRef = useRef<
+    Map<string, { marker: mapboxgl.Marker; root: Root }>
+  >(new Map());
   const pendingMarkerRef = useRef<mapboxgl.Marker | null>(null);
 
   // 콜백을 ref 로 보관
@@ -216,6 +245,10 @@ export default function CheckpointMap({
     return () => {
       map.remove();
       mapRef.current = null;
+      for (const [, { root }] of markersRef.current) {
+        // 렌더 중 동기 unmount 금지 (React 경고) — 다음 태스크로 미룸
+          setTimeout(() => root.unmount(), 0);
+      }
       markersRef.current.clear();
       pendingMarkerRef.current = null;
     };
@@ -228,16 +261,18 @@ export default function CheckpointMap({
 
     const apply = () => {
       // 기존 마커 정리
-      for (const [, marker] of markersRef.current) marker.remove();
+      for (const [, { marker, root }] of markersRef.current) {
+        marker.remove();
+        // 렌더 중 동기 unmount 금지 (React 경고) — 다음 태스크로 미룸
+          setTimeout(() => root.unmount(), 0);
+      }
       markersRef.current.clear();
 
       for (const cp of checkpoints) {
         const isSel = selectedId === cp.id;
-        const el = makeCheckpointEl(
-          cp.sort_order,
-          isSel ? CP_SELECTED_COLOR : CP_COLOR,
-          isSel
-        );
+        const el = document.createElement("div");
+        const root = createRoot(el);
+        root.render(<MarkerContent cp={cp} selected={isSel} />);
         el.addEventListener("click", (ev) => {
           ev.stopPropagation();
           onMarkerClickRef.current?.(cp.id);
@@ -245,7 +280,7 @@ export default function CheckpointMap({
         const m = new mapboxgl.Marker(el)
           .setLngLat([cp.lng, cp.lat])
           .addTo(map);
-        markersRef.current.set(cp.id, m);
+        markersRef.current.set(cp.id, { marker: m, root });
       }
     };
 
