@@ -1,17 +1,17 @@
-import type { Metadata } from "next"
-import { Toaster } from "@/components/ui/sonner"
-import "./globals.css"
+import type { Metadata } from "next";
+import { Toaster } from "@/components/ui/sonner";
+import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://hillyheally.com"),
   title: "힐리힐리 지도만들기",
   description: "웹에서 나만의 코스지도와 스탬프지도를 만들어 보세요.",
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="ko" className="dark">
@@ -26,5 +26,5 @@ export default function RootLayout({
         <Toaster position="top-center" />
       </body>
     </html>
-  )
+  );
 }

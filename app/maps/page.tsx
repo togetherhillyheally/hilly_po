@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useCallback, useEffect, useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Eye,
   EyeOff,
@@ -13,7 +13,7 @@ import {
   Route,
   Stamp,
   Trash2,
-} from "lucide-react"
+} from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,93 +23,93 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { useCurrentUser } from "@/hooks/use-current-user"
-import { trailRepo } from "@/lib/repos/trailRepo"
-import { trailThumbnailUrl } from "@/lib/repos/trailThumbnail"
-import type { Trail } from "@/lib/repos/trailTypes"
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { trailRepo } from "@/lib/repos/trailRepo";
+import { trailThumbnailUrl } from "@/lib/repos/trailThumbnail";
+import type { Trail } from "@/lib/repos/trailTypes";
 
-type StatusFilter = "all" | "draft" | "published"
+type StatusFilter = "all" | "draft" | "published";
 
 const FILTER_LABELS: Record<StatusFilter, string> = {
   all: "전체",
   draft: "작성중",
   published: "완료",
-}
+};
 
 export default function MapsDashboardPage() {
-  const router = useRouter()
-  const { user, loading: userLoading } = useCurrentUser()
-  const [trails, setTrails] = useState<Trail[] | null>(null)
-  const [filter, setFilter] = useState<StatusFilter>("all")
-  const [deleteTarget, setDeleteTarget] = useState<Trail | null>(null)
-  const [deleting, setDeleting] = useState(false)
+  const router = useRouter();
+  const { user, loading: userLoading } = useCurrentUser();
+  const [trails, setTrails] = useState<Trail[] | null>(null);
+  const [filter, setFilter] = useState<StatusFilter>("all");
+  const [deleteTarget, setDeleteTarget] = useState<Trail | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const reload = useCallback(async (userId: string) => {
     try {
-      setTrails(await trailRepo.listMyTrails(userId))
+      setTrails(await trailRepo.listMyTrails(userId));
     } catch {
-      toast.error("지도 목록을 불러오지 못했어요.")
-      setTrails([])
+      toast.error("지도 목록을 불러오지 못했어요.");
+      setTrails([]);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    if (user) reload(user.id)
-  }, [user, reload])
+    if (user) reload(user.id);
+  }, [user, reload]);
 
   async function toggleVisibility(trail: Trail) {
-    const next = trail.visibility === "private" ? "public" : "private"
+    const next = trail.visibility === "private" ? "public" : "private";
     setTrails(
       (prev) =>
         prev?.map((t) =>
           t.id === trail.id ? { ...t, visibility: next } : t,
         ) ?? prev,
-    )
+    );
     try {
-      await trailRepo.updateTrailVisibility(trail.id, next)
+      await trailRepo.updateTrailVisibility(trail.id, next);
       toast.success(
         next === "private"
           ? "비공개로 전환했어요. 앱에서 나에게만 보여요."
           : "지도를 공개했어요.",
-      )
+      );
     } catch {
       setTrails(
         (prev) =>
           prev?.map((t) =>
             t.id === trail.id ? { ...t, visibility: trail.visibility } : t,
           ) ?? prev,
-      )
-      toast.error("전환에 실패했어요.")
+      );
+      toast.error("전환에 실패했어요.");
     }
   }
 
   async function handleDelete() {
-    if (!deleteTarget || !user) return
-    setDeleting(true)
+    if (!deleteTarget || !user) return;
+    setDeleting(true);
     try {
-      await trailRepo.deleteUploadedTrail(deleteTarget.id, user.id)
-      toast.success("지도를 삭제했어요.")
-      setDeleteTarget(null)
-      reload(user.id)
+      await trailRepo.deleteUploadedTrail(deleteTarget.id, user.id);
+      toast.success("지도를 삭제했어요.");
+      setDeleteTarget(null);
+      reload(user.id);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "삭제에 실패했어요.")
+      toast.error(e instanceof Error ? e.message : "삭제에 실패했어요.");
     } finally {
-      setDeleting(false)
+      setDeleting(false);
     }
   }
 
-  const isLoading = userLoading || trails === null
+  const isLoading = userLoading || trails === null;
   const visibleTrails =
-    trails?.filter((t) => filter === "all" || t.status === filter) ?? []
+    trails?.filter((t) => filter === "all" || t.status === filter) ?? [];
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">내 지도</h1>
+          <h1 className="text-2xl font-bold">내 지도다</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             완료한 지도만 힐리힐리 앱에 공개돼요.
           </p>
@@ -142,7 +142,7 @@ export default function MapsDashboardPage() {
             const count =
               f === "all"
                 ? trails.length
-                : trails.filter((t) => t.status === f).length
+                : trails.filter((t) => t.status === f).length;
             return (
               <button
                 key={f}
@@ -157,7 +157,7 @@ export default function MapsDashboardPage() {
                 {FILTER_LABELS[f]}{" "}
                 <span className="tabular-nums opacity-60">{count}</span>
               </button>
-            )
+            );
           })}
         </div>
       )}
@@ -187,8 +187,8 @@ export default function MapsDashboardPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {visibleTrails.map((trail) => {
-            const thumb = trailThumbnailUrl(trail.thumbnail_path)
-            const isStamp = trail.map_type === "stamp"
+            const thumb = trailThumbnailUrl(trail.thumbnail_path);
+            const isStamp = trail.map_type === "stamp";
             return (
               <div
                 key={trail.id}
@@ -265,8 +265,8 @@ export default function MapsDashboardPage() {
                             : "sm:opacity-0 sm:group-hover:opacity-100"
                         }`}
                         onClick={(e) => {
-                          e.stopPropagation()
-                          toggleVisibility(trail)
+                          e.stopPropagation();
+                          toggleVisibility(trail);
                         }}
                       >
                         {trail.visibility === "private" ? (
@@ -281,8 +281,8 @@ export default function MapsDashboardPage() {
                       size="icon"
                       className="h-8 w-8 text-muted-foreground transition-opacity focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                       onClick={(e) => {
-                        e.stopPropagation()
-                        setDeleteTarget(trail)
+                        e.stopPropagation();
+                        setDeleteTarget(trail);
                       }}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -290,7 +290,7 @@ export default function MapsDashboardPage() {
                   </div>
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       )}
@@ -311,8 +311,8 @@ export default function MapsDashboardPage() {
             <AlertDialogCancel disabled={deleting}>취소</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
-                e.preventDefault()
-                handleDelete()
+                e.preventDefault();
+                handleDelete();
               }}
               disabled={deleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -323,5 +323,5 @@ export default function MapsDashboardPage() {
         </AlertDialogContent>
       </AlertDialog>
     </main>
-  )
+  );
 }
