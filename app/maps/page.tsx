@@ -109,7 +109,7 @@ export default function MapsDashboardPage() {
     <main className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">내 지도다</h1>
+          <h1 className="text-2xl font-bold">내 지도</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             완료한 지도만 힐리힐리 앱에 공개돼요.
           </p>
