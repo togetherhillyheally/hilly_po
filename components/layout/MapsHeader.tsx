@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LayoutGrid } from "lucide-react";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { Button } from "@/components/ui/button";
 
 /** /maps 공통 헤더 — 에디터 화면은 전체 폭이라 타이틀도 왼쪽 끝에 붙인다 */
 export function MapsHeader() {
@@ -18,7 +20,21 @@ export function MapsHeader() {
         <Link href="/maps" className="text-base font-bold">
           힐리힐리 <span className="text-muted-foreground">지도만들기</span>
         </Link>
-        <LogoutButton />
+        <div className="flex items-center gap-1">
+          {isEditor && (
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground"
+            >
+              <Link href="/maps">
+                <LayoutGrid className="mr-1.5 h-4 w-4" />내 지도
+              </Link>
+            </Button>
+          )}
+          <LogoutButton />
+        </div>
       </div>
     </header>
   );
