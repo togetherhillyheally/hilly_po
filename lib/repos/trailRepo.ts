@@ -37,17 +37,15 @@ export const trailRepo = {
     return data ? parseTrailRow(data as Record<string, unknown>) : null
   },
 
-  /** 작성중(draft) ↔ 완료(published) 전환. draft 는 앱에서 본인에게만 보임.
-   *  완료 시에는 공개 상태도 함께 초기화 — "완료했는데 안 보임" 방지. */
+  /** 작성중(draft) ↔ 저장됨(published) 전환. draft 는 앱에서 본인에게만 보임.
+   *  공개(visibility) 여부는 별도로 관리 — 여기서는 건드리지 않음. */
   async updateTrailStatus(
     trailId: string,
     status: "draft" | "published",
   ): Promise<void> {
-    const update =
-      status === "published" ? { status, visibility: "public" } : { status }
     const { error } = await getSupabase()
       .from(TRAILS_TABLE)
-      .update(update)
+      .update({ status })
       .eq("id", trailId)
     if (error) throw error
   },

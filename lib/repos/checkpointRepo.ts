@@ -19,6 +19,22 @@ import {
 const CP_SELECT =
   "id, trail_id, sort_order, title, lng, lat, note, marker_icon, created_by, radius_m, quiz_question, quiz_choices, quiz_answer_index"
 
+export interface CheckpointReview {
+  id: string
+  checkpoint_id: string
+  author_id: string
+  body: string
+  rating: number | null
+  created_at: string
+  author_nickname: string | null
+  author_avatar_url: string | null
+}
+
+export interface CheckpointSeed {
+  checkpoint_id: string
+  giver_id: string
+}
+
 function parseCheckpointRow(row: Record<string, unknown>): TrailCheckpoint {
   return {
     id: String(row.id ?? ""),
@@ -155,7 +171,97 @@ export const checkpointRepo = {
     }
   },
 
+  // ── 댓글/좋아요(씨앗) 조회 (오너 확인용 읽기 전용) ──
+
+  /** 트레일 전체 체크포인트 댓글 — 최신순. 작성자 프로필 join. */
+  async listCheckpointReviewsForTrail(
+    trailId: string,
+  ): Promise<CheckpointReview[]> {
+    const supabase = getSupabase()
+    const { data, error } = await supabase
+      .from("trail_checkpoint_reviews")
+      .select(
+        "id, checkpoint_id, author_id, body, rating, created_at, trail_checkpoints!inner(trail_id)",
+      )
+      .eq("trail_checkpoints.trail_id", trailId)
+      .order("created_at", { ascending: false })
+    if (error) throw error
+
+    const rows = (data ?? []) as unknown as (Omit<
+      CheckpointReview,
+      "author_nickname" | "author_avatar_url"
+    > & { trail_checkpoints: unknown })[]
+    if (rows.length === 0) return []
+
+    const authorIds = [...new Set(rows.map((r) => r.author_id))]
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, nickname, avatar_url")
+      .in("id", authorIds)
+    const profileMap = new Map<
+      string,
+      { nickname: string; avatar_url: string | null }
+    >()
+    for (const p of (profiles ?? []) as {
+      id: string
+      nickname: string
+      avatar_url: string | null
+    }[]) {
+      profileMap.set(p.id, { nickname: p.nickname, avatar_url: p.avatar_url })
+    }
+
+    return rows.map((r) => ({
+      id: r.id,
+      checkpoint_id: r.checkpoint_id,
+      author_id: r.author_id,
+      body: r.body,
+      rating: r.rating,
+      created_at: r.created_at,
+      author_nickname: profileMap.get(r.author_id)?.nickname ?? null,
+      author_avatar_url: profileMap.get(r.author_id)?.avatar_url ?? null,
+    }))
+  },
+
+  /** 트레일 전체 체크포인트 좋아요(씨앗) — checkpoint_id 로 그룹핑해 사용 */
+  async listCheckpointSeedsForTrail(trailId: string): Promise<CheckpointSeed[]> {
+    const { data, error } = await getSupabase()
+      .from("trail_checkpoint_seeds")
+      .select("checkpoint_id, giver_id, trail_checkpoints!inner(trail_id)")
+      .eq("trail_checkpoints.trail_id", trailId)
+    if (error) throw error
+    return (data ?? []).map((r) => ({
+      checkpoint_id: (r as { checkpoint_id: string }).checkpoint_id,
+      giver_id: (r as { giver_id: string }).giver_id,
+    }))
+  },
+
   // ── 사진 ──
+
+  /** 트레일 전체 체크포인트 사진 — 블로그형 보기용. checkpoint_id 로 그룹핑해 사용 */
+  async listCheckpointPhotosForTrail(
+    trailId: string,
+  ): Promise<TrailCheckpointPhoto[]> {
+    const { data, error } = await getSupabase()
+      .from(CHECKPOINT_PHOTOS_TABLE)
+      .select(
+        "id, checkpoint_id, author_id, storage_bucket, storage_path, created_at, trail_checkpoints!inner(trail_id)",
+      )
+      .eq("trail_checkpoints.trail_id", trailId)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true })
+    if (error) throw error
+    return (data ?? []).map((r) => {
+      const row = r as unknown as TrailCheckpointPhoto
+      return {
+        id: row.id,
+        checkpoint_id: row.checkpoint_id,
+        author_id: row.author_id,
+        storage_bucket: row.storage_bucket,
+        storage_path: row.storage_path,
+        created_at: row.created_at,
+      }
+    })
+  },
 
   async listCheckpointPhotos(
     checkpointId: string,

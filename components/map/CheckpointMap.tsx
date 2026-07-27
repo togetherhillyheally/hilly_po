@@ -13,6 +13,9 @@ import { syncRadiusCircles, type RadiusCircle } from "./radius-layer";
 
 const TRAIL_COLOR = "#DC2F55";
 const CP_PENDING_COLOR = "#f59e0b";
+const START_COLOR = "#22c55e";
+const END_COLOR = "#DC2F55";
+const SE_CLOSE_THRESHOLD = 0.0005; // 약 50m
 const MAPBOX_STYLE = "mapbox://styles/mapbox/outdoors-v12";
 
 type Coord = [number, number] | [number, number, number];
@@ -34,6 +37,10 @@ export type CheckpointMapProps = {
   bounds?: { minLat: number; maxLat: number; minLon: number; maxLon: number };
   checkpoints: Checkpoint[];
   selectedId?: string | null;
+  /** trail.start_lat/lng 가 있으면 전달. null/undefined 이면 coordinates 첫 점 사용. */
+  start?: LatLng | null;
+  /** trail.end_lat/lng 가 있으면 전달. null/undefined 이면 coordinates 마지막 점 사용. */
+  end?: LatLng | null;
   /** 지도 클릭으로 새 체크포인트 추가 모드. activate 시 onMapClick 호출. */
   addMode?: boolean;
   /** 미확정 임시 위치 (지도 클릭으로 선택했으나 아직 저장 안 됨). */
@@ -123,11 +130,32 @@ function makePendingEl(): HTMLDivElement {
   return el;
 }
 
+function makeSeMarkerEl(
+  bg: string,
+  label: string,
+  size = 28,
+  textSize = 11,
+): HTMLDivElement {
+  const el = document.createElement("div");
+  el.style.cssText = `
+    width: ${size}px; height: ${size}px; border-radius: 50%;
+    background: ${bg}; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: ${textSize}px; font-weight: 700; letter-spacing: 0.04em;
+    border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+    user-select: none; pointer-events: none;
+  `;
+  el.textContent = label;
+  return el;
+}
+
 export default function CheckpointMap({
   coordinates,
   bounds,
   checkpoints,
   selectedId,
+  start,
+  end,
   addMode,
   pendingPoint,
   radiusCircles,
@@ -142,6 +170,9 @@ export default function CheckpointMap({
     Map<string, { marker: mapboxgl.Marker; root: Root }>
   >(new Map());
   const pendingMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const startMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const endMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const seMarkerRef = useRef<mapboxgl.Marker | null>(null);
 
   // 콜백을 ref 로 보관
   const onMapClickRef = useRef(onMapClick);
@@ -251,8 +282,59 @@ export default function CheckpointMap({
       }
       markersRef.current.clear();
       pendingMarkerRef.current = null;
+      startMarkerRef.current = null;
+      endMarkerRef.current = null;
+      seMarkerRef.current = null;
     };
   }, [coordinates, bounds]);
+
+  // 출발/도착 마커 — start/end 없으면 coordinates 첫·끝 점 사용
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const apply = () => {
+      const flat = flatten(coordinates);
+      if (flat.length === 0) return;
+      const defStart = flat[0];
+      const defEnd = flat[flat.length - 1];
+
+      const startLng = start?.lng ?? defStart[0];
+      const startLat = start?.lat ?? defStart[1];
+      const endLng = end?.lng ?? defEnd[0];
+      const endLat = end?.lat ?? defEnd[1];
+
+      const isClose =
+        Math.abs(startLng - endLng) < SE_CLOSE_THRESHOLD &&
+        Math.abs(startLat - endLat) < SE_CLOSE_THRESHOLD;
+
+      startMarkerRef.current?.remove();
+      endMarkerRef.current?.remove();
+      seMarkerRef.current?.remove();
+      startMarkerRef.current = null;
+      endMarkerRef.current = null;
+      seMarkerRef.current = null;
+
+      if (isClose) {
+        const el = makeSeMarkerEl(START_COLOR, "S/E", 32, 10);
+        seMarkerRef.current = new mapboxgl.Marker(el)
+          .setLngLat([startLng, startLat])
+          .addTo(map);
+      } else {
+        const sEl = makeSeMarkerEl(START_COLOR, "S");
+        startMarkerRef.current = new mapboxgl.Marker(sEl)
+          .setLngLat([startLng, startLat])
+          .addTo(map);
+        const eEl = makeSeMarkerEl(END_COLOR, "E");
+        endMarkerRef.current = new mapboxgl.Marker(eEl)
+          .setLngLat([endLng, endLat])
+          .addTo(map);
+      }
+    };
+
+    if (map.loaded()) apply();
+    else map.once("load", apply);
+  }, [coordinates, start, end]);
 
   // 체크포인트 마커 동기화
   useEffect(() => {

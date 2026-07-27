@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import {
-  ArrowDown,
-  ArrowUp,
+  Eye,
   ImagePlus,
   Loader2,
   MapPin,
   MousePointerClick,
   Trash2,
+  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,8 +17,10 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import CheckpointMap, { type LatLng } from "@/components/map/CheckpointMap"
+import CourseGuideView from "./CourseGuideView"
 import { PhotoUploader } from "./PhotoUploader"
 import { PublishBar } from "./PublishBar"
+import { sortCheckpointsAlongPath } from "@/lib/checkpoint-order"
 import { extractPhotoExif, resizeToJpeg } from "@/lib/image"
 import { checkpointRepo } from "@/lib/repos/checkpointRepo"
 import { generateAndStoreTrailThumbnail } from "@/lib/repos/trailThumbnail"
@@ -36,12 +38,20 @@ export default function CourseEditor({
   trail: Trail
   userId: string
 }) {
+  const [mode, setMode] = useState<"view" | "edit">("view")
   const [checkpoints, setCheckpoints] = useState<TrailCheckpoint[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [addMode, setAddMode] = useState(false)
   const [creating, setCreating] = useState(false)
   const exifInputRef = useRef<HTMLInputElement | null>(null)
+
+  // GPS 없는 사진 — 지도 클릭으로 위치 지정 대기 중
+  const [pendingPhoto, setPendingPhoto] = useState<{
+    file: File
+    takenAt: string | null
+  } | null>(null)
+  const [pendingPhotoUrl, setPendingPhotoUrl] = useState<string | null>(null)
 
   // 선택 체크포인트 편집 드래프트
   const [draftTitle, setDraftTitle] = useState("")
@@ -52,6 +62,11 @@ export default function CourseEditor({
   const selected = useMemo(
     () => checkpoints.find((c) => c.id === selectedId) ?? null,
     [checkpoints, selectedId],
+  )
+
+  const orderedCheckpoints = useMemo(
+    () => sortCheckpointsAlongPath(checkpoints, trail.coordinates),
+    [checkpoints, trail.coordinates],
   )
 
   const reload = useCallback(async () => {
@@ -68,6 +83,22 @@ export default function CourseEditor({
     reload()
   }, [reload])
 
+  // 대기중인 사진의 미리보기 URL 관리
+  useEffect(() => {
+    if (!pendingPhoto) {
+      setPendingPhotoUrl(null)
+      return
+    }
+    const url = URL.createObjectURL(pendingPhoto.file)
+    setPendingPhotoUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [pendingPhoto])
+
+  function cancelPendingPhoto() {
+    setPendingPhoto(null)
+    setAddMode(false)
+  }
+
   // 선택 변경 시 드래프트 동기화
   useEffect(() => {
     if (!selected) return
@@ -76,7 +107,7 @@ export default function CourseEditor({
     setDraftIcon(selected.marker_icon ?? "flag-outline")
   }, [selected])
 
-  /** 지도 클릭 즉시 체크포인트 생성 — 이름은 기본값, 생성 후 편집 폼 자동 오픈 */
+  /** 지도 클릭 즉시 체크포인트 생성 — 대기중인 사진이 있으면 그 자리에서 바로 첨부 */
   async function createAt(point: LatLng) {
     if (creating) return
     setCreating(true)
@@ -90,6 +121,26 @@ export default function CourseEditor({
       })
       setCheckpoints((prev) => [...prev, cp])
       setAddMode(false)
+
+      if (pendingPhoto) {
+        const photo = pendingPhoto
+        setPendingPhoto(null)
+        try {
+          const blob = await resizeToJpeg(photo.file)
+          await checkpointRepo.uploadCheckpointPhoto({
+            userId,
+            checkpointId: cp.id,
+            blob,
+            fileSize: photo.file.size,
+            takenAt: photo.takenAt,
+          })
+          toast.success("체크포인트를 만들고 사진을 추가했어요.")
+        } catch {
+          toast.error("체크포인트는 만들었지만 사진 업로드에 실패했어요.")
+        }
+      }
+
+      // 사진 업로드가 끝난 뒤에 선택해야 PhotoUploader 최초 조회에 방금 올린 사진이 잡힘
       setSelectedId(cp.id)
       generateAndStoreTrailThumbnail(trail.id).catch(() => {})
     } catch (e) {
@@ -99,14 +150,21 @@ export default function CourseEditor({
     }
   }
 
-  /** 사진 EXIF GPS 로 체크포인트 생성 + 사진 자동 첨부 */
+  /**
+   * 사진 EXIF GPS 로 체크포인트 생성 + 사진 자동 첨부.
+   * GPS 정보가 없으면(카카오톡 등으로 전송돼 EXIF 가 제거된 사진 등) 에러로 끝내지 않고
+   * 사진을 대기시킨 뒤 지도 클릭 모드로 자동 전환해, 클릭 한 번으로 위치를 지정하게 한다.
+   */
   async function createFromPhoto(file: File) {
     if (creating) return
     setCreating(true)
     try {
       const exif = await extractPhotoExif(file)
       if (exif.lat == null || exif.lng == null) {
-        toast.error("사진에 위치 정보(GPS)가 없어요. 지도 클릭으로 추가해 주세요.")
+        setPendingPhoto({ file, takenAt: exif.takenAt })
+        setSelectedId(null)
+        setAddMode(true)
+        toast("사진에 위치 정보가 없어요. 지도를 클릭해 이 사진의 위치를 지정해 주세요.")
         return
       }
       const cp = await checkpointRepo.createCheckpoint({
@@ -117,7 +175,6 @@ export default function CourseEditor({
         lat: exif.lat,
       })
       setCheckpoints((prev) => [...prev, cp])
-      setSelectedId(cp.id)
       const blob = await resizeToJpeg(file)
       await checkpointRepo.uploadCheckpointPhoto({
         userId,
@@ -126,7 +183,10 @@ export default function CourseEditor({
         fileSize: file.size,
         takenAt: exif.takenAt,
       })
+      // 사진 업로드가 끝난 뒤에 선택해야 PhotoUploader 최초 조회에 방금 올린 사진이 잡힘
+      setSelectedId(cp.id)
       toast.success("사진 위치에 체크포인트를 만들었어요.")
+      generateAndStoreTrailThumbnail(trail.id).catch(() => {})
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "체크포인트 생성에 실패했어요.")
     } finally {
@@ -167,23 +227,15 @@ export default function CourseEditor({
     }
   }
 
-  async function move(cpId: string, dir: -1 | 1) {
-    const idx = checkpoints.findIndex((c) => c.id === cpId)
-    const target = idx + dir
-    if (idx < 0 || target < 0 || target >= checkpoints.length) return
-    const next = [...checkpoints]
-    ;[next[idx], next[target]] = [next[target], next[idx]]
-    const renumbered = next.map((c, i) => ({ ...c, sort_order: i }))
-    setCheckpoints(renumbered)
-    try {
-      await checkpointRepo.reorderCheckpoints(
-        trail.id,
-        renumbered.map((c) => c.id),
-      )
-    } catch {
-      toast.error("순서 변경에 실패했어요.")
-      reload()
-    }
+  if (mode === "view") {
+    return (
+      <CourseGuideView
+        trail={trail}
+        checkpoints={checkpoints}
+        loading={loading}
+        onEdit={() => setMode("edit")}
+      />
+    )
   }
 
   return (
@@ -197,7 +249,17 @@ export default function CourseEditor({
               | [number, number][][]
           }
           bounds={trail.bounds ?? undefined}
-          checkpoints={checkpoints.map((c, i) => ({
+          start={
+            trail.start_lat != null && trail.start_lng != null
+              ? { lat: trail.start_lat, lng: trail.start_lng }
+              : null
+          }
+          end={
+            trail.end_lat != null && trail.end_lng != null
+              ? { lat: trail.end_lat, lng: trail.end_lng }
+              : null
+          }
+          checkpoints={orderedCheckpoints.map((c, i) => ({
             id: c.id,
             lng: c.lng,
             lat: c.lat,
@@ -212,11 +274,33 @@ export default function CourseEditor({
           onMarkerClick={(id) => {
             setSelectedId(id)
             setAddMode(false)
+            setPendingPhoto(null)
           }}
           height="100%"
           className="min-h-[420px] lg:h-full"
         />
-        {addMode && (
+        {addMode && pendingPhoto && pendingPhotoUrl && (
+          <div className="absolute left-1/2 top-8 flex -translate-x-1/2 items-center gap-2 rounded-full bg-foreground py-1.5 pl-1.5 pr-2 text-sm font-medium text-background shadow-lg">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={pendingPhotoUrl}
+              alt=""
+              className="h-7 w-7 rounded-full object-cover"
+            />
+            <span className="pointer-events-none">
+              지도를 클릭해 이 사진의 위치를 지정하세요
+            </span>
+            <button
+              type="button"
+              onClick={cancelPendingPhoto}
+              className="rounded-full p-0.5 hover:bg-background/20"
+              aria-label="취소"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+        {addMode && !pendingPhoto && (
           <div className="pointer-events-none absolute left-1/2 top-8 -translate-x-1/2 rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background shadow-lg">
             지도를 클릭하면 체크포인트가 바로 추가돼요
           </div>
@@ -225,11 +309,17 @@ export default function CourseEditor({
 
       {/* 우측 패널 */}
       <aside className="w-full shrink-0 space-y-4 overflow-y-auto p-4 lg:w-96 lg:pl-2">
-        <div>
-          <h1 className="truncate text-lg font-bold">{trail.name}</h1>
-          <p className="text-xs text-muted-foreground">
-            코스지도 · 체크포인트 {checkpoints.length}개 · 변경사항 자동 저장
-          </p>
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-bold">{trail.name}</h1>
+            <p className="text-xs text-muted-foreground">
+              코스지도 · 체크포인트 {checkpoints.length}개 · 변경사항 자동 저장
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setMode("view")}>
+            <Eye className="mr-1.5 h-3.5 w-3.5" />
+            보기
+          </Button>
         </div>
 
         <div className="flex gap-2">
@@ -240,6 +330,7 @@ export default function CourseEditor({
             onClick={() => {
               setAddMode((v) => !v)
               setSelectedId(null)
+              setPendingPhoto(null)
             }}
           >
             <MousePointerClick className="mr-1.5 h-4 w-4" />
@@ -282,7 +373,7 @@ export default function CourseEditor({
           </div>
         ) : (
           <ul className="space-y-1.5">
-            {checkpoints.map((cp, i) => (
+            {orderedCheckpoints.map((cp, i) => (
               <li key={cp.id}>
                 <div
                   className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
@@ -318,30 +409,6 @@ export default function CourseEditor({
                     {i + 1}
                   </span>
                   <span className="min-w-0 flex-1 truncate">{cp.title}</span>
-                  <span className="flex shrink-0 items-center gap-0.5">
-                    <button
-                      type="button"
-                      className="rounded p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                      disabled={i === 0}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        move(cp.id, -1)
-                      }}
-                    >
-                      <ArrowUp className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                      disabled={i === checkpoints.length - 1}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        move(cp.id, 1)
-                      }}
-                    >
-                      <ArrowDown className="h-3.5 w-3.5" />
-                    </button>
-                  </span>
                 </div>
 
                 {/* 선택된 체크포인트 상세 편집 */}
