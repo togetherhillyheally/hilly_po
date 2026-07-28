@@ -423,15 +423,6 @@ export default function CourseEditor({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm">설명</Label>
-                      <Textarea
-                        value={draftNote}
-                        onChange={(e) => setDraftNote(e.target.value)}
-                        placeholder="이 지점에 대한 설명이나 미션 안내를 적어 주세요"
-                        rows={3}
-                      />
-                    </div>
-                    <div className="space-y-2">
                       <Label className="text-sm">아이콘</Label>
                       <div className="flex flex-wrap gap-1.5">
                         {CHECKPOINT_MARKERS.map((m) => {
@@ -464,6 +455,15 @@ export default function CourseEditor({
                     </div>
                     <Separator />
                     <PhotoUploader userId={userId} checkpointId={cp.id} />
+                    <div className="space-y-2">
+                      <Label className="text-sm">설명</Label>
+                      <Textarea
+                        value={draftNote}
+                        onChange={(e) => setDraftNote(e.target.value)}
+                        placeholder="이 지점에 대한 설명이나 미션 안내를 적어 주세요"
+                        rows={3}
+                      />
+                    </div>
                     <div className="flex gap-2 pt-1">
                       <Button
                         size="sm"

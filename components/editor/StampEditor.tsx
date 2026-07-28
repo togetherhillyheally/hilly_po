@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import {
   ArrowDown,
   ArrowUp,
+  Eye,
   Loader2,
   MousePointerClick,
   Stamp as StampIcon,
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import StampMap, { type LatLng } from "@/components/map/StampMap"
+import StampGuideView from "./StampGuideView"
 import { PublishBar } from "./PublishBar"
 import { QuizForm, isQuizComplete, type QuizValue } from "./QuizForm"
 import { DEFAULT_RADIUS_M, RadiusControl } from "./RadiusControl"
@@ -49,6 +51,7 @@ export default function StampEditor({
   trail: Trail
   userId: string
 }) {
+  const [mode, setMode] = useState<"view" | "edit">("view")
   const [name, setName] = useState(trail.name)
   const [orderMode, setOrderMode] = useState<OrderMode>(
     trail.stamp_order_mode ?? "free",
@@ -210,6 +213,17 @@ export default function StampEditor({
 
   const selectedName = selected ? parseStampTitle(selected.title).name : ""
 
+  if (mode === "view") {
+    return (
+      <StampGuideView
+        trail={trail}
+        points={points ?? []}
+        loading={points === null}
+        onEdit={() => setMode("edit")}
+      />
+    )
+  }
+
   return (
     <div className="flex flex-col gap-4 lg:h-[calc(100vh-3.5rem)] lg:flex-row lg:gap-0">
       <div className="relative flex-1 p-4 lg:pr-2">
@@ -235,6 +249,16 @@ export default function StampEditor({
       </div>
 
       <aside className="w-full shrink-0 space-y-4 overflow-y-auto p-4 lg:w-96 lg:pl-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="truncate text-xs text-muted-foreground">
+            스탬프지도 · 스탬프 {(points ?? []).length}개
+          </p>
+          <Button variant="outline" size="sm" onClick={() => setMode("view")}>
+            <Eye className="mr-1.5 h-3.5 w-3.5" />
+            보기
+          </Button>
+        </div>
+
         <div className="space-y-3">
           <div className="space-y-2">
             <Label className="text-sm">지도 이름</Label>
@@ -413,9 +437,6 @@ export default function StampEditor({
             trail={trail}
             pointCount={(points ?? []).length}
             pointNoun="스탬프"
-            dirty={dirty}
-            saving={saving}
-            onSave={save}
             onBeforePublish={async () => (dirty ? await save() : true)}
           />
         </div>

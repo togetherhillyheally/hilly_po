@@ -310,12 +310,6 @@ export default function CourseGuideView({
                     </span>
                   </div>
 
-                  {cp.note && (
-                    <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-                      {cp.note}
-                    </p>
-                  )}
-
                   {cpPhotos.length > 0 && (
                     <div className="flex gap-2 overflow-x-auto">
                       {cpPhotos.map((p) => (
@@ -328,6 +322,12 @@ export default function CourseGuideView({
                         />
                       ))}
                     </div>
+                  )}
+
+                  {cp.note && (
+                    <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                      {cp.note}
+                    </p>
                   )}
 
                   <div className="space-y-2 border-t pt-2.5">

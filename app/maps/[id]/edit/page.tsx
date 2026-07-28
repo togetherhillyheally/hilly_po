@@ -26,6 +26,15 @@ export default function EditMapPage({
       .catch(() => setTrail(null))
   }, [id])
 
+  useEffect(() => {
+    if (!trail) return
+    const prevTitle = document.title
+    document.title = `${trail.name} | 힐리힐리지도`
+    return () => {
+      document.title = prevTitle
+    }
+  }, [trail])
+
   if (userLoading || trail === undefined) {
     return (
       <div className="flex items-center justify-center py-32 text-muted-foreground">

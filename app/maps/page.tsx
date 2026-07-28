@@ -279,7 +279,7 @@ export default function MapsDashboardPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-muted-foreground transition-opacity focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                      className="h-8 w-8 text-destructive transition-opacity hover:bg-destructive/10 hover:text-destructive focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                       onClick={(e) => {
                         e.stopPropagation();
                         setDeleteTarget(trail);

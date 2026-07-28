@@ -12,25 +12,18 @@ import type { Trail } from "@/lib/repos/trailTypes"
 /**
  * 에디터 하단 저장 바.
  * - 공개/비공개는 상태(작성중/저장됨)와 무관하게 항상 토글 가능.
- * - "저장" — 항상 표시. 성공 시 published 로 전환하고 내 지도 목록으로 이동.
+ * - "저장" 버튼 하나만 표시. 성공 시 published 로 전환하고 내 지도 목록으로 이동.
  *   (편집 화면 진입 자체는 보기/수정 모드 전환으로 처리하므로 별도 "수정" 단계는 없음)
- * onSave 를 넘기면 저장 버튼도 함께 렌더링 (스탬프 에디터처럼 수동 저장이 있는 경우).
  */
 export function PublishBar({
   trail,
   pointCount,
   pointNoun,
-  dirty,
-  saving,
-  onSave,
   onBeforePublish,
 }: {
   trail: Trail
   pointCount: number
   pointNoun: string
-  dirty?: boolean
-  saving?: boolean
-  onSave?: () => void
   /** 저장(발행) 직전 훅 — false 반환 시 중단 (예: 미저장 변경사항 저장 실패) */
   onBeforePublish?: () => Promise<boolean>
 }) {
@@ -104,31 +97,13 @@ export function PublishBar({
         )}
       </p>
 
-      <div className="flex gap-2">
-        {onSave && (
-          <Button
-            variant="outline"
-            className="h-11 flex-1"
-            onClick={onSave}
-            disabled={saving || !dirty}
-          >
-            {saving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : dirty ? (
-              "변경사항 저장"
-            ) : (
-              "저장됨"
-            )}
-          </Button>
-        )}
-        <Button
-          className="h-11 flex-1 bg-[#DC2F55] text-white hover:bg-[#DC2F55]/90"
-          onClick={save}
-          disabled={busy || saving}
-        >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "저장"}
-        </Button>
-      </div>
+      <Button
+        className="h-11 w-full bg-[#DC2F55] text-white hover:bg-[#DC2F55]/90"
+        onClick={save}
+        disabled={busy}
+      >
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "저장"}
+      </Button>
     </div>
   )
 }
