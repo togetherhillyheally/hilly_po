@@ -7,22 +7,35 @@
 
 import {
   Bed,
+  Binoculars,
   Building2,
   Camera,
   Car,
   CircleAlert,
   Coffee,
   Compass,
+  createLucideIcon,
   Droplet,
   Flag,
   Flame,
   House,
   Leaf,
+  Mountain,
   TriangleAlert,
   Users,
   Utensils,
   type LucideIcon,
 } from "lucide-react"
+
+// lucide 에 다리(bridge) 아이콘이 없어 커스텀 — 물 위 2아치교(hilly_rn FA6 bridge-water 대응)
+const Bridge = createLucideIcon("Bridge", [
+  ["path", { d: "M2 9h20", key: "deck" }],
+  ["path", { d: "M6 9v2", key: "l" }],
+  ["path", { d: "M18 9v2", key: "r" }],
+  ["path", { d: "M6 11q3-4 6 0", key: "a1" }],
+  ["path", { d: "M12 11q3-4 6 0", key: "a2" }],
+  ["path", { d: "M2 16q2-1.5 4 0t4 0t4 0t4 0t4 0", key: "w" }],
+])
 
 export interface CheckpointMarkerEntry {
   /** Ionicons 이름 (hilly_rn 호환 — DB marker_icon 값) */
@@ -37,6 +50,9 @@ export interface CheckpointMarkerEntry {
 export const CHECKPOINT_MARKERS: CheckpointMarkerEntry[] = [
   { icon: "flag-outline", accent: "#DC2F55", name: "깃발", Icon: Flag },
   { icon: "camera-outline", accent: "#7C3AED", name: "사진 명소", Icon: Camera },
+  { icon: "binoculars", accent: "#0D9488", name: "전망", Icon: Binoculars },
+  { icon: "mountain", accent: "#4D7C0F", name: "산", Icon: Mountain },
+  { icon: "bridge", accent: "#0369A1", name: "다리", Icon: Bridge },
   { icon: "water-outline", accent: "#0284C7", name: "식수", Icon: Droplet },
   { icon: "leaf-outline", accent: "#059669", name: "자연", Icon: Leaf },
   { icon: "alert-outline", accent: "#DC2626", name: "위험", Icon: CircleAlert },
