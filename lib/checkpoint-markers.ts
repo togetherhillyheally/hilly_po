@@ -6,7 +6,6 @@
  */
 
 import {
-  Armchair,
   Bed,
   Binoculars,
   Building2,
@@ -27,6 +26,14 @@ import {
   Utensils,
   type LucideIcon,
 } from "lucide-react"
+
+// lucide 에 정자 아이콘이 없어 커스텀 — 지붕(사다리꼴)+기둥2+마루(hilly_rn rest 커스텀 SVG 동일)
+const Pavilion = createLucideIcon("Pavilion", [
+  ["path", { d: "M4 9L8 4h8l4 5z", key: "roof" }],
+  ["path", { d: "M7 9v9", key: "lp" }],
+  ["path", { d: "M17 9v9", key: "rp" }],
+  ["path", { d: "M5 18h14", key: "fl" }],
+])
 
 // lucide 에 다리(bridge) 아이콘이 없어 커스텀 — 물 위 2아치교(hilly_rn FA6 bridge-water 대응)
 const Bridge = createLucideIcon("Bridge", [
@@ -64,7 +71,7 @@ export const CHECKPOINT_MARKERS: CheckpointMarkerEntry[] = [
   { icon: "fork", accent: "#0891B2", name: "갈림길", Icon: Split },
   { icon: "bed-outline", accent: "#1E40AF", name: "숙소", Icon: Bed },
   { icon: "home-outline", accent: "#16A34A", name: "대피소", Icon: House },
-  { icon: "rest", accent: "#B45309", name: "쉼터", Icon: Armchair },
+  { icon: "rest", accent: "#B45309", name: "정자/쉼터", Icon: Pavilion },
   { icon: "restroom", accent: "#2563EB", name: "화장실", Icon: Users },
   { icon: "car-outline", accent: "#52525B", name: "도로", Icon: Car },
   { icon: "business-outline", accent: "#4F46E5", name: "빌딩", Icon: Building2 },
