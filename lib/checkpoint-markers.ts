@@ -6,6 +6,7 @@
  */
 
 import {
+  Armchair,
   Bed,
   Binoculars,
   Building2,
@@ -63,6 +64,7 @@ export const CHECKPOINT_MARKERS: CheckpointMarkerEntry[] = [
   { icon: "fork", accent: "#0891B2", name: "갈림길", Icon: Split },
   { icon: "bed-outline", accent: "#1E40AF", name: "숙소", Icon: Bed },
   { icon: "home-outline", accent: "#16A34A", name: "대피소", Icon: House },
+  { icon: "rest", accent: "#B45309", name: "쉼터", Icon: Armchair },
   { icon: "restroom", accent: "#2563EB", name: "화장실", Icon: Users },
   { icon: "car-outline", accent: "#52525B", name: "도로", Icon: Car },
   { icon: "business-outline", accent: "#4F46E5", name: "빌딩", Icon: Building2 },
