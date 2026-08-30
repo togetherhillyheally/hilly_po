@@ -46,6 +46,8 @@ export default function MapsDashboardPage() {
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [deleteTarget, setDeleteTarget] = useState<Trail | null>(null);
   const [deleting, setDeleting] = useState(false);
+  // 썸네일 파일이 없거나 로드 실패한 지도 — 깨진 이미지 대신 아이콘 폴백
+  const [failedThumbs, setFailedThumbs] = useState<Set<string>>(new Set());
 
   const reload = useCallback(async (userId: string) => {
     try {
@@ -187,7 +189,9 @@ export default function MapsDashboardPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {visibleTrails.map((trail) => {
-            const thumb = trailThumbnailUrl(trail.thumbnail_path);
+            const thumb = failedThumbs.has(trail.id)
+              ? null
+              : trailThumbnailUrl(trail.thumbnail_path);
             const isStamp = trail.map_type === "stamp";
             return (
               <div
@@ -202,6 +206,9 @@ export default function MapsDashboardPage() {
                       src={thumb}
                       alt={trail.name}
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                      onError={() =>
+                        setFailedThumbs((prev) => new Set(prev).add(trail.id))
+                      }
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center bg-[radial-gradient(80%_120%_at_50%_0%,rgba(220,47,85,0.08),transparent_65%)] text-muted-foreground">

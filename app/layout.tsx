@@ -3,8 +3,8 @@ import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://hillyheally.com"),
-  title: "힐리힐리 지도만들기",
+  metadataBase: new URL("https://map.hillyheally.com"),
+  title: "힐리힐리 MAP",
   description: "웹에서 나만의 코스지도와 스탬프지도를 만들어 보세요.",
 };
 

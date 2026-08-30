@@ -33,7 +33,10 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  if (!user && pathname.startsWith("/maps")) {
+  if (
+    !user &&
+    (pathname.startsWith("/maps") || pathname.startsWith("/control"))
+  ) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     url.searchParams.set("next", pathname)
@@ -51,5 +54,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/maps/:path*", "/login"],
+  // /watch 는 공개 관전 페이지 — 의도적으로 matcher 에서 제외 (비로그인 접근 허용)
+  matcher: ["/maps/:path*", "/control/:path*", "/login"],
 }

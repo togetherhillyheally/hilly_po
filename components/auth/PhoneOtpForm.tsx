@@ -21,6 +21,10 @@ import {
 
 const RESEND_COOLDOWN_S = 60
 
+/** dev 환경 로그인 — SMS 없이 tester-auth 엣지 펑션 사용 (슈퍼관리자 번호 + 123456) */
+const TESTER_AUTH = process.env.NEXT_PUBLIC_TESTER_AUTH === "1"
+const TESTER_CODE = "123456"
+
 export function PhoneOtpForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -53,6 +57,13 @@ export function PhoneOtpForm() {
 
   async function sendOtp() {
     if (!phoneValid || busy) return
+    if (TESTER_AUTH) {
+      // dev: SMS 미지원 — 바로 인증번호 입력 단계로 (123456)
+      setStep("otp")
+      setOtp("")
+      toast.info("개발 환경이에요. 인증번호 123456 을 입력해 주세요.")
+      return
+    }
     setBusy(true)
     const { error } = await getSupabase().auth.signInWithOtp({
       phone: toE164(digits),
@@ -71,11 +82,36 @@ export function PhoneOtpForm() {
   async function verifyOtp(code: string) {
     if (busy) return
     setBusy(true)
-    const { error } = await getSupabase().auth.verifyOtp({
-      phone: toE164(digits),
-      token: code,
-      type: "sms",
-    })
+    let error: unknown = null
+    if (TESTER_AUTH && code === TESTER_CODE) {
+      // dev: tester-auth 가 슈퍼관리자 검증 후 recovery 토큰 발급
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/tester-auth`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone: digits, code }),
+          },
+        )
+        const json = (await res.json()) as { token_hash?: string }
+        if (!res.ok || !json.token_hash) throw new Error("tester-auth failed")
+        const { error: verifyError } = await getSupabase().auth.verifyOtp({
+          type: "recovery",
+          token_hash: json.token_hash,
+        })
+        error = verifyError
+      } catch (e) {
+        error = e
+      }
+    } else {
+      const { error: verifyError } = await getSupabase().auth.verifyOtp({
+        phone: toE164(digits),
+        token: code,
+        type: "sms",
+      })
+      error = verifyError
+    }
     setBusy(false)
     if (error) {
       toast.error("인증번호가 올바르지 않아요.")

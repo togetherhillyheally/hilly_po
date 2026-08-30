@@ -48,6 +48,30 @@ body {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+  /* 다크 루트(.dark) 아래에서 특정 영역만 라이트로 되돌리는 스코프 —
+     관제/관전 지도 화면처럼 라이트 톤 지도 위 오버레이에 사용 */
+  .theme-light {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+  }
+
   .dark {
     /* 힐리힐리 앱 다크 토큰 정렬 — canvas #121212, surface #1E1E1E, 브랜드 레드 #DC2F55 */
     --background: 0 0% 7%;

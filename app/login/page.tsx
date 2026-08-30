@@ -3,7 +3,7 @@ import { Suspense } from "react"
 import { PhoneOtpForm } from "@/components/auth/PhoneOtpForm"
 
 export const metadata = {
-  title: "로그인 · 힐리힐리 지도만들기",
+  title: "로그인 · 힐리힐리 MAP",
 }
 
 export default function LoginPage() {
@@ -24,8 +24,9 @@ export default function LoginPage() {
           <div className="space-y-2 text-center">
             <h1 className="text-xl font-bold">휴대폰 번호로 시작하기</h1>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              힐리힐리 앱과 같은 번호로 로그인하면 만든 지도가 내 계정에
-              연결돼요.
+              힐리힐리 앱과 같은 번호로 로그인하면
+              <br />
+              만든 지도가 내 계정에 연결돼요.
             </p>
           </div>
           <div className="mt-8">
