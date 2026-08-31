@@ -194,6 +194,35 @@ export const trackerControlRepo = {
     return parsePublicEventInfo(data)
   },
 
+  // ── 모험 라이브 업로드 주기 설정 ──
+  async getLiveUploadSettings(): Promise<{
+    solo_interval_sec: number
+    group_interval_sec: number
+  }> {
+    const { data, error } = await getSupabase()
+      .from("live_upload_settings")
+      .select("solo_interval_sec, group_interval_sec")
+      .maybeSingle()
+    if (error) throw error
+    return (
+      (data as { solo_interval_sec: number; group_interval_sec: number } | null) ?? {
+        solo_interval_sec: 15,
+        group_interval_sec: 3,
+      }
+    )
+  },
+
+  async updateLiveUploadSettings(
+    soloSec: number,
+    groupSec: number,
+  ): Promise<void> {
+    const { error } = await getSupabase().rpc(
+      "admin_update_live_upload_settings",
+      { p_solo_sec: soloSec, p_group_sec: groupSec },
+    )
+    if (error) throw error
+  },
+
   // ── 결과 확정 / 기록 ──
   /** 이벤트 종료 시 최종 순위·기록 스냅샷 저장 (기존 결과 덮어씀) */
   async finalizeEvent(

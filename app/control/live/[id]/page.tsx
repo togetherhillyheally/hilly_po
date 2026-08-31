@@ -52,6 +52,7 @@ export default function LiveAdventureControlPage() {
   const [displayMode, setDisplayMode] = useState<DisplayMode>("all")
   const [viewMode, setViewMode] = useState<ViewMode>("map")
   const [is3d, setIs3d] = useState(true)
+  const [panelOpen, setPanelOpen] = useState(true)
   const [terrainElevations, setTerrainElevations] =
     useState<Map<string, number> | null>(null)
   const { favs, toggleFav } = useFavorites(`adventure-${params.id}`)
@@ -171,11 +172,14 @@ export default function LiveAdventureControlPage() {
             height="100%"
             className="absolute inset-0"
           />
-          {/* 2D/3D — 우측 아래 */}
+          {/* 2D/3D — 좌측 아래 (모바일 하단 시트가 열려 있으면 시트 위로) */}
           <MapDimensionToggle
             is3d={is3d}
             onChange={setIs3d}
-            className="absolute bottom-3 left-3 z-30"
+            className={
+              "absolute left-3 z-30 md:bottom-3 " +
+              (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-3")
+            }
           />
           <LiveSidebar
             ranked={ranked}
@@ -189,6 +193,7 @@ export default function LiveAdventureControlPage() {
             terrainElevations={terrainElevations}
             displayMode={displayMode}
             onDisplayModeChange={setDisplayMode}
+            onOpenChange={setPanelOpen}
           />
         </div>
 

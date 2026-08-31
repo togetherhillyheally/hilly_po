@@ -1,7 +1,15 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Check, ChevronsLeft, ChevronsRight, Search, Star } from "lucide-react"
+import {
+  Check,
+  ChevronsDown,
+  ChevronsLeft,
+  ChevronsRight,
+  ChevronsUp,
+  Search,
+  Star,
+} from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,6 +38,8 @@ export type LiveSidebarProps = {
   /** 표시 필터(전체/리더/⭐) — 전달하면 헤더 타이틀 자리에 렌더 */
   displayMode?: DisplayMode
   onDisplayModeChange?: (mode: DisplayMode) => void
+  /** 열림/접힘 변경 알림 — 페이지가 지도 위 다른 컨트롤 위치를 조정할 때 사용 */
+  onOpenChange?: (open: boolean) => void
 }
 
 /** 1~3위 카드 — 색 구분 없이 살짝 도드라진 배경만 */
@@ -286,8 +296,13 @@ export default function LiveSidebar({
   variant = "overlay",
   displayMode,
   onDisplayModeChange,
+  onOpenChange,
 }: LiveSidebarProps) {
-  const [open, setOpen] = useState(true)
+  const [open, _setOpen] = useState(true)
+  const setOpen = (v: boolean) => {
+    _setOpen(v)
+    onOpenChange?.(v)
+  }
   const inline = variant === "inline"
   const [query, setQuery] = useState("")
   const isRace = eventType === "race"
@@ -333,15 +348,28 @@ export default function LiveSidebar({
 
   if (!inline && !open) {
     return (
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => setOpen(true)}
-        title="참가자 목록 열기"
-        className="absolute right-3 top-1/2 z-20 h-10 w-10 -translate-y-1/2 rounded-full bg-background/80 shadow-lg backdrop-blur"
-      >
-        <ChevronsLeft className="h-5 w-5" />
-      </Button>
+      <>
+        {/* 데스크톱: 우측 가장자리 « */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setOpen(true)}
+          title="참가자 목록 열기"
+          className="absolute right-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 rounded-full bg-background/80 shadow-lg backdrop-blur md:flex"
+        >
+          <ChevronsLeft className="h-5 w-5" />
+        </Button>
+        {/* 모바일: 하단 중앙 리더보드 열기 버튼 */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setOpen(true)}
+          className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full bg-background/85 px-4 shadow-lg backdrop-blur md:hidden"
+        >
+          <ChevronsUp className="mr-1.5 h-4 w-4" />
+          {isRace ? "리더보드" : "참가자"}
+        </Button>
+      </>
     )
   }
 
@@ -350,20 +378,34 @@ export default function LiveSidebar({
       className={
         inline
           ? "relative flex w-full flex-col overflow-hidden rounded-2xl border bg-background"
-          : "absolute bottom-0 right-0 top-0 z-20 flex w-[360px] max-w-[88vw] flex-col border-l bg-background/90 backdrop-blur"
+          : // 모바일: 하단 시트(전폭·절반 높이) / 데스크톱: 우측 패널
+            "absolute inset-x-0 bottom-0 z-20 flex h-1/2 flex-col rounded-t-2xl border-t bg-background/90 backdrop-blur " +
+            "md:inset-y-0 md:left-auto md:right-0 md:h-auto md:w-[360px] md:max-w-[88vw] md:rounded-none md:border-l md:border-t-0"
       }
     >
-      {/* 접기 버튼 — 접혔을 때의 « 버튼과 같은 위치(패널 가장자리 세로 중앙) */}
       {!inline && (
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setOpen(false)}
-          title="참가자 목록 접기"
-          className="absolute -left-5 top-1/2 z-30 h-10 w-10 -translate-y-1/2 rounded-full bg-background/80 shadow-lg backdrop-blur"
-        >
-          <ChevronsRight className="h-5 w-5" />
-        </Button>
+        <>
+          {/* 데스크톱: 좌측 가장자리 » (접혔을 때 « 와 같은 위치) */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setOpen(false)}
+            title="참가자 목록 접기"
+            className="absolute -left-5 top-1/2 z-30 hidden h-10 w-10 -translate-y-1/2 rounded-full bg-background/80 shadow-lg backdrop-blur md:flex"
+          >
+            <ChevronsRight className="h-5 w-5" />
+          </Button>
+          {/* 모바일: 시트 상단 중앙 접기 버튼 */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setOpen(false)}
+            title="접기"
+            className="absolute -top-4 left-1/2 z-30 h-8 w-12 -translate-x-1/2 rounded-full bg-background/85 shadow-lg backdrop-blur md:hidden"
+          >
+            <ChevronsDown className="h-4 w-4" />
+          </Button>
+        </>
       )}
 
       <div className="flex items-center border-b px-3 py-2.5">

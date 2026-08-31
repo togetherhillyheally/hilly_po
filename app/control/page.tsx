@@ -3,7 +3,16 @@
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { toast } from "sonner"
-import { Link2, MapPin, Plus, Radio, Route, Trash2, Users } from "lucide-react"
+import {
+  Link2,
+  MapPin,
+  Plus,
+  Radio,
+  Route,
+  Timer,
+  Trash2,
+  Users,
+} from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +26,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import EventFormDialog from "@/components/control/EventFormDialog"
+import LiveIntervalDialog from "@/components/control/LiveIntervalDialog"
 import { useSuperAdmin } from "@/hooks/use-super-admin"
 import {
   type LiveAdventure,
@@ -102,6 +112,7 @@ export default function ControlListPage() {
     new Map(),
   )
   const [formOpen, setFormOpen] = useState(false)
+  const [intervalOpen, setIntervalOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<TrackerEvent | null>(null)
 
   const reload = useCallback(async () => {
@@ -182,12 +193,22 @@ export default function ControlListPage() {
             트래커 이벤트를 만들고 실시간 위치를 관제해요.
           </p>
         </div>
-        <Button
-          onClick={() => setFormOpen(true)}
-          className="bg-[#DC2F55] text-white hover:bg-[#DC2F55]/90"
-        >
-          <Plus className="mr-1.5 h-4 w-4" />새 이벤트
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setIntervalOpen(true)}
+            title="모험 신호 주기 설정"
+          >
+            <Timer className="mr-1.5 h-4 w-4" />
+            신호 주기
+          </Button>
+          <Button
+            onClick={() => setFormOpen(true)}
+            className="bg-[#DC2F55] text-white hover:bg-[#DC2F55]/90"
+          >
+            <Plus className="mr-1.5 h-4 w-4" />새 이벤트
+          </Button>
+        </div>
       </div>
 
       {/* ── 트래커 이벤트 (UTMB 허브식 카드) ── */}
@@ -381,6 +402,8 @@ export default function ControlListPage() {
         event={null}
         onSaved={reload}
       />
+
+      <LiveIntervalDialog open={intervalOpen} onOpenChange={setIntervalOpen} />
 
       <AlertDialog
         open={deleteTarget !== null}

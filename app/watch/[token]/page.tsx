@@ -51,6 +51,7 @@ export default function WatchPage() {
   const [displayMode, setDisplayMode] = useState<DisplayMode>("all")
   const [viewMode, setViewMode] = useState<ViewMode>("map")
   const [is3d, setIs3d] = useState(true)
+  const [panelOpen, setPanelOpen] = useState(true)
   const [terrainElevations, setTerrainElevations] =
     useState<Map<string, number> | null>(null)
   const { favs, toggleFav } = useFavorites(params.token)
@@ -136,12 +137,14 @@ export default function WatchPage() {
           className="absolute inset-0"
         />
 
-        {/* 좌상단 이벤트 정보 오버레이 */}
-        <header className="absolute left-4 top-4 z-10 rounded-xl border bg-background/85 px-4 py-3 shadow-lg backdrop-blur">
+        {/* 좌상단 이벤트 정보 오버레이 — 모바일은 중앙 컨트롤과 겹치지 않게 폭 제한 */}
+        <header className="absolute left-4 top-4 z-10 max-w-[48vw] rounded-xl border bg-background/85 px-4 py-3 shadow-lg backdrop-blur md:max-w-none">
           <p className="text-[10px] font-bold tracking-tight text-muted-foreground">
             HILLY HEALLY LIVE
           </p>
-          <h1 className="text-base font-bold leading-tight">{info.title}</h1>
+          <h1 className="truncate text-base font-bold leading-tight">
+            {info.title}
+          </h1>
           <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
             <span>{isRace ? "대회" : "실시간 위치"}</span>
             {info.trail?.name && <span>{info.trail.name}</span>}
@@ -165,11 +168,14 @@ export default function WatchPage() {
           </p>
         </header>
 
-        {/* 2D/3D — 우측 아래 */}
+        {/* 2D/3D — 좌측 아래 (모바일 하단 시트가 열려 있으면 시트 위로) */}
         <MapDimensionToggle
           is3d={is3d}
           onChange={setIs3d}
-          className="absolute bottom-4 left-4 z-30"
+          className={
+            "absolute left-4 z-30 md:bottom-4 " +
+            (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-4")
+          }
         />
 
         <LiveSidebar
@@ -184,6 +190,7 @@ export default function WatchPage() {
           terrainElevations={terrainElevations}
           displayMode={displayMode}
           onDisplayModeChange={setDisplayMode}
+          onOpenChange={setPanelOpen}
         />
       </div>
 
