@@ -46,6 +46,8 @@ export interface LiveEntry {
   category: string | null
   /** 연결된 계정의 프로필 사진 (미연결 엔트리는 null) */
   avatar_url?: string | null
+  /** 위치 비공개(모험 라이브의 hidden) — 좌표 없이 참가 사실만 표시 */
+  hidden?: boolean
   lat: number | null
   lng: number | null
   recorded_at: string | null

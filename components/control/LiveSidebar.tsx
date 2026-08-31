@@ -71,6 +71,13 @@ function StatusBadge({ r }: { r: RankedEntry }) {
         <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
       </span>
     )
+  // 위치 비공개(모험 hidden) — 신호 이상이 아니라 사용자의 선택이므로 중립 표시
+  if (r.entry.hidden && r.entry.lat == null)
+    return (
+      <Badge variant="outline" className="whitespace-nowrap text-muted-foreground">
+        위치 비공개
+      </Badge>
+    )
   if (r.status === "noSignal" || r.status === "stale")
     return (
       <Badge
@@ -149,8 +156,11 @@ function EntryRow({
   onToggleFav: (entryId: string) => void
   terrainEle?: number | null
 }) {
+  const hiddenMasked = r.entry.hidden === true && r.entry.lat == null
   const dimmed =
-    (r.status === "stale" || r.status === "noSignal") && !r.finished
+    (r.status === "stale" || r.status === "noSignal") &&
+    !r.finished &&
+    !hiddenMasked
   const podium = isRace && r.rank != null && r.rank <= 3
   const battery = isAdmin ? batteryPercent(r.entry.battery_mv) : null
   const eta = isRace ? formatEta(r.etaAt) : null

@@ -91,7 +91,8 @@ export const liveAdventureRepo = {
     return (data as never) ?? null
   },
 
-  /** 세션 라이브 참가자 위치 → 관제 공용 LiveEntry 로 매핑 (위치 숨김 참가자 제외) */
+  /** 세션 라이브 참가자 위치 → 관제 공용 LiveEntry 로 매핑.
+   *  위치 숨김(hidden) 참가자도 목록에는 표시 — 좌표는 서버에 없으므로 '위치 비공개'로 노출 */
   async listSessionLive(sessionId: string): Promise<LiveEntry[]> {
     const { data, error } = await getSupabase()
       .from("hiking_session_live_participants")
@@ -100,19 +101,18 @@ export const liveAdventureRepo = {
       )
       .eq("session_id", sessionId)
     if (error) throw error
-    return ((data ?? []) as LiveRow[])
-      .filter((r) => !r.hidden)
-      .map((r) => ({
-        entry_id: r.user_id,
-        display_name: r.nickname,
-        bib_no: null,
-        category: null,
-        avatar_url: r.avatar_url,
-        lat: r.lat,
-        lng: r.lng,
-        recorded_at: r.last_seen,
-        speed_kmh: null,
-      }))
+    return ((data ?? []) as LiveRow[]).map((r) => ({
+      entry_id: r.user_id,
+      display_name: r.nickname,
+      bib_no: null,
+      category: null,
+      avatar_url: r.avatar_url,
+      lat: r.lat,
+      lng: r.lng,
+      recorded_at: r.last_seen,
+      speed_kmh: null,
+      hidden: r.hidden,
+    }))
   },
 
   /** 코스 체크포인트 (프로필/지도 시설 표시용) */

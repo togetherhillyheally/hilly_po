@@ -43,6 +43,18 @@ function StatusCell({ r, selected }: { r: RankedEntry; selected: boolean }) {
         <Check className="h-4 w-4 text-white" strokeWidth={3} />
       </span>
     )
+  if (r.entry.hidden && r.entry.lat == null)
+    return (
+      <Badge
+        variant="outline"
+        className={
+          "whitespace-nowrap " +
+          (selected ? "border-white/60 text-white" : "text-muted-foreground")
+        }
+      >
+        위치 비공개
+      </Badge>
+    )
   if (r.status === "noSignal" || r.status === "stale")
     return (
       <Badge
