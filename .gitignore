@@ -36,3 +36,5 @@ deno.lock
 
 # supabase cli
 supabase/.temp/
+.env.dev
+.env.prod
