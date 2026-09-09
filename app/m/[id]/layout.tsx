@@ -2,9 +2,10 @@ import type { Metadata } from "next"
 import type { ReactNode } from "react"
 
 /**
- * 공개 지도 페이지 메타데이터 — 공개(published+public) 지도는 검색 색인 허용,
- * 카카오톡/슬랙 공유 미리보기(OG)에 지도 썸네일을 사용한다.
- * RLS 덕분에 anon 조회로는 공개 지도만 내려온다 (비공개면 404 성격의 기본 메타).
+ * 공개 지도 페이지 메타데이터 — public_map_by_id RPC 로 조회.
+ * 완료(published) 지도만 응답. 앱 공개(public) 지도는 검색 색인 허용,
+ * 앱 비공개(private) 지도는 링크로만 보는 unlisted 성격이라 noindex.
+ * OG 이미지는 지도 썸네일.
  */
 export async function generateMetadata({
   params,
@@ -15,29 +16,34 @@ export async function generateMetadata({
   try {
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     const base = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const res = await fetch(
-      `${base}/rest/v1/trails?id=eq.${encodeURIComponent(id)}&select=name,distance_km,total_ascent_m,map_type,thumbnail_path`,
-      {
-        headers: { apikey: anon, Authorization: `Bearer ${anon}` },
-        next: { revalidate: 300 },
+    const res = await fetch(`${base}/rest/v1/rpc/public_map_by_id`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: anon,
+        Authorization: `Bearer ${anon}`,
       },
-    )
-    if (!res.ok) throw new Error("fetch failed")
-    const rows = (await res.json()) as {
-      name: string
-      distance_km: number | null
-      total_ascent_m: number | null
-      map_type: string
-      thumbnail_path: string | null
-    }[]
-    const t = rows[0]
-    if (!t) throw new Error("not found")
+      body: JSON.stringify({ p_id: id }),
+      next: { revalidate: 300 },
+    })
+    if (!res.ok) throw new Error("not found")
+    const t = (await res.json()) as {
+      name?: string
+      map_type?: string
+      visibility?: string
+      distance_km?: number | string | null
+      total_ascent_m?: number | string | null
+      thumbnail_path?: string | null
+    }
+    if (!t?.name) throw new Error("not found")
 
     const title = `${t.name} · 힐리힐리 MAP`
     const kind = t.map_type === "stamp" ? "스탬프지도" : "코스지도"
     const stats = [
       t.distance_km != null ? `${Number(t.distance_km).toFixed(1)}km` : null,
-      t.total_ascent_m != null ? `D+${Math.round(Number(t.total_ascent_m))}m` : null,
+      t.total_ascent_m != null
+        ? `D+${Math.round(Number(t.total_ascent_m))}m`
+        : null,
     ]
       .filter(Boolean)
       .join(" · ")
@@ -48,6 +54,11 @@ export async function generateMetadata({
     return {
       title,
       description,
+      // 앱 비공개 지도는 링크 전용(unlisted) — 검색 색인 제외
+      robots:
+        t.visibility === "public"
+          ? undefined
+          : { index: false, follow: false },
       openGraph: {
         title,
         description,

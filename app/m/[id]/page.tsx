@@ -10,14 +10,15 @@ import { MapDimensionToggle } from "@/components/control/DisplayFilter"
 import ElevationProfile from "@/components/control/ElevationProfile"
 import LiveMap from "@/components/control/LiveMap"
 import { buildCourseIndex } from "@/lib/course-progress"
-import { type PublicMap, loadPublicMap } from "@/lib/repos/publicMapRepo"
+import { type PublicMapData, loadPublicMap } from "@/lib/repos/publicMapRepo"
 import type { EventCourse } from "@/lib/repos/trackerControlTypes"
 
-/** 공개 지도 공유 페이지 — 완료+공개(published+public)된 지도만 표시 (RLS 보장).
+/** 공개 지도 공유 페이지 — 완료(published)한 지도는 링크로 누구나 조회 가능.
+ *  (앱 공개/비공개는 앱 노출만 제어 — 링크 조회와 무관. 작성중은 조회 불가)
  *  로그인 불필요 (/m 은 middleware matcher 밖). */
 export default function PublicMapPage() {
   const params = useParams<{ id: string }>()
-  const [data, setData] = useState<PublicMap | null | undefined>(undefined)
+  const [data, setData] = useState<PublicMapData | null | undefined>(undefined)
   const [is3d, setIs3d] = useState(true)
 
   useEffect(() => {
@@ -34,18 +35,17 @@ export default function PublicMapPage() {
     }
   }, [params.id])
 
-  const trail = data?.trail ?? null
   const points = useMemo(() => data?.points ?? [], [data])
 
   const courseIndex = useMemo(
-    () => (trail?.coordinates ? buildCourseIndex(trail.coordinates) : null),
-    [trail],
+    () => (data?.coordinates ? buildCourseIndex(data.coordinates) : null),
+    [data],
   )
 
   // LiveMap 용 코스 — 스탬프지도(경로 없음)는 포인트 범위로 bounds 를 만들어 fit
   const course: EventCourse | null = useMemo(() => {
-    if (!trail) return null
-    let bounds = trail.bounds
+    if (!data) return null
+    let bounds = data.bounds
     if (!bounds && points.length > 0) {
       bounds = {
         minLat: Math.min(...points.map((p) => p.lat)),
@@ -55,14 +55,14 @@ export default function PublicMapPage() {
       }
     }
     return {
-      name: trail.name,
-      distance_km: trail.distance_km,
+      name: data.name,
+      distance_km: data.distance_km,
       bounds,
-      center: trail.center,
-      coordinates: trail.coordinates,
+      center: data.center,
+      coordinates: data.coordinates,
       checkpoints: points,
     }
-  }, [trail, points])
+  }, [data, points])
 
   function copyLink() {
     navigator.clipboard
@@ -79,10 +79,10 @@ export default function PublicMapPage() {
     )
   }
 
-  if (!trail) {
+  if (!data) {
     return (
       <main className="theme-light flex min-h-[100dvh] flex-col items-center justify-center bg-background px-6 text-center text-foreground">
-        <h1 className="text-lg font-bold">비공개이거나 없는 지도예요</h1>
+        <h1 className="text-lg font-bold">아직 완성되지 않았거나 없는 지도예요</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           링크를 다시 확인해 주세요.
         </p>
@@ -90,7 +90,7 @@ export default function PublicMapPage() {
     )
   }
 
-  const isStamp = trail.map_type === "stamp"
+  const isStamp = data.map_type === "stamp"
 
   return (
     <main className="theme-light min-h-[100dvh] bg-background text-foreground">
@@ -102,7 +102,7 @@ export default function PublicMapPage() {
               HILLY HEALLY MAP
             </p>
             <h1 className="flex items-center gap-2 text-2xl font-extrabold leading-tight">
-              {trail.name}
+              {data.name}
               <Badge variant="secondary">
                 {isStamp ? (
                   <>
@@ -118,9 +118,9 @@ export default function PublicMapPage() {
               </Badge>
             </h1>
             <p className="mt-1 flex flex-wrap items-center gap-x-3 text-sm text-muted-foreground">
-              {trail.distance_km != null && (
+              {data.distance_km != null && (
                 <span className="tabular-nums">
-                  {trail.distance_km.toFixed(1)}km
+                  {data.distance_km.toFixed(1)}km
                 </span>
               )}
               {courseIndex?.totalAscentM != null && (

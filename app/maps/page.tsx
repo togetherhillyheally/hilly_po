@@ -284,8 +284,7 @@ export default function MapsDashboardPage() {
                         )}
                       </Button>
                     )}
-                    {trail.status === "published" &&
-                      trail.visibility === "public" && (
+                    {trail.status === "published" && (
                         <Button
                           variant="ghost"
                           size="icon"
