@@ -7,9 +7,7 @@ import { Link2, MapPin, Mountain, Route, Stamp } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { MapDimensionToggle } from "@/components/control/DisplayFilter"
-import ElevationProfile from "@/components/control/ElevationProfile"
 import LiveMap from "@/components/control/LiveMap"
-import { buildCourseIndex } from "@/lib/course-progress"
 import { type PublicMapData, loadPublicMap } from "@/lib/repos/publicMapRepo"
 import type { EventCourse } from "@/lib/repos/trackerControlTypes"
 
@@ -36,11 +34,6 @@ export default function PublicMapPage() {
   }, [params.id])
 
   const points = useMemo(() => data?.points ?? [], [data])
-
-  const courseIndex = useMemo(
-    () => (data?.coordinates ? buildCourseIndex(data.coordinates) : null),
-    [data],
-  )
 
   // LiveMap 용 코스 — 스탬프지도(경로 없음)는 포인트 범위로 bounds 를 만들어 fit
   const course: EventCourse | null = useMemo(() => {
@@ -123,10 +116,10 @@ export default function PublicMapPage() {
                   {data.distance_km.toFixed(1)}km
                 </span>
               )}
-              {courseIndex?.totalAscentM != null && (
+              {data.total_ascent_m != null && (
                 <span className="flex items-center gap-1 tabular-nums">
                   <Mountain className="h-3.5 w-3.5" />
-                  D+{courseIndex.totalAscentM}m
+                  D+{Math.round(data.total_ascent_m)}m
                 </span>
               )}
               {points.length > 0 && (
@@ -161,20 +154,6 @@ export default function PublicMapPage() {
             className="absolute bottom-3 left-3 z-10"
           />
         </div>
-
-        {/* 고도 프로필 (경로 지도만) */}
-        {courseIndex && (
-          <div className="mt-4 overflow-hidden rounded-2xl bg-background">
-            <ElevationProfile
-              index={courseIndex}
-              entries={[]}
-              categories={[]}
-              checkpoints={points}
-              expanded
-              className="h-[32dvh] min-h-[240px]"
-            />
-          </div>
-        )}
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           힐리힐리 앱에서 이 지도로 모험을 시작해 보세요 🏔️

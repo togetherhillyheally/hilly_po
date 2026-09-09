@@ -3,6 +3,10 @@
 import { useEffect, useRef } from "react"
 import mapboxgl, { type LngLatBoundsLike } from "mapbox-gl"
 import "mapbox-gl/dist/mapbox-gl.css"
+import {
+  CHECKPOINT_MARKER_ICONS,
+  DEFAULT_MARKER_ICON,
+} from "@/lib/checkpoint-marker-icons"
 import { applyKoreanLabels } from "@/lib/mapbox-locale"
 import type { RankedEntry } from "@/lib/course-progress"
 import type { EventCourse, TailPoint } from "@/lib/repos/trackerControlTypes"
@@ -213,12 +217,16 @@ export default function LiveMap({
         },
       })
 
-      // 체크포인트 마커
+      // 체크포인트 마커 — 에디터 기본지도와 동일하게 마커 아이콘으로 표시
       for (const cp of course?.checkpoints ?? []) {
+        const icon =
+          CHECKPOINT_MARKER_ICONS[cp.marker_icon ?? ""] ?? DEFAULT_MARKER_ICON
         const el = document.createElement("div")
         el.className =
-          "flex h-5 w-5 items-center justify-center rounded-full border border-white bg-zinc-800 text-[10px] font-bold text-white shadow"
-        el.textContent = String(cp.sort_order + 1)
+          "flex h-6 w-6 items-center justify-center rounded-full border border-black/10 bg-white shadow"
+        el.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="${icon.color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${icon.paths
+          .map((d) => `<path d="${d}"/>`)
+          .join("")}</svg>`
         el.title = cp.title
         cpMarkersRef.current.push(
           new mapboxgl.Marker(el).setLngLat([cp.lng, cp.lat]).addTo(map),
