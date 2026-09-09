@@ -47,6 +47,8 @@ export default function MapsDashboardPage() {
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [deleteTarget, setDeleteTarget] = useState<Trail | null>(null);
   const [deleting, setDeleting] = useState(false);
+  // 공유 확인 다이얼로그 — 링크 공개 범위를 안내하고 나서 복사 (노션식 UX)
+  const [shareTarget, setShareTarget] = useState<Trail | null>(null);
   // 썸네일 파일이 없거나 로드 실패한 지도 — 깨진 이미지 대신 아이콘 폴백
   const [failedThumbs, setFailedThumbs] = useState<Set<string>>(new Set());
 
@@ -292,14 +294,7 @@ export default function MapsDashboardPage() {
                           className="h-8 w-8 text-muted-foreground transition-opacity focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigator.clipboard
-                              .writeText(
-                                `${window.location.origin}/m/${trail.id}`,
-                              )
-                              .then(() =>
-                                toast.success("공유 링크를 복사했어요."),
-                              )
-                              .catch(() => toast.error("복사에 실패했어요."));
+                            setShareTarget(trail);
                           }}
                         >
                           <Link2 className="h-4 w-4" />
@@ -347,6 +342,46 @@ export default function MapsDashboardPage() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {deleting ? "삭제 중…" : "삭제"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 공유 확인 — 링크 공개 범위 안내 후 복사 */}
+      <AlertDialog
+        open={shareTarget !== null}
+        onOpenChange={(open) => !open && setShareTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>지도 공유 링크를 복사할까요?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  완료한 지도는 <b>링크를 아는 누구나</b> 로그인 없이 볼 수
+                  있어요. 앱 공개/비공개 설정과는 별개예요 — 비공개 지도도
+                  링크로는 볼 수 있어요.
+                </p>
+                <p className="break-all rounded-md border bg-muted px-3 py-2 font-mono text-xs">
+                  {shareTarget &&
+                    `${typeof window !== "undefined" ? window.location.origin : ""}/m/${shareTarget.id}`}
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-[#DC2F55] text-white hover:bg-[#DC2F55]/90"
+              onClick={() => {
+                if (!shareTarget) return;
+                navigator.clipboard
+                  .writeText(`${window.location.origin}/m/${shareTarget.id}`)
+                  .then(() => toast.success("공유 링크를 복사했어요."))
+                  .catch(() => toast.error("복사에 실패했어요."));
+              }}
+            >
+              링크 복사
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
