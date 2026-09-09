@@ -233,7 +233,7 @@ export default function PublicMapPage() {
   const isStamp = data.map_type === "stamp"
 
   return (
-    <main className="theme-light min-h-[100dvh] bg-background text-foreground">
+    <main className="theme-light flex min-h-[100dvh] flex-col bg-background text-foreground">
       <div className="mx-auto w-full max-w-screen-xl px-4 py-8">
         {/* 헤더 */}
         <header className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -303,8 +303,11 @@ export default function PublicMapPage() {
           />
         </div>
 
-        {/* 앱으로 보기 — 설치돼 있으면 앱의 지도 화면으로, 없으면 스토어로 */}
-        <div className="mt-8 flex flex-col items-center gap-2">
+      </div>
+
+      {/* 앱으로 보기 — 페이지 최하단 고정 푸터 */}
+      <footer className="mt-auto border-t bg-background">
+        <div className="mx-auto flex w-full max-w-screen-xl flex-col items-center gap-2 px-4 py-6">
           <Button
             size="lg"
             className="bg-[#DC2F55] px-8 text-white hover:bg-[#DC2F55]/90"
@@ -339,7 +342,7 @@ export default function PublicMapPage() {
             </a>
           </p>
         </div>
-      </div>
+      </footer>
 
       <PointDetailDialog
         point={selectedPoint}
