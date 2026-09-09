@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   Eye,
   EyeOff,
+  Link2,
   MapPin,
   Mountain,
   Plus,
@@ -283,6 +284,28 @@ export default function MapsDashboardPage() {
                         )}
                       </Button>
                     )}
+                    {trail.status === "published" &&
+                      trail.visibility === "public" && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="공유 링크 복사"
+                          className="h-8 w-8 text-muted-foreground transition-opacity focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard
+                              .writeText(
+                                `${window.location.origin}/m/${trail.id}`,
+                              )
+                              .then(() =>
+                                toast.success("공유 링크를 복사했어요."),
+                              )
+                              .catch(() => toast.error("복사에 실패했어요."));
+                          }}
+                        >
+                          <Link2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     <Button
                       variant="ghost"
                       size="icon"
