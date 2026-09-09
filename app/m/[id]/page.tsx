@@ -6,10 +6,149 @@ import { toast } from "sonner"
 import { Link2, MapPin, Mountain, Route, Stamp } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { MapDimensionToggle } from "@/components/control/DisplayFilter"
 import LiveMap from "@/components/control/LiveMap"
+import {
+  CHECKPOINT_MARKER_ICONS,
+  DEFAULT_MARKER_ICON,
+} from "@/lib/checkpoint-marker-icons"
 import { type PublicMapData, loadPublicMap } from "@/lib/repos/publicMapRepo"
-import type { EventCourse } from "@/lib/repos/trackerControlTypes"
+import { checkpointPhotoThumbUrl } from "@/lib/repos/trailTypes"
+import { getSupabase } from "@/lib/supabase/client"
+import type {
+  EventCourse,
+  EventCourseCheckpoint,
+} from "@/lib/repos/trackerControlTypes"
+
+/** 포인트 마커 아이콘 (지도 마커와 동일) */
+function PointIcon({ name, size = 16 }: { name: string | null; size?: number }) {
+  const icon = CHECKPOINT_MARKER_ICONS[name ?? ""] ?? DEFAULT_MARKER_ICON
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke={icon.color}
+      strokeWidth={2.2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {icon.paths.map((d, i) => (
+        <path key={i} d={d} />
+      ))}
+    </svg>
+  )
+}
+
+/** 포인트 기록 상세 — 앱의 체크포인트 상세처럼 설명 + 사진 슬라이드 */
+function PointDetailDialog({
+  point,
+  onClose,
+}: {
+  point: EventCourseCheckpoint | null
+  onClose: () => void
+}) {
+  const [photos, setPhotos] = useState<string[] | null>(null)
+
+  useEffect(() => {
+    if (!point?.id) {
+      setPhotos([])
+      return
+    }
+    setPhotos(null)
+    let cancelled = false
+    getSupabase()
+      .from("trail_checkpoint_photos")
+      .select("storage_bucket, storage_path")
+      .eq("checkpoint_id", point.id)
+      .order("created_at")
+      .then(({ data }) => {
+        if (cancelled) return
+        setPhotos(
+          ((data ?? []) as { storage_bucket: string; storage_path: string }[]).map(
+            (r) => checkpointPhotoThumbUrl(r, 1200),
+          ),
+        )
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [point?.id])
+
+  return (
+    <Dialog open={!!point} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full border bg-white shadow-sm">
+              <PointIcon name={point?.marker_icon ?? null} />
+            </span>
+            {point?.title}
+          </DialogTitle>
+        </DialogHeader>
+
+        {point?.note && (
+          <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+            {point.note}
+          </p>
+        )}
+
+        {photos === null ? (
+          <div className="flex aspect-video items-center justify-center rounded-xl bg-muted text-sm text-muted-foreground">
+            사진 불러오는 중…
+          </div>
+        ) : photos.length === 0 ? (
+          <div className="flex aspect-video items-center justify-center rounded-xl bg-muted text-sm text-muted-foreground">
+            아직 등록된 사진이 없어요
+          </div>
+        ) : (
+          <Carousel className="w-full">
+            <CarouselContent>
+              {photos.map((url, i) => (
+                <CarouselItem key={url}>
+                  <div className="overflow-hidden rounded-xl bg-muted">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt={`${point?.title} 사진 ${i + 1}`}
+                      className="aspect-[4/3] w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            {photos.length > 1 && (
+              <>
+                <CarouselPrevious className="left-2" />
+                <CarouselNext className="right-2" />
+              </>
+            )}
+          </Carousel>
+        )}
+        {photos != null && photos.length > 1 && (
+          <p className="text-center text-xs text-muted-foreground">
+            사진 {photos.length}장 — 좌우로 넘겨보세요
+          </p>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 /** 공개 지도 공유 페이지 — 완료(published)한 지도는 링크로 누구나 조회 가능.
  *  (앱 공개/비공개는 앱 노출만 제어 — 링크 조회와 무관. 작성중은 조회 불가)
@@ -18,6 +157,8 @@ export default function PublicMapPage() {
   const params = useParams<{ id: string }>()
   const [data, setData] = useState<PublicMapData | null | undefined>(undefined)
   const [is3d, setIs3d] = useState(true)
+  const [selectedPoint, setSelectedPoint] =
+    useState<EventCourseCheckpoint | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -145,6 +286,7 @@ export default function PublicMapPage() {
             tails={[]}
             categories={[]}
             enable3d={is3d}
+            onCheckpointSelect={setSelectedPoint}
             height="100%"
             className="absolute inset-0"
           />
@@ -159,6 +301,11 @@ export default function PublicMapPage() {
           힐리힐리 앱에서 이 지도로 모험을 시작해 보세요 🏔️
         </p>
       </div>
+
+      <PointDetailDialog
+        point={selectedPoint}
+        onClose={() => setSelectedPoint(null)}
+      />
     </main>
   )
 }

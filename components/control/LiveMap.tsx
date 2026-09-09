@@ -9,7 +9,11 @@ import {
 } from "@/lib/checkpoint-marker-icons"
 import { applyKoreanLabels } from "@/lib/mapbox-locale"
 import type { RankedEntry } from "@/lib/course-progress"
-import type { EventCourse, TailPoint } from "@/lib/repos/trackerControlTypes"
+import type {
+  EventCourse,
+  EventCourseCheckpoint,
+  TailPoint,
+} from "@/lib/repos/trackerControlTypes"
 
 const MAPBOX_STYLE = "mapbox://styles/mapbox/outdoors-v12"
 const TRAIL_COLOR = "#DC2F55"
@@ -49,6 +53,8 @@ export type LiveMapProps = {
   enable3d?: boolean
   /** 지형(DEM) 기반 참가자별 해발고도(m) 보고 — 코스 고도가 없는 모니터 모드 보조용 */
   onElevations?: (elevations: Map<string, number>) => void
+  /** 체크포인트 마커 클릭 (공개 지도 페이지의 포인트 상세용) */
+  onCheckpointSelect?: (cp: EventCourseCheckpoint) => void
   className?: string
   height?: number | string
   /** true 면 라운드/테두리 없이 컨테이너를 꽉 채움 (전체 화면 배치용) */
@@ -126,6 +132,7 @@ export default function LiveMap({
   focusSignal = 0,
   enable3d = false,
   onElevations,
+  onCheckpointSelect,
   className,
   height = 520,
   bare = false,
@@ -141,6 +148,8 @@ export default function LiveMap({
   enable3dRef.current = enable3d
   const onElevationsRef = useRef(onElevations)
   onElevationsRef.current = onElevations
+  const onCheckpointSelectRef = useRef(onCheckpointSelect)
+  onCheckpointSelectRef.current = onCheckpointSelect
 
   // 지도 초기화 — 코스가 있으면 코스 기준, 없으면 참가자 위치에 맞춰 이후 fit
   useEffect(() => {
@@ -223,11 +232,15 @@ export default function LiveMap({
           CHECKPOINT_MARKER_ICONS[cp.marker_icon ?? ""] ?? DEFAULT_MARKER_ICON
         const el = document.createElement("div")
         el.className =
-          "flex h-6 w-6 items-center justify-center rounded-full border border-black/10 bg-white shadow"
+          "flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white shadow"
         el.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="${icon.color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${icon.paths
           .map((d) => `<path d="${d}"/>`)
           .join("")}</svg>`
         el.title = cp.title
+        el.addEventListener("click", (ev) => {
+          ev.stopPropagation()
+          onCheckpointSelectRef.current?.(cp)
+        })
         cpMarkersRef.current.push(
           new mapboxgl.Marker(el).setLngLat([cp.lng, cp.lat]).addTo(map),
         )

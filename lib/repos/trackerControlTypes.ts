@@ -72,6 +72,9 @@ export interface EventCourseCheckpoint {
   lng: number
   sort_order: number
   marker_icon: string | null
+  /** 포인트 상세(사진 조회 등)용 — 공개 지도 페이지에서 사용 */
+  id?: string
+  note?: string | null
 }
 
 export interface EventCourse {

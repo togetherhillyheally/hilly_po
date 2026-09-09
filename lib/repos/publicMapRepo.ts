@@ -45,18 +45,20 @@ export async function loadPublicMap(id: string): Promise<PublicMapData | null> {
     thumbnail_path:
       typeof o.thumbnail_path === "string" ? o.thumbnail_path : null,
     points: rawPoints
-      .map((p) => {
+      .map((p): EventCourseCheckpoint | null => {
         const cp = p as Record<string, unknown>
         const lat = toNumberOrNull(cp.lat)
         const lng = toNumberOrNull(cp.lng)
         if (lat == null || lng == null) return null
         return {
+          id: typeof cp.id === "string" ? cp.id : undefined,
           title: String(cp.title ?? ""),
           lat,
           lng,
           sort_order: toNumberOrNull(cp.sort_order) ?? 0,
           marker_icon:
             typeof cp.marker_icon === "string" ? cp.marker_icon : null,
+          note: typeof cp.note === "string" ? cp.note : null,
         }
       })
       .filter((p): p is EventCourseCheckpoint => p !== null),
