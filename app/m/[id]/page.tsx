@@ -3,7 +3,13 @@
 import { useEffect, useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 import { toast } from "sonner"
-import { Link2, MapPin, Mountain, Route, Stamp } from "lucide-react"
+import { Link2, MapPin, Mountain, Route, Smartphone, Stamp } from "lucide-react"
+import {
+  APP_STORE_URL,
+  PLAY_STORE_URL,
+  attemptOpenApp,
+  detectPlatform,
+} from "@/lib/open-app"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -297,9 +303,42 @@ export default function PublicMapPage() {
           />
         </div>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          힐리힐리 앱에서 이 지도로 모험을 시작해 보세요 🏔️
-        </p>
+        {/* 앱으로 보기 — 설치돼 있으면 앱의 지도 화면으로, 없으면 스토어로 */}
+        <div className="mt-8 flex flex-col items-center gap-2">
+          <Button
+            size="lg"
+            className="bg-[#DC2F55] px-8 text-white hover:bg-[#DC2F55]/90"
+            onClick={() =>
+              attemptOpenApp(
+                `t/${params.id}`,
+                detectPlatform(navigator.userAgent),
+              )
+            }
+          >
+            <Smartphone className="mr-2 h-5 w-5" />
+            힐리힐리 앱으로 보기
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            이 지도로 모험을 시작해 보세요 · 앱이 없으면{" "}
+            <a
+              href={APP_STORE_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-2"
+            >
+              App Store
+            </a>
+            {" / "}
+            <a
+              href={PLAY_STORE_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-2"
+            >
+              Google Play
+            </a>
+          </p>
+        </div>
       </div>
 
       <PointDetailDialog
