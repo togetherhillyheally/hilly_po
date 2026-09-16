@@ -14,6 +14,9 @@ const WINDOW_BACK_M = 300
 const WINDOW_FWD_M = 3000
 const BACKTRACK_ACCEPT_COUNT = 2
 export const STALE_MS = 180_000 // 3분 무신호 = '신호 없음'
+export const STATIONARY_THRESHOLD_SEC = 1800 // 30분 이상 같은 자리 = '장시간 정지'
+export const STATIONARY_MOVE_M = 30 // 이 거리 이상 벗어나야 '이동'으로 간주
+export const LOW_BATTERY_MV = 3600 // MT710 3.6V 미만 = 배터리 부족
 
 type Coord = [number, number, number?]
 type Coordinates = Coord[] | Coord[][]
@@ -258,6 +261,29 @@ export interface RankedEntry {
   /** 결승점 도착 여부 (코스 끝 30m 이내 도달) — 도착 후 신호가 끊겨도 유지 */
   finished: boolean
   status: LiveStatus
+  /** 같은 자리(30m 반경)에 머문 시간(초) — 판정 불가면 null */
+  stationarySec: number | null
+  /** 최근 24시간 누적 이동거리(km) — 관리자 응답에만 있음 */
+  distance24hKm: number | null
+  /** 배터리 부족 (3.6V 미만, 관리자 응답 전용) */
+  lowBattery: boolean
+}
+
+/** 클라이언트 정지 감지용 앵커 — 폴링 간 유지 (훅이 ref 로 보관) */
+export interface MovementAnchor {
+  lat: number
+  lng: number
+  since: number
+}
+
+/** 모니터(상시 관제) 정렬용 심각도 — 낮을수록 위험 (SOS > 신호없음 > 장시간 정지 > 배터리 부족 > 정상) */
+export function monitorSeverity(r: RankedEntry): number {
+  if (r.status === "sos") return 0
+  if (r.status === "noSignal" || r.status === "stale") return 1
+  if (r.stationarySec != null && r.stationarySec >= STATIONARY_THRESHOLD_SEC)
+    return 2
+  if (r.lowBattery) return 3
+  return 4
 }
 
 const FINISH_THRESHOLD_M = 30
@@ -273,6 +299,8 @@ export function rankEntries(
   now: number,
   /** 이벤트 시작 시각(epoch ms) — 있으면 평균 페이스로 예상 완주 시각 계산 */
   startsAtMs?: number | null,
+  /** 서버 last_moved_at 이 없는 응답(관전/모험)의 클라이언트 정지 감지 앵커 */
+  movementMap?: Map<string, MovementAnchor>,
 ): RankedEntry[] {
   const ranked: RankedEntry[] = entries.map((entry) => {
     const hasFix = entry.lat != null && entry.lng != null && entry.recorded_at
@@ -337,6 +365,35 @@ export function rankEntries(
       progressM != null &&
       progressM >= courseIndex.totalM - FINISH_THRESHOLD_M
 
+    // 정지 시간 — 서버 값(last_moved_at) 우선, 없으면 클라이언트 앵커로 판정
+    let stationarySec: number | null = null
+    if (hasFix && !stale) {
+      if ("last_moved_at" in entry) {
+        stationarySec = entry.last_moved_at
+          ? Math.max(0, (now - new Date(entry.last_moved_at).getTime()) / 1000)
+          : 86_400 // 24시간 창 안에서 한 번도 30m 이상 못 벗어남
+      } else if (movementMap) {
+        const anchor = movementMap.get(entry.entry_id)
+        const lat = entry.lat as number
+        const lng = entry.lng as number
+        if (
+          !anchor ||
+          haversineMeters(anchor.lat, anchor.lng, lat, lng) > STATIONARY_MOVE_M
+        ) {
+          movementMap.set(entry.entry_id, { lat, lng, since: now })
+          stationarySec = 0
+        } else {
+          stationarySec = (now - anchor.since) / 1000
+        }
+      }
+    }
+
+    const rawDist = entry.distance_24h_km
+    const distance24hKm =
+      rawDist == null || rawDist === "" ? null : Number(rawDist)
+    const lowBattery =
+      entry.battery_mv != null && entry.battery_mv < LOW_BATTERY_MV
+
     return {
       entry,
       progressM,
@@ -349,6 +406,11 @@ export function rankEntries(
       ascentM,
       finished,
       status,
+      stationarySec,
+      distance24hKm: Number.isFinite(distance24hKm as number)
+        ? distance24hKm
+        : null,
+      lowBattery,
     }
   })
 
@@ -389,6 +451,15 @@ export function formatGap(gapM: number | null): string {
   if (gapM < 1) return "—" // 동률(격차 0)
   if (gapM < 1000) return `+${Math.round(gapM)}m`
   return `+${(gapM / 1000).toFixed(1)}km`
+}
+
+/** 정지 시간 라벨 — 임계(30분) 미만이면 null */
+export function formatStationary(sec: number | null): string | null {
+  if (sec == null || sec < STATIONARY_THRESHOLD_SEC) return null
+  const min = Math.floor(sec / 60)
+  if (min < 60) return `정지 ${min}분`
+  if (sec >= 86_400) return "정지 24시간+"
+  return `정지 ${Math.floor(min / 60)}시간 ${min % 60 > 0 ? `${min % 60}분` : ""}`.trim()
 }
 
 export function formatGapTime(gapSec: number | null): string | null {

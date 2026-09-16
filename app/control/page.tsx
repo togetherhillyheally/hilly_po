@@ -211,22 +211,32 @@ export default function ControlListPage() {
         </div>
       </div>
 
-      {/* ── 트래커 이벤트 (UTMB 허브식 카드) ── */}
-      <section className="mb-10">
-        <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
-          트래커 이벤트
-        </h2>
-        {events === null ? (
-          <p className="rounded-2xl border px-4 py-10 text-center text-sm text-muted-foreground">
-            불러오는 중…
-          </p>
-        ) : events.length === 0 ? (
-          <p className="rounded-2xl border px-4 py-10 text-center text-sm text-muted-foreground">
-            아직 이벤트가 없어요. 새 이벤트를 만들어 보세요.
-          </p>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {events.map((ev) => {
+      {/* ── 트래커 이벤트 — 레이스 / 상시 관제 분리 (UTMB 허브식 카드) ── */}
+      {(
+        [
+          ["race", "레이스"],
+          ["monitor", "상시 관제"],
+        ] as const
+      ).map(([type, label]) => {
+        const list = events?.filter((ev) => ev.event_type === type) ?? null
+        // 상시 관제 이벤트가 아직 없으면 섹션 자체를 숨김 (레이스 섹션이 목록 기본)
+        if (type === "monitor" && (list?.length ?? 0) === 0) return null
+        return (
+          <section key={type} className="mb-10">
+            <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
+              {label}
+            </h2>
+            {list === null ? (
+              <p className="rounded-2xl border px-4 py-10 text-center text-sm text-muted-foreground">
+                불러오는 중…
+              </p>
+            ) : list.length === 0 ? (
+              <p className="rounded-2xl border px-4 py-10 text-center text-sm text-muted-foreground">
+                아직 이벤트가 없어요. 새 이벤트를 만들어 보세요.
+              </p>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {list.map((ev) => {
               const card = ev.trail_id ? trailCards.get(ev.trail_id) : null
               const start = formatStart(ev.starts_at)
               return (
@@ -312,9 +322,11 @@ export default function ControlListPage() {
                 </div>
               )
             })}
-          </div>
-        )}
-      </section>
+              </div>
+            )}
+          </section>
+        )
+      })}
 
       {/* ── 모험 라이브 (앱 hiking_sessions) ── */}
       <section>

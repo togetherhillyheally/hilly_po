@@ -8,7 +8,10 @@ import {
   DEFAULT_MARKER_ICON,
 } from "@/lib/checkpoint-marker-icons"
 import { applyKoreanLabels } from "@/lib/mapbox-locale"
-import type { RankedEntry } from "@/lib/course-progress"
+import {
+  type RankedEntry,
+  STATIONARY_THRESHOLD_SEC,
+} from "@/lib/course-progress"
 import type {
   EventCourse,
   EventCourseCheckpoint,
@@ -106,12 +109,19 @@ function styleMarkerEl(
   // 도착자는 신호가 끊겨도 정상 표시 유지
   const noSignal =
     (r.status === "stale" || r.status === "noSignal") && !r.finished
+  // 장시간 정지(30분+) — 신호는 정상, 노란 링으로 경고
+  const stationary =
+    r.status === "ok" &&
+    !r.finished &&
+    r.stationarySec != null &&
+    r.stationarySec >= STATIONARY_THRESHOLD_SEC
   const podium = r.rank != null && r.rank <= 3
   chip.className =
     "inline-flex w-max items-center rounded-full border border-white/80 px-2 py-0.5 text-[11px] font-bold text-white shadow-md cursor-pointer select-none whitespace-nowrap" +
     (r.status === "sos" ? " animate-pulse ring-2 ring-red-500" : "") +
     // 신호 없음: 빨간 링 + 살짝 흐리게 (SOS 의 빨간 배경/펄스와 구분)
     (noSignal ? " opacity-75 ring-2 ring-red-500" : "") +
+    (stationary && !selected ? " ring-2 ring-amber-400" : "") +
     // 1~3위: 색 구분 없이 살짝 크게 ("n위" 텍스트로만 표시)
     (podium ? " text-[12px]" : "") +
     (selected ? " ring-2 ring-white scale-110" : "")

@@ -57,6 +57,10 @@ export interface LiveEntry {
   battery_mv?: number | null
   device_last_seen_at?: string | null
   sos_at?: string | null
+  /** 현재 위치에서 30m 이상 떨어진 가장 최근 fix 시각 — 정지 감지용 */
+  last_moved_at?: string | null
+  /** 최근 24시간 누적 이동거리(km) */
+  distance_24h_km?: number | string | null
 }
 
 export interface TailPoint {

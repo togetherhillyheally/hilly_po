@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import {
   type CourseIndex,
+  type MovementAnchor,
   type ProgressState,
   type RankedEntry,
   buildCourseIndex,
@@ -36,6 +37,7 @@ export function useLiveAdventure(sessionId: string): UseLiveAdventureResult {
   const [loading, setLoading] = useState(true)
 
   const progressMapRef = useRef<Map<string, ProgressState>>(new Map())
+  const movementMapRef = useRef<Map<string, MovementAnchor>>(new Map())
   const toastedRef = useRef(false)
 
   const courseIndex = useMemo(
@@ -106,6 +108,7 @@ export function useLiveAdventure(sessionId: string): UseLiveAdventureResult {
           progressMapRef.current,
           Date.now(),
           startsAtMsRef.current,
+          movementMapRef.current,
         ),
       )
       setLastPolledAt(Date.now())

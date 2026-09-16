@@ -4,7 +4,12 @@ import { useMemo, useState } from "react"
 import { Check, Search, Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { type RankedEntry, formatGap } from "@/lib/course-progress"
+import {
+  type RankedEntry,
+  formatGap,
+  formatStationary,
+  monitorSeverity,
+} from "@/lib/course-progress"
 import {
   type DisplayMode,
   DisplayFilterControl,
@@ -71,7 +76,33 @@ function StatusCell({ r, selected }: { r: RankedEntry; selected: boolean }) {
         코스 이탈
       </Badge>
     )
+  const stationary = formatStationary(r.stationarySec)
+  if (stationary)
+    return (
+      <Badge
+        variant="outline"
+        className={
+          "whitespace-nowrap " +
+          (selected
+            ? "border-white/60 text-white"
+            : "border-amber-500/60 bg-amber-500/10 text-amber-600")
+        }
+      >
+        {stationary}
+      </Badge>
+    )
   return null
+}
+
+/** "n분 전" — 모니터 모드 수신 컬럼 */
+function formatAgoShort(recordedAt: string | null): string {
+  if (!recordedAt) return "—"
+  const ms = Date.now() - new Date(recordedAt).getTime()
+  if (ms < 0) return "—"
+  const min = Math.floor(ms / 60_000)
+  if (min < 1) return "방금"
+  if (min < 60) return `${min}분 전`
+  return `${Math.floor(min / 60)}시간 전`
 }
 
 /** UTMB 리더보드식 와이드 테이블 — 고도(리스트) 뷰 전용 */
@@ -104,12 +135,18 @@ export default function LiveTableWide({
         if (a.status === "sos" && b.status !== "sos") return -1
         if (b.status === "sos" && a.status !== "sos") return 1
       }
+      // 모니터(상시 관제): 이상 상태 우선 정렬
+      if (!isRace) {
+        const sev = monitorSeverity(a) - monitorSeverity(b)
+        if (sev !== 0) return sev
+        return a.entry.display_name.localeCompare(b.entry.display_name)
+      }
       if (a.rank != null && b.rank != null) return a.rank - b.rank
       if (a.rank != null) return -1
       if (b.rank != null) return 1
       return a.entry.display_name.localeCompare(b.entry.display_name)
     })
-  }, [ranked, displayMode, favs, categories, query, isAdmin])
+  }, [ranked, displayMode, favs, categories, query, isAdmin, isRace])
 
   return (
     <div>
@@ -145,6 +182,10 @@ export default function LiveTableWide({
               {isRace && (
                 <th className="w-32 px-3 py-1 font-medium">진행</th>
               )}
+              {!isRace && (
+                <th className="w-28 px-3 py-1 font-medium">24h 이동</th>
+              )}
+              {!isRace && <th className="w-24 px-3 py-1 font-medium">수신</th>}
               {isRace && (
                 <th className="w-28 px-3 py-1 font-medium">도착 예상</th>
               )}
@@ -162,7 +203,7 @@ export default function LiveTableWide({
             {rows.length === 0 && (
               <tr>
                 <td
-                  colSpan={9}
+                  colSpan={10}
                   className="px-4 py-10 text-center text-sm text-muted-foreground"
                 >
                   표시할 참가자가 없어요.
@@ -284,6 +325,18 @@ export default function LiveTableWide({
                       )}
                     </td>
                   )}
+                  {!isRace && (
+                    <td className="px-3 py-2.5 align-middle tabular-nums">
+                      {r.distance24hKm != null
+                        ? `${r.distance24hKm.toFixed(1)}km`
+                        : "—"}
+                    </td>
+                  )}
+                  {!isRace && (
+                    <td className="px-3 py-2.5 align-middle tabular-nums">
+                      {formatAgoShort(r.entry.recorded_at)}
+                    </td>
+                  )}
                   {isRace && (
                     <td className="px-3 py-2.5 align-middle tabular-nums">
                       {r.finished ? "—" : formatEtaTime(r.etaAt)}
@@ -295,8 +348,18 @@ export default function LiveTableWide({
                     </td>
                   )}
                   {isAdmin && (
-                    <td className="px-3 py-2.5 align-middle tabular-nums">
+                    <td
+                      className={
+                        "px-3 py-2.5 align-middle tabular-nums" +
+                        (r.lowBattery && !selected
+                          ? " font-semibold text-red-500"
+                          : "")
+                      }
+                    >
                       {battery != null ? `${battery}%` : "—"}
+                      {r.lowBattery && (
+                        <span className="ml-1 text-xs">부족</span>
+                      )}
                     </td>
                   )}
                   <td className="px-3 py-2.5 align-middle">

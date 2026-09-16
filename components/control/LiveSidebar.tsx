@@ -13,7 +13,12 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { type RankedEntry, formatGap } from "@/lib/course-progress"
+import {
+  type RankedEntry,
+  formatGap,
+  formatStationary,
+  monitorSeverity,
+} from "@/lib/course-progress"
 import {
   type DisplayMode,
   DisplayFilterControl,
@@ -89,7 +94,29 @@ function StatusBadge({ r }: { r: RankedEntry }) {
         코스 이탈
       </Badge>
     )
+  // 장시간 정지 — 신호는 정상인데 30분+ 같은 자리 (안전 관제의 핵심 경고)
+  const stationary = formatStationary(r.stationarySec)
+  if (stationary)
+    return (
+      <Badge
+        variant="outline"
+        className="whitespace-nowrap border-amber-500/60 bg-amber-500/10 text-amber-600"
+      >
+        {stationary}
+      </Badge>
+    )
   return null
+}
+
+/** "수신 n분 전" — 모니터 모드 전용 (1시간 이상은 시각으로) */
+function formatReceivedAgo(recordedAt: string | null): string | null {
+  if (!recordedAt) return null
+  const ms = Date.now() - new Date(recordedAt).getTime()
+  if (ms < 0) return null
+  const min = Math.floor(ms / 60_000)
+  if (min < 1) return "수신 방금"
+  if (min < 60) return `수신 ${min}분 전`
+  return `수신 ${Math.floor(min / 60)}시간 전`
 }
 
 function formatEta(etaAt: number | null): string | null {
@@ -157,6 +184,7 @@ function EntryRow({
   // 레이스: 여기까지의 누적 상승 / 모니터: 현재 해발고도(지형 조회)
   const ascent = isRace && !dimmed ? r.ascentM : null
   const altitude = !isRace && !dimmed ? (terrainEle ?? null) : null
+  const receivedAgo = !isRace ? formatReceivedAgo(r.entry.recorded_at) : null
   const color = categoryColor(r.entry.category, categories)
 
   return (
@@ -265,12 +293,30 @@ function EntryRow({
         {altitude != null && (
           <span className="whitespace-nowrap">⛰{Math.round(altitude)}m</span>
         )}
+        {!isRace && r.distance24hKm != null && (
+          <span className="whitespace-nowrap font-medium text-foreground/80">
+            24h {r.distance24hKm.toFixed(1)}km
+          </span>
+        )}
+        {!isRace && receivedAgo && (
+          <span className="whitespace-nowrap">{receivedAgo}</span>
+        )}
         {!r.finished && eta && (
           <span className="whitespace-nowrap font-medium text-foreground/80">
             {eta}
           </span>
         )}
-        {battery && <span className="whitespace-nowrap">🔋{battery}</span>}
+        {battery && (
+          <span
+            className={
+              "whitespace-nowrap " +
+              (r.lowBattery ? "font-semibold text-red-500" : "")
+            }
+          >
+            🔋{battery}
+            {r.lowBattery && " 부족"}
+          </span>
+        )}
         <span className="ml-auto">
           <StatusBadge r={r} />
         </span>
@@ -325,26 +371,35 @@ export default function LiveSidebar({
         if (a.status === "sos" && b.status !== "sos") return -1
         if (b.status === "sos" && a.status !== "sos") return 1
       }
+      // 모니터(상시 관제): 이상 상태 우선 — SOS > 신호없음 > 장시간 정지 > 배터리 부족 > 정상
+      if (!isRace) {
+        const sev = monitorSeverity(a) - monitorSeverity(b)
+        if (sev !== 0) return sev
+        return a.entry.display_name.localeCompare(b.entry.display_name)
+      }
       if (a.rank != null && b.rank != null) return a.rank - b.rank
       if (a.rank != null) return -1
       if (b.rank != null) return 1
       return a.entry.display_name.localeCompare(b.entry.display_name)
     })
-  }, [ranked, displayMode, favs, categories, query, isAdmin])
+  }, [ranked, displayMode, favs, categories, query, isAdmin, isRace])
 
   const podiumRows = isRace
     ? rows
         .filter((r) => r.rank != null && r.rank <= 3)
         .sort((a, b) => (a.rank as number) - (b.rank as number))
     : []
-  const restRows = (
-    isRace ? rows.filter((r) => !(r.rank != null && r.rank <= 3)) : rows
-  ).sort((a, b) => {
-    // 즐겨찾기 우선 (기존 정렬 유지한 안정 정렬)
-    const fa = favs.has(a.entry.entry_id) ? 0 : 1
-    const fb = favs.has(b.entry.entry_id) ? 0 : 1
-    return fa - fb
-  })
+  // 모니터 모드는 이상 상태 정렬이 즐겨찾기보다 우선 (SOS 가 ⭐ 아래로 내려가면 안 됨)
+  const restRows = isRace
+    ? rows
+        .filter((r) => !(r.rank != null && r.rank <= 3))
+        .sort((a, b) => {
+          // 즐겨찾기 우선 (기존 정렬 유지한 안정 정렬)
+          const fa = favs.has(a.entry.entry_id) ? 0 : 1
+          const fb = favs.has(b.entry.entry_id) ? 0 : 1
+          return fa - fb
+        })
+    : rows
 
   if (!inline && !open) {
     return (

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import {
   type CourseIndex,
+  type MovementAnchor,
   type ProgressState,
   type RankedEntry,
   buildCourseIndex,
@@ -50,6 +51,7 @@ export function useLiveEvent(options: {
   const [loading, setLoading] = useState(true)
 
   const progressMapRef = useRef<Map<string, ProgressState>>(new Map())
+  const movementMapRef = useRef<Map<string, MovementAnchor>>(new Map())
   const errorCountRef = useRef(0)
   const toastedRef = useRef(false)
 
@@ -102,6 +104,7 @@ export function useLiveEvent(options: {
           progressMapRef.current,
           Date.now(),
           startsAtMsRef.current,
+          movementMapRef.current,
         ),
       )
       setLastPolledAt(Date.now())
@@ -116,14 +119,17 @@ export function useLiveEvent(options: {
     }
   }, [mode, eventId, token])
 
+  // 상시 관제(모니터)는 긴 궤적(6시간)이 안전 확인에 유용 — 레이스는 30분
+  const tailsMinutes = info?.event_type === "monitor" ? 360 : 30
+
   const pollTails = useCallback(async () => {
     if (document.visibilityState === "hidden") return
     try {
-      setTails(await trackerControlRepo.eventTails(token, 30))
+      setTails(await trackerControlRepo.eventTails(token, tailsMinutes))
     } catch {
       // 꼬리는 부가 정보 — 조용히 다음 주기에 재시도
     }
-  }, [token])
+  }, [token, tailsMinutes])
 
   // 위치 폴링 (에러 시 백오프)
   useEffect(() => {
