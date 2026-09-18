@@ -284,11 +284,11 @@ export default function PublicMapPage() {
         </header>
       </div>
 
-      {/* 지도 — 카드형 박스 유지하되 예전(55dvh)보다 크게.
+      {/* 지도 — 카드형 박스를 유지하되 남은 화면 높이를 전부 채움 (아래 빈 공간 없음).
           mapbox-gl 이 .mapboxgl-map 에 position:relative 를 강제해 LiveMap 자체에 준
           absolute 가 무시되므로, 순수 div 로 감싸 확정 높이를 만든다 (height:100% 기준). */}
-      <div className="mx-auto w-full max-w-screen-xl flex-1 px-4 pb-6">
-        <div className="relative h-[70dvh] min-h-[420px] overflow-hidden rounded-2xl border">
+      <div className="mx-auto flex w-full max-w-screen-xl flex-1 flex-col px-4 pb-6">
+        <div className="relative min-h-[420px] flex-1 overflow-hidden rounded-2xl border">
           <div className="absolute inset-0">
           <LiveMap
             bare
