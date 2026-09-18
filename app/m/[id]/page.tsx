@@ -292,6 +292,7 @@ export default function PublicMapPage() {
             tails={[]}
             categories={[]}
             enable3d={is3d}
+            enableGeolocate
             onCheckpointSelect={setSelectedPoint}
             height="100%"
             className="absolute inset-0"

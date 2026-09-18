@@ -62,6 +62,8 @@ export type LiveMapProps = {
   height?: number | string
   /** true 면 라운드/테두리 없이 컨테이너를 꽉 채움 (전체 화면 배치용) */
   bare?: boolean
+  /** 브라우저 GPS '내 위치' 버튼(파란 점 + 정확도 원 + 따라가기) — 공개 지도 페이지용 */
+  enableGeolocate?: boolean
 }
 
 const DEM_SOURCE = "mapbox-dem"
@@ -146,6 +148,7 @@ export default function LiveMap({
   className,
   height = 520,
   bare = false,
+  enableGeolocate = false,
 }: LiveMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
@@ -179,6 +182,17 @@ export default function LiveMap({
       new mapboxgl.NavigationControl({ showCompass: false }),
       "top-right",
     )
+    if (enableGeolocate) {
+      // 내 위치 — 버튼 클릭 시 권한 요청, 파란 점 + 정확도 원, 이동 시 따라가기
+      map.addControl(
+        new mapboxgl.GeolocateControl({
+          positionOptions: { enableHighAccuracy: true },
+          trackUserLocation: true,
+          showUserHeading: true,
+        }),
+        "top-right",
+      )
+    }
 
     map.on("load", () => {
       applyKoreanLabels(map)
