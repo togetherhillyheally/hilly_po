@@ -284,20 +284,23 @@ export default function PublicMapPage() {
         </header>
       </div>
 
-      {/* 지도 — 전체 폭, 남은 화면 높이 전부 사용 */}
+      {/* 지도 — 전체 폭, 남은 화면 높이 전부 사용.
+          mapbox-gl 이 .mapboxgl-map 에 position:relative 를 강제해 LiveMap 자체에 준
+          absolute 가 무시되므로, 순수 div 로 감싸 확정 높이를 만든다 (height:100% 기준). */}
       <div className="relative min-h-[60dvh] w-full flex-1 overflow-hidden border-y">
-        <LiveMap
-          bare
-          course={course}
-          entries={[]}
-          tails={[]}
-          categories={[]}
-          enable3d={is3d}
-          enableGeolocate
-          onCheckpointSelect={setSelectedPoint}
-          height="100%"
-          className="absolute inset-0"
-        />
+        <div className="absolute inset-0">
+          <LiveMap
+            bare
+            course={course}
+            entries={[]}
+            tails={[]}
+            categories={[]}
+            enable3d={is3d}
+            enableGeolocate
+            onCheckpointSelect={setSelectedPoint}
+            height="100%"
+          />
+        </div>
         <MapDimensionToggle
           is3d={is3d}
           onChange={setIs3d}
