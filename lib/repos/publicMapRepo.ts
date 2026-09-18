@@ -16,7 +16,7 @@ import type { EventCourseCheckpoint } from "./trackerControlTypes"
 export interface PublicMapData {
   name: string
   map_type: "adventure" | "stamp"
-  visibility: "public" | "private"
+  visibility: "public" | "unlisted" | "private"
   distance_km: number | null
   total_ascent_m: number | null
   bounds: Trail["bounds"]
@@ -36,7 +36,12 @@ export async function loadPublicMap(id: string): Promise<PublicMapData | null> {
   return {
     name: String(o.name ?? ""),
     map_type: o.map_type === "stamp" ? "stamp" : "adventure",
-    visibility: o.visibility === "private" ? "private" : "public",
+    visibility:
+      o.visibility === "private"
+        ? "private"
+        : o.visibility === "unlisted"
+          ? "unlisted"
+          : "public",
     distance_km: toNumberOrNull(o.distance_km),
     total_ascent_m: toNumberOrNull(o.total_ascent_m),
     bounds: parseBounds(o.bounds),
