@@ -234,14 +234,14 @@ export default function PublicMapPage() {
 
   return (
     <main className="theme-light flex min-h-[100dvh] flex-col bg-background text-foreground">
-      <div className="mx-auto w-full max-w-screen-xl px-4 py-8">
-        {/* 헤더 */}
-        <header className="mb-4 flex flex-wrap items-end justify-between gap-3">
+      {/* 헤더 — 지도가 주인공이라 컴팩트하게 */}
+      <div className="mx-auto w-full max-w-screen-xl px-4 pb-3 pt-5">
+        <header className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-[10px] font-bold tracking-widest text-muted-foreground">
               HILLY HEALLY MAP
             </p>
-            <h1 className="flex items-center gap-2 text-2xl font-extrabold leading-tight">
+            <h1 className="flex items-center gap-2 text-xl font-extrabold leading-tight">
               {data.name}
               <Badge variant="secondary">
                 {isStamp ? (
@@ -282,33 +282,33 @@ export default function PublicMapPage() {
             링크 복사
           </Button>
         </header>
-
-        {/* 지도 */}
-        <div className="relative h-[55dvh] min-h-[360px] overflow-hidden rounded-2xl border">
-          <LiveMap
-            bare
-            course={course}
-            entries={[]}
-            tails={[]}
-            categories={[]}
-            enable3d={is3d}
-            enableGeolocate
-            onCheckpointSelect={setSelectedPoint}
-            height="100%"
-            className="absolute inset-0"
-          />
-          <MapDimensionToggle
-            is3d={is3d}
-            onChange={setIs3d}
-            className="absolute bottom-3 left-3 z-10"
-          />
-        </div>
-
       </div>
 
-      {/* 앱으로 보기 — 페이지 최하단 고정 푸터 */}
-      <footer className="mt-auto border-t bg-background">
-        <div className="mx-auto flex w-full max-w-screen-xl flex-col items-center gap-2 px-4 py-6">
+      {/* 지도 — 전체 폭, 남은 화면 높이 전부 사용 */}
+      <div className="relative min-h-[60dvh] w-full flex-1 overflow-hidden border-y">
+        <LiveMap
+          bare
+          course={course}
+          entries={[]}
+          tails={[]}
+          categories={[]}
+          enable3d={is3d}
+          enableGeolocate
+          onCheckpointSelect={setSelectedPoint}
+          height="100%"
+          className="absolute inset-0"
+        />
+        <MapDimensionToggle
+          is3d={is3d}
+          onChange={setIs3d}
+          className="absolute bottom-3 left-3 z-10"
+        />
+      </div>
+
+      {/* 앱으로 보기 — 페이지 최하단 고정 푸터. 링크 공유(unlisted) 지도는 웹 전용 공유 의도라 숨김. */}
+      {data?.visibility !== "unlisted" ? (
+      <footer className="border-t bg-background">
+        <div className="mx-auto flex w-full max-w-screen-xl flex-col items-center gap-1.5 px-4 py-4">
           <Button
             size="lg"
             className="bg-[#DC2F55] px-8 text-white hover:bg-[#DC2F55]/90"
@@ -344,6 +344,7 @@ export default function PublicMapPage() {
           </p>
         </div>
       </footer>
+      ) : null}
 
       <PointDetailDialog
         point={selectedPoint}
