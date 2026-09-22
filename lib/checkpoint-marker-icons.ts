@@ -36,6 +36,13 @@ export const CHECKPOINT_MARKER_ICONS: Record<string, MarkerIcon> = {
   ] },
   "car-outline": { color: "#52525B", paths: ["M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2", "M5.0 17.0a2.0 2.0 0 1 0 4.0 0a2.0 2.0 0 1 0 -4.0 0", "M9 17h6", "M15.0 17.0a2.0 2.0 0 1 0 4.0 0a2.0 2.0 0 1 0 -4.0 0"] },
   "business-outline": { color: "#4F46E5", paths: ["M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z", "M9 22v-4h6v4", "M8 6h.01", "M16 6h.01", "M12 6h.01", "M12 10h.01", "M12 14h.01", "M16 10h.01", "M16 14h.01", "M8 10h.01", "M8 14h.01"] },
+  // 자전거 — lucide Bike (앞·뒷바퀴 + 프레임 + 라이더 헤드)
+  "bicycle-outline": { color: "#0EA5E9", paths: [
+    "M2.0 17.5a3.5 3.5 0 1 0 7.0 0a3.5 3.5 0 1 0 -7.0 0",
+    "M15.0 17.5a3.5 3.5 0 1 0 7.0 0a3.5 3.5 0 1 0 -7.0 0",
+    "M14.0 5.0a1.0 1.0 0 1 0 2.0 0a1.0 1.0 0 1 0 -2.0 0",
+    "M12 17.5V14l-3-3 4-3 2 3h2",
+  ] },
 };
 
 export const DEFAULT_MARKER_ICON: MarkerIcon = CHECKPOINT_MARKER_ICONS["flag-outline"];
