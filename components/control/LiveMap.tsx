@@ -18,7 +18,14 @@ import type {
   TailPoint,
 } from "@/lib/repos/trackerControlTypes"
 
-const MAPBOX_STYLE = "mapbox://styles/mapbox/outdoors-v12"
+export type MapStyleKey = "outdoors" | "streets" | "satellite"
+
+const MAPBOX_STYLES: Record<MapStyleKey, string> = {
+  outdoors: "mapbox://styles/mapbox/outdoors-v12",
+  streets: "mapbox://styles/mapbox/streets-v12",
+  satellite: "mapbox://styles/mapbox/satellite-streets-v12",
+}
+
 const TRAIL_COLOR = "#DC2F55"
 const DEFAULT_CENTER: [number, number] = [127.8, 36.3] // 코스 없을 때 한국 중심
 const CATEGORY_COLORS = [
@@ -64,6 +71,8 @@ export type LiveMapProps = {
   bare?: boolean
   /** 브라우저 GPS '내 위치' 버튼(파란 점 + 정확도 원 + 따라가기) — 공개 지도 페이지용 */
   enableGeolocate?: boolean
+  /** Mapbox 스타일 (지형/도로/위성). 부모가 컨트롤. 값이 바뀌면 setStyle. */
+  mapStyle?: MapStyleKey
 }
 
 const DEM_SOURCE = "mapbox-dem"
@@ -149,12 +158,15 @@ export default function LiveMap({
   height = 520,
   bare = false,
   enableGeolocate = false,
+  mapStyle = "outdoors",
 }: LiveMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map())
   const cpMarkersRef = useRef<mapboxgl.Marker[]>([])
+  const applyOverlaysRef = useRef<((fitInitial: boolean) => void) | null>(null)
   const didFitToEntriesRef = useRef(false)
+  const initialStyleMount = useRef(true)
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
   const enable3dRef = useRef(enable3d)
@@ -172,7 +184,7 @@ export default function LiveMap({
 
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: MAPBOX_STYLE,
+      style: MAPBOX_STYLES[mapStyle],
       center: course?.center ?? DEFAULT_CENTER,
       zoom: course ? 11 : 6,
       attributionControl: false,
@@ -194,7 +206,8 @@ export default function LiveMap({
       )
     }
 
-    map.on("load", () => {
+    // 스타일 로드 후 반복 사용 가능한 오버레이 재적용 (마커 재생성 없음)
+    const applyOverlays = (fitInitial: boolean) => {
       applyKoreanLabels(map)
 
       // 코스 라인
@@ -215,6 +228,8 @@ export default function LiveMap({
                 ([lng, lat]) => [lng, lat],
               ),
             }
+        if (map.getLayer("course-line")) map.removeLayer("course-line")
+        if (map.getSource("course")) map.removeSource("course")
         map.addSource("course", {
           type: "geojson",
           data: { type: "Feature", properties: {}, geometry },
@@ -233,6 +248,8 @@ export default function LiveMap({
       }
 
       // 이동 궤적(꼬리) — setData 로 갱신
+      if (map.getLayer("tails-line")) map.removeLayer("tails-line")
+      if (map.getSource("tails")) map.removeSource("tails")
       map.addSource("tails", {
         type: "geojson",
         data: { type: "FeatureCollection", features: [] },
@@ -243,14 +260,35 @@ export default function LiveMap({
         source: "tails",
         layout: { "line-join": "round", "line-cap": "round" },
         paint: {
-          // 라이트 톤 지도에서 보이도록 어두운 슬레이트 계열
           "line-color": "#475569",
           "line-width": 2,
           "line-opacity": 0.45,
         },
       })
 
-      // 체크포인트 마커 — 에디터 기본지도와 동일하게 마커 아이콘으로 표시
+      // 3D 지형 재적용
+      ensureDemSource(map)
+      if (enable3dRef.current) {
+        map.setTerrain({ source: DEM_SOURCE, exaggeration: 1.3 })
+        if (fitInitial) {
+          map.easeTo({ pitch: TERRAIN_PITCH, duration: 800 })
+        }
+      }
+
+      if (fitInitial && course?.bounds) {
+        const fb: LngLatBoundsLike = [
+          [course.bounds.minLon, course.bounds.minLat],
+          [course.bounds.maxLon, course.bounds.maxLat],
+        ]
+        map.fitBounds(fb, { padding: 60, animate: false })
+      }
+    }
+    applyOverlaysRef.current = applyOverlays
+
+    map.on("load", () => {
+      applyOverlays(true)
+
+      // 체크포인트 마커 — DOM 마커라 스타일 변경 시 유지되므로 최초 1회만
       for (const cp of course?.checkpoints ?? []) {
         const icon =
           CHECKPOINT_MARKER_ICONS[cp.marker_icon ?? ""] ?? DEFAULT_MARKER_ICON
@@ -269,21 +307,6 @@ export default function LiveMap({
           new mapboxgl.Marker(el).setLngLat([cp.lng, cp.lat]).addTo(map),
         )
       }
-
-      if (course?.bounds) {
-        const fb: LngLatBoundsLike = [
-          [course.bounds.minLon, course.bounds.minLat],
-          [course.bounds.maxLon, course.bounds.maxLat],
-        ]
-        map.fitBounds(fb, { padding: 60, animate: false })
-      }
-
-      // 3D 지형 초기 적용
-      ensureDemSource(map)
-      if (enable3dRef.current) {
-        map.setTerrain({ source: DEM_SOURCE, exaggeration: 1.3 })
-        map.easeTo({ pitch: TERRAIN_PITCH, duration: 800 })
-      }
     })
 
     return () => {
@@ -295,6 +318,21 @@ export default function LiveMap({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [course])
+
+  // 스타일 변경 — setStyle 후 오버레이 재적용 (마커는 DOM 이라 유지)
+  useEffect(() => {
+    if (initialStyleMount.current) {
+      initialStyleMount.current = false
+      return
+    }
+    const map = mapRef.current
+    if (!map) return
+    const target = MAPBOX_STYLES[mapStyle]
+    map.setStyle(target)
+    map.once("style.load", () => {
+      applyOverlaysRef.current?.(false)
+    })
+  }, [mapStyle])
 
   // 참가자 마커 동기화 (entry_id 기준 diff — 위치/스타일만 갱신)
   useEffect(() => {

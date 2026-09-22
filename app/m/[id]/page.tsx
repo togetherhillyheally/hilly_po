@@ -26,7 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { MapDimensionToggle } from "@/components/control/DisplayFilter"
-import LiveMap from "@/components/control/LiveMap"
+import LiveMap, { type MapStyleKey } from "@/components/control/LiveMap"
 import {
   CHECKPOINT_MARKER_ICONS,
   DEFAULT_MARKER_ICON,
@@ -163,6 +163,7 @@ export default function PublicMapPage() {
   const params = useParams<{ id: string }>()
   const [data, setData] = useState<PublicMapData | null | undefined>(undefined)
   const [is3d, setIs3d] = useState(true)
+  const [mapStyle, setMapStyle] = useState<MapStyleKey>("outdoors")
   const [selectedPoint, setSelectedPoint] =
     useState<EventCourseCheckpoint | null>(null)
 
@@ -298,9 +299,33 @@ export default function PublicMapPage() {
             categories={[]}
             enable3d={is3d}
             enableGeolocate
+            mapStyle={mapStyle}
             onCheckpointSelect={setSelectedPoint}
             height="100%"
           />
+          </div>
+          {/* 지도 스타일 토글 — 지형/도로/위성 */}
+          <div className="absolute top-3 left-3 z-10 inline-flex items-center gap-0.5 rounded-md border bg-white/95 p-0.5 text-[11px] font-semibold shadow-sm">
+            {(
+              [
+                { k: "outdoors", label: "지형" },
+                { k: "streets", label: "도로" },
+                { k: "satellite", label: "위성" },
+              ] as { k: MapStyleKey; label: string }[]
+            ).map((o) => (
+              <button
+                key={o.k}
+                type="button"
+                onClick={() => setMapStyle(o.k)}
+                className={`h-7 px-2.5 rounded transition ${
+                  mapStyle === o.k
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
           </div>
           <MapDimensionToggle
             is3d={is3d}
