@@ -300,6 +300,7 @@ export default function PublicMapPage() {
             enable3d={is3d}
             enableGeolocate
             mapStyle={mapStyle}
+            segmentsColored={!!data?.segments_colored}
             onCheckpointSelect={setSelectedPoint}
             height="100%"
           />

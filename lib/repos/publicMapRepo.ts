@@ -23,6 +23,7 @@ export interface PublicMapData {
   center: [number, number] | null
   coordinates: Trail["coordinates"]
   thumbnail_path: string | null
+  segments_colored: boolean
   points: EventCourseCheckpoint[]
 }
 
@@ -49,6 +50,7 @@ export async function loadPublicMap(id: string): Promise<PublicMapData | null> {
     coordinates: parseCoordinates(o.coordinates),
     thumbnail_path:
       typeof o.thumbnail_path === "string" ? o.thumbnail_path : null,
+    segments_colored: o.segments_colored === true,
     points: rawPoints
       .map((p): EventCourseCheckpoint | null => {
         const cp = p as Record<string, unknown>

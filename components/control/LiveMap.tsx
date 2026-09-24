@@ -8,6 +8,7 @@ import {
   DEFAULT_MARKER_ICON,
 } from "@/lib/checkpoint-marker-icons"
 import { applyKoreanLabels } from "@/lib/mapbox-locale"
+import { TRAIL_SEGMENT_PALETTE } from "@/lib/trail-palette"
 import {
   type RankedEntry,
   STATIONARY_THRESHOLD_SEC,
@@ -73,6 +74,8 @@ export type LiveMapProps = {
   enableGeolocate?: boolean
   /** Mapbox 스타일 (지형/도로/위성). 부모가 컨트롤. 값이 바뀌면 setStyle. */
   mapStyle?: MapStyleKey
+  /** true 면 각 세그먼트를 팔레트 색으로 순환 표시. */
+  segmentsColored?: boolean
 }
 
 const DEM_SOURCE = "mapbox-dem"
@@ -159,6 +162,7 @@ export default function LiveMap({
   bare = false,
   enableGeolocate = false,
   mapStyle = "outdoors",
+  segmentsColored = false,
 }: LiveMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
@@ -167,6 +171,8 @@ export default function LiveMap({
   const applyOverlaysRef = useRef<((fitInitial: boolean) => void) | null>(null)
   const didFitToEntriesRef = useRef(false)
   const initialStyleMount = useRef(true)
+  const segmentsColoredRef = useRef(segmentsColored)
+  segmentsColoredRef.current = segmentsColored
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
   const enable3dRef = useRef(enable3d)
@@ -215,36 +221,73 @@ export default function LiveMap({
         const coords = course.coordinates
         const isMulti =
           coords.length > 0 && Array.isArray((coords[0] as unknown[])[0])
-        const geometry = isMulti
-          ? {
-              type: "MultiLineString" as const,
-              coordinates: (coords as [number, number, number?][][]).map(
-                (seg) => seg.map(([lng, lat]) => [lng, lat]),
-              ),
-            }
-          : {
-              type: "LineString" as const,
-              coordinates: (coords as [number, number, number?][]).map(
-                ([lng, lat]) => [lng, lat],
-              ),
-            }
+        const colored = segmentsColoredRef.current
+
         if (map.getLayer("course-line")) map.removeLayer("course-line")
         if (map.getSource("course")) map.removeSource("course")
-        map.addSource("course", {
-          type: "geojson",
-          data: { type: "Feature", properties: {}, geometry },
-        })
-        map.addLayer({
-          id: "course-line",
-          type: "line",
-          source: "course",
-          layout: { "line-join": "round", "line-cap": "round" },
-          paint: {
-            "line-color": TRAIL_COLOR,
-            "line-width": 3,
-            "line-opacity": 0.8,
-          },
-        })
+
+        if (colored && isMulti) {
+          // 세그먼트별 팔레트 순환 컬러 — FeatureCollection 으로 index 부여
+          const segs = coords as [number, number, number?][][]
+          const features = segs.map((seg, i) => ({
+            type: "Feature" as const,
+            properties: { i },
+            geometry: {
+              type: "LineString" as const,
+              coordinates: seg.map(([lng, lat]) => [lng, lat]),
+            },
+          }))
+          map.addSource("course", {
+            type: "geojson",
+            data: { type: "FeatureCollection", features },
+          })
+          const colorExpr = [
+            "match",
+            ["%", ["get", "i"], TRAIL_SEGMENT_PALETTE.length],
+            ...TRAIL_SEGMENT_PALETTE.flatMap((c, idx) => [idx, c]),
+            TRAIL_SEGMENT_PALETTE[0],
+          ] as unknown as mapboxgl.ExpressionSpecification
+          map.addLayer({
+            id: "course-line",
+            type: "line",
+            source: "course",
+            layout: { "line-join": "round", "line-cap": "round" },
+            paint: {
+              "line-color": colorExpr,
+              "line-width": 3,
+              "line-opacity": 0.9,
+            },
+          })
+        } else {
+          const geometry = isMulti
+            ? {
+                type: "MultiLineString" as const,
+                coordinates: (coords as [number, number, number?][][]).map(
+                  (seg) => seg.map(([lng, lat]) => [lng, lat]),
+                ),
+              }
+            : {
+                type: "LineString" as const,
+                coordinates: (coords as [number, number, number?][]).map(
+                  ([lng, lat]) => [lng, lat],
+                ),
+              }
+          map.addSource("course", {
+            type: "geojson",
+            data: { type: "Feature", properties: {}, geometry },
+          })
+          map.addLayer({
+            id: "course-line",
+            type: "line",
+            source: "course",
+            layout: { "line-join": "round", "line-cap": "round" },
+            paint: {
+              "line-color": TRAIL_COLOR,
+              "line-width": 3,
+              "line-opacity": 0.8,
+            },
+          })
+        }
       }
 
       // 이동 궤적(꼬리) — setData 로 갱신
@@ -333,6 +376,19 @@ export default function LiveMap({
       applyOverlaysRef.current?.(false)
     })
   }, [mapStyle])
+
+  // 세그먼트 컬러 옵션 변경 — 라인만 재적용
+  const initialColorMount = useRef(true)
+  useEffect(() => {
+    if (initialColorMount.current) {
+      initialColorMount.current = false
+      return
+    }
+    const map = mapRef.current
+    if (!map) return
+    if (map.loaded()) applyOverlaysRef.current?.(false)
+    else map.once("load", () => applyOverlaysRef.current?.(false))
+  }, [segmentsColored])
 
   // 참가자 마커 동기화 (entry_id 기준 diff — 위치/스타일만 갱신)
   useEffect(() => {
