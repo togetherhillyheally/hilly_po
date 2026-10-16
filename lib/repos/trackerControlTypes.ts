@@ -63,6 +63,26 @@ export interface LiveEntry {
   distance_24h_km?: number | string | null
 }
 
+/** 전역 기기 관제(/control/devices) 한 줄 — admin_all_devices_live_state */
+export interface DeviceLiveRow {
+  device_id: string
+  imei: string
+  label: string | null
+  device_status: string | null
+  battery_mv: number | null
+  last_seen_at: string | null
+  lat: number | null
+  lng: number | null
+  recorded_at: string | null
+  speed_kmh: number | null
+  fix: string | null
+  sos_at: string | null
+  event_id: string | null
+  event_title: string | null
+  event_status: string | null
+  entry_display_name: string | null
+}
+
 export interface TailPoint {
   entry_id: string
   lat: number

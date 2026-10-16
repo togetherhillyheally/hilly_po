@@ -8,6 +8,7 @@ import {
   MapPin,
   Plus,
   Radio,
+  RadioTower,
   Route,
   Timer,
   Trash2,
@@ -194,6 +195,12 @@ export default function ControlListPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button asChild variant="outline" title="전체 기기 관제 (하드웨어 점검)">
+            <Link href="/control/devices">
+              <RadioTower className="mr-1.5 h-4 w-4" />
+              전체 기기
+            </Link>
+          </Button>
           <Button
             variant="outline"
             onClick={() => setIntervalOpen(true)}

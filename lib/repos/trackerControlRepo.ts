@@ -5,6 +5,7 @@
 import { getSupabase } from "@/lib/supabase/client"
 import {
   type AthleteRecord,
+  type DeviceLiveRow,
   type EventEntry,
   type EventResultRow,
   type FinalizeResultInput,
@@ -167,6 +168,15 @@ export const trackerControlRepo = {
   },
 
   // ── 실시간 상태 ──
+  /** 전역 기기 관제 — 모든 트래커의 최신 위치·수신·배터리·SOS·배정 이벤트 */
+  async allDevicesLiveState(): Promise<DeviceLiveRow[]> {
+    const { data, error } = await getSupabase().rpc(
+      "admin_all_devices_live_state",
+    )
+    if (error) throw error
+    return (data ?? []) as DeviceLiveRow[]
+  },
+
   async adminLiveState(eventId: string): Promise<LiveEntry[]> {
     const { data, error } = await getSupabase().rpc(
       "admin_tracker_event_live_state",
