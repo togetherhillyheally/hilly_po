@@ -221,6 +221,7 @@ export default function DevicesControlPage() {
           favs={favs}
           onToggleFav={toggleFav}
           onOpenChange={setPanelOpen}
+          noun="기기"
         />
       </div>
     </main>

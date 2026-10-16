@@ -45,6 +45,8 @@ export type LiveSidebarProps = {
   onDisplayModeChange?: (mode: DisplayMode) => void
   /** 열림/접힘 변경 알림 — 페이지가 지도 위 다른 컨트롤 위치를 조정할 때 사용 */
   onOpenChange?: (open: boolean) => void
+  /** 목록 항목 명칭 — 기본 "참가자", 전역 기기 관제는 "기기" */
+  noun?: string
 }
 
 /** 1~3위 카드 — 색 구분 없이 살짝 도드라진 배경만 */
@@ -343,6 +345,7 @@ export default function LiveSidebar({
   displayMode,
   onDisplayModeChange,
   onOpenChange,
+  noun = "참가자",
 }: LiveSidebarProps) {
   const [open, _setOpen] = useState(true)
   const setOpen = (v: boolean) => {
@@ -409,7 +412,7 @@ export default function LiveSidebar({
           variant="outline"
           size="icon"
           onClick={() => setOpen(true)}
-          title="참가자 목록 열기"
+          title={noun + " 목록 열기"}
           className="absolute right-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 rounded-full bg-background/80 shadow-lg backdrop-blur md:flex"
         >
           <ChevronsLeft className="h-5 w-5" />
@@ -422,7 +425,7 @@ export default function LiveSidebar({
           className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full bg-background/85 px-4 shadow-lg backdrop-blur md:hidden"
         >
           <ChevronsUp className="mr-1.5 h-4 w-4" />
-          {isRace ? "리더보드" : "참가자"}
+          {isRace ? "리더보드" : noun}
         </Button>
       </>
     )
@@ -445,7 +448,7 @@ export default function LiveSidebar({
             variant="outline"
             size="icon"
             onClick={() => setOpen(false)}
-            title="참가자 목록 접기"
+            title={noun + " 목록 접기"}
             className="absolute -left-5 top-1/2 z-30 hidden h-10 w-10 -translate-y-1/2 rounded-full bg-background/80 shadow-lg backdrop-blur md:flex"
           >
             <ChevronsRight className="h-5 w-5" />
@@ -476,7 +479,7 @@ export default function LiveSidebar({
           />
         ) : (
           <h2 className="px-1 text-sm font-bold">
-            {isRace ? "리더보드" : "참가자"}
+            {isRace ? "리더보드" : noun}
           </h2>
         )}
       </div>
@@ -496,7 +499,7 @@ export default function LiveSidebar({
       <div className={inline ? "" : "flex-1 overflow-y-auto"}>
         {rows.length === 0 && (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-            표시할 참가자가 없어요.
+            표시할 {noun}가 없어요.
           </p>
         )}
 
