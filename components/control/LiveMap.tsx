@@ -92,11 +92,17 @@ function ensureDemSource(map: mapboxgl.Map) {
   }
 }
 
+/** 지도용 짧은 이름 — 괄호 부가정보(IMEI 등) 제거 + 길이 제한 (상세는 사이드바) */
+function markerShortName(name: string): string {
+  const base = name.replace(/\s*[(（].*$/, "").trim() || name
+  return base.length > 12 ? `${base.slice(0, 12)}…` : base
+}
+
 function markerLabel(r: RankedEntry): string {
   const flag = r.finished ? "✓ " : ""
   const rank = r.rank != null && r.rank <= 3 ? `${r.rank}위 ` : ""
   const bib = r.entry.bib_no ? `#${r.entry.bib_no} ` : ""
-  return `${flag}${rank}${bib}${r.entry.display_name}`
+  return `${flag}${rank}${bib}${markerShortName(r.entry.display_name)}`
 }
 
 /** 겹침 대비 z-index: 선택 > SOS > 순위 높은 순. 호버 시 일시적으로 최상단 */
@@ -119,7 +125,19 @@ function styleMarkerEl(
     chip = document.createElement("div")
     el.appendChild(chip)
   }
-  chip.textContent = markerLabel(r)
+  // 사진(아바타) + 짧은 이름 — textContent/src 만 갱신 (XSS 안전)
+  chip.replaceChildren()
+  if (r.entry.avatar_url) {
+    const img = document.createElement("img")
+    img.src = r.entry.avatar_url
+    img.alt = ""
+    img.className =
+      "-ml-1 mr-1 h-[18px] w-[18px] shrink-0 rounded-full border border-white/70 object-cover"
+    chip.appendChild(img)
+  }
+  const text = document.createElement("span")
+  text.textContent = markerLabel(r)
+  chip.appendChild(text)
   // 도착자는 신호가 끊겨도 정상 표시 유지
   const noSignal =
     (r.status === "stale" || r.status === "noSignal") && !r.finished

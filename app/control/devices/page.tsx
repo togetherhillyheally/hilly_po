@@ -23,13 +23,15 @@ import type { DeviceLiveRow, LiveEntry } from "@/lib/repos/trackerControlTypes"
 const POLL_MS = 5_000
 const UNASSIGNED = "미배정"
 
-/** 기기 행 → 관제 파이프라인 공용 LiveEntry (구분 = 배정 이벤트명, 색 구분 겸용) */
+/** 기기 행 → 관제 파이프라인 공용 LiveEntry (구분 = 배정 이벤트명, 색 구분 겸용)
+ *  라벨의 괄호 부가정보(IMEI 메모 등)는 지도·목록 표시에선 제거 */
 function toLiveEntry(d: DeviceLiveRow): LiveEntry {
+  const cleanLabel = d.label?.replace(/\s*[(（].*$/, "").trim() || null
   return {
     entry_id: d.device_id,
     display_name:
-      d.entry_display_name ?? d.label ?? `…${d.imei.slice(-4)}`,
-    bib_no: d.label && d.entry_display_name ? d.label : null,
+      d.entry_display_name ?? cleanLabel ?? `…${d.imei.slice(-4)}`,
+    bib_no: cleanLabel && d.entry_display_name ? cleanLabel : null,
     category: d.event_title ?? UNASSIGNED,
     lat: d.lat,
     lng: d.lng,
@@ -39,6 +41,7 @@ function toLiveEntry(d: DeviceLiveRow): LiveEntry {
     fix: d.fix,
     imei: d.imei,
     battery_mv: d.battery_mv,
+    battery_pct: d.battery_pct,
     device_last_seen_at: d.last_seen_at,
     sos_at: d.sos_at,
   }
