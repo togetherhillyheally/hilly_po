@@ -465,9 +465,9 @@ export function SignupForm() {
           </div>
         )}
 
-        {/* 결제 */}
-        <section className="border-t pt-6">
-          <div className="mb-5 flex items-center justify-between">
+        {/* 결제 — 시트 하단 고정 (스크롤해도 항상 보임) */}
+        <section className="sticky -bottom-6 -mx-6 border-t bg-background px-6 pb-5 pt-4">
+          <div className="mb-4 flex items-center justify-between">
             <span className="text-sm text-muted-foreground">참가비</span>
             <span className="text-2xl font-bold tabular-nums">
               {EV.fee.toLocaleString()}
