@@ -34,14 +34,22 @@ export default function LandingPage() {
         <span className="text-sm font-bold tracking-tight">
           HILLY HEALLY <span className="text-muted-foreground">GROUND</span>
         </span>
-        <Button
-          asChild
-          variant="ghost"
-          size="sm"
-          className="hover:bg-[#DC2F55] hover:text-white"
-        >
-          <Link href="/login">로그인</Link>
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button asChild variant="ghost" size="sm" className="relative">
+            <Link href="/events/natseongot">
+              이벤트
+              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[#DC2F55]" />
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="hover:bg-[#DC2F55] hover:text-white"
+          >
+            <Link href="/login">로그인</Link>
+          </Button>
+        </div>
       </header>
 
       {/* 히어로 — 좌: 카피 / 우: 실제 Mapbox 데모 지도 */}
