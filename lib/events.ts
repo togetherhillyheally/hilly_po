@@ -24,7 +24,7 @@ export const NATSEONGOT: EventInfo = {
   fee: 1_000, // ⚠️ 결제 리허설용 임시 금액 — 모집 오픈 전 100_000 으로 복구
   capacity: 16,
   dateLabel: "2026. 11. 14. (토)",
-  timeLabel: "제한 4시간 · 일몰 전 복귀",
+  timeLabel: "13:00 ~ 17:00 · 제한 4시간",
   placeLabel: "경기 수원 광교산",
   placeSub: "광교산 산림욕장 출발 · 도착",
   path: "/events/natseongot",

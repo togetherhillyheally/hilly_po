@@ -11,6 +11,7 @@ import { NATSEONGOT as EV, TOSS_CLIENT_KEY, callEventFn } from "@/lib/events"
 type Fields = {
   name: string
   phone: string
+  companionPhone: string
   email: string
   birth: string
   gender: string
@@ -24,6 +25,7 @@ type Fields = {
 const EMPTY: Fields = {
   name: "",
   phone: "",
+  companionPhone: "",
   email: "",
   birth: "",
   gender: "",
@@ -141,6 +143,24 @@ export function SignupForm() {
       setStatus("error")
     }
   }
+
+  // 로그인 계정의 전화번호를 자동 입력 (비워져 있을 때만 — 수정 가능)
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { getSupabase } = await import("@/lib/supabase/client")
+      const {
+        data: { user },
+      } = await getSupabase().auth.getUser()
+      if (cancelled || !user?.phone) return
+      const digits = user.phone.replace(/\D/g, "")
+      const local = digits.startsWith("82") ? "0" + digits.slice(2) : digits
+      setF((p) => (p.phone ? p : { ...p, phone: local }))
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const set =
     (k: keyof Fields) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -326,6 +346,21 @@ export function SignupForm() {
                   </Button>
                 ))}
               </div>
+            </Field>
+            <Field
+              label="함께 신청하는 분 연락처 (선택)"
+              className="sm:col-span-2"
+            >
+              <Input
+                value={f.companionPhone}
+                onChange={set("companionPhone")}
+                placeholder="010-0000-0000"
+                inputMode="tel"
+              />
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                친구와 함께 신청했다면 서로 적어주세요 — 같은 팀 배정에
+                참고해요.
+              </p>
             </Field>
           </div>
         </section>

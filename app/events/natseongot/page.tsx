@@ -105,7 +105,11 @@ const RULES = [
 ] as const
 
 const PROVIDED = [
-  { icon: Navigation, text: "광교산 산림욕장 집결 · 주차 안내" },
+  {
+    icon: Navigation,
+    text: "광교산 산림욕장 집결 · 주차: 수원시환경성질환아토피센터",
+    href: "https://naver.me/xnhfZnLP",
+  },
   { icon: Package, text: "파밍박스·파밍백 보급 (물·음료·에너지젤)" },
   { icon: Radio, text: "실시간 GPS 관제 — 가족·지인 응원 시청" },
   { icon: Gift, text: "기념품 + 티타임 경품 추첨" },
@@ -114,7 +118,7 @@ const PROVIDED = [
 
 const SAFETY = [
   "2인 1조 이동이 원칙이에요. 혼자 다니지 않아요.",
-  "운영본부가 전원의 위치를 실시간으로 봐요. 경로 이탈·장시간 정지 시 바로 연락해요.",
+  "운영본부가 전원의 위치를 실시간으로 봐요.",
   "제한 시각까지 광교산 산림욕장 복귀가 원칙이고, 늦어지면 운영진이 위치를 확인해 찾아가요.",
   "언제든 기권할 수 있어요. 가장 가까운 날머리로 안내할게요.",
   "참가자 전원 행사 상해보험에 가입해요.",
@@ -402,7 +406,18 @@ export default function NatseongotPage() {
                       />
                     </span>
                     <span className="pt-1.5 text-sm leading-relaxed">
-                      {p.text}
+                      {"href" in p ? (
+                        <a
+                          href={p.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline decoration-muted-foreground/40 underline-offset-4 hover:text-[#DC2F55]"
+                        >
+                          {p.text} ↗
+                        </a>
+                      ) : (
+                        p.text
+                      )}
                     </span>
                   </li>
                 ))}
@@ -422,7 +437,7 @@ export default function NatseongotPage() {
                 </h3>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                11월 산중, 해가 짧아요
+                운영본부가 처음부터 끝까지 전원의 위치를 지켜봐요
               </p>
               <ul className="mt-6 space-y-3">
                 {SAFETY.map((s) => (
