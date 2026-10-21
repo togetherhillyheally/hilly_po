@@ -76,10 +76,14 @@ async function loadFromTrail(): Promise<{
     const cps: CheckPoint[] = []
     let start: { name: string; lng: number; lat: number } | null = null
     for (const p of points) {
-      const title = typeof p.title === "string" ? p.title : ""
+      const rawTitle = typeof p.title === "string" ? p.title : ""
       const lat = typeof p.lat === "number" ? p.lat : null
       const lng = typeof p.lng === "number" ? p.lng : null
       if (lat == null || lng == null) continue
+      // BO(hilly_home 어드민) 저장 규약: "아이콘|이름(배점)" — 아이콘 접두사는 표시명에서 제거
+      const title = rawTitle.includes("|")
+        ? rawTitle.slice(rawTitle.lastIndexOf("|") + 1).trim()
+        : rawTitle
       const m = title.match(/[(（]\s*(\d{1,3})\s*[)）]\s*$/)
       if (m) {
         const tier = Number(m[1]) as CheckPoint["points"]
