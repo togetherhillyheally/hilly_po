@@ -97,7 +97,7 @@ export default function LandingPage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/events/course.jpg"
-                alt="은티마을 코스"
+                alt="광교산 코스"
                 className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
               />
               <span className="absolute left-4 top-4 rounded-full bg-[#DC2F55] px-3 py-1 text-xs font-bold text-white">

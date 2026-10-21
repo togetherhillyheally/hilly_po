@@ -111,7 +111,7 @@ export function SuccessClient() {
                   <div>
                     <dt className="text-sm font-semibold">{EV.placeLabel}</dt>
                     <dd className="text-xs text-muted-foreground">
-                      서울 출발 차량 제공
+                      광교산 산림욕장 집결
                     </dd>
                   </div>
                 </div>

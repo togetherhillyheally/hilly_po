@@ -6,30 +6,34 @@ import {
   CalendarDays,
   Clock,
   Compass,
+  Flag,
+  Footprints,
   Gift,
+  Lock,
   MapPin,
   Navigation,
   Package,
   Radio,
   ShieldCheck,
   Ticket,
-  Trophy,
   Users,
   Wallet,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Reveal } from "@/components/landing/Reveal"
+import { CourseMapLazy } from "@/components/events/CourseMapLazy"
 import { NATSEONGOT as EV } from "@/lib/events"
+import { COURSE, CPS, TIERS, TIER_COLOR, totalPoints } from "@/lib/events/gwanggyo-cps"
 import { SignupSheet } from "./SignupSheet"
 
 export const metadata: Metadata = {
-  title: "낯선곳으로 — 은티마을 스탬프 게임 | 힐리힐리",
+  title: "낯선곳으로 — 광교산 스탬프 게임 | 힐리힐리",
   description:
-    "2026.11.14 괴산 은티마을. 배점이 다른 스탬프를 자유 순서로 모으는 숲길 팀 전략 게임. 순위는 없고, 팀이 정한 목표만 있어요. 16명 한정.",
+    "2026.11.14 수원 광교산. 배점이 다른 체크포인트 26곳을 4시간 안에 자유 순서로 모으는 숲길 팀 전략 게임. 순위는 없고, 팀이 정한 목표만 있어요. 16명 한정.",
   openGraph: {
-    title: "낯선곳으로 — 은티마을 스탬프 게임",
+    title: "낯선곳으로 — 광교산 스탬프 게임",
     description:
-      "숲길에서 펼쳐지는 팀 전략 게임. 2026.11.14 괴산 은티마을, 16명 한정 모집.",
+      "숲길에서 펼쳐지는 팀 전략 게임. 2026.11.14 수원 광교산, 16명 한정 모집.",
     images: ["/events/course.jpg"],
   },
 }
@@ -52,72 +56,61 @@ const FACTS = [
     icon: Wallet,
     label: "참가비",
     value: `${EV.fee.toLocaleString()}원`,
-    sub: "왕복 이동 · 보급 · 기념품 포함",
+    sub: "보급 · 기념품 · 기록 포함",
   },
-] as const
-
-const STAMPS = [
-  { name: "시루봉쉼터", pt: 20, zone: "산길" },
-  { name: "중앙 갈림길", pt: 20, zone: "산길" },
-  { name: "서쪽 갈림길", pt: 30, zone: "산길" },
-  { name: "구왕봉", pt: 40, zone: "산길" },
-  { name: "희양산", pt: 50, zone: "산길" },
-  { name: "이만봉", pt: 50, zone: "둘레길" },
-  { name: "둘레길 분지리", pt: 40, zone: "둘레길" },
-  { name: "둘레길 쌍천", pt: 30, zone: "둘레길" },
 ] as const
 
 const RULES = [
   {
     icon: Users,
     title: "4명 한 팀, 2명씩 한 조",
-    desc: "팀 안에서 2인 1조로 나뉘어 움직여요. 팀 점수는 두 조가 찍은 스탬프를 합쳐 계산하니, 갈라져서 다른 곳을 찍는 쪽이 이득이에요.",
+    desc: "팀 안에서 2인 1조로 나뉘어 움직이고, 조마다 트래커를 하나씩 들어요. 팀 점수는 두 조가 찍은 체크포인트를 합쳐 계산하니, 갈라져서 다른 곳을 찍는 쪽이 이득이에요.",
   },
   {
     icon: Compass,
-    title: "작전 타임 15분, 그리고 목표 선언",
-    desc: "출발 전 지도와 배점을 보고 동선을 짜요. 그리고 팀의 목표를 선언해요 — “우리는 오늘 160점.” 남을 이기는 게 아니라 우리 팀을 정확히 읽는 게 승부예요.",
+    title: "작전 타임, 그리고 목표 선언",
+    desc: "출발 전 지도와 배점을 보고 두 조의 동선을 짜요. 그리고 팀의 목표를 선언해요 — “우리는 오늘 몇 점.” 남을 이기는 게 아니라 우리 팀을 정확히 읽는 게 승부예요.",
   },
   {
     icon: Navigation,
-    title: "순서도, 경로도 자유",
-    desc: "스탬프 8곳을 어떤 순서로 어떻게 돌아도 괜찮아요. 다만 전부 돌기엔 시간이 빠듯해요. 어디를 가고 어디를 버릴지가 이 게임의 전부예요.",
+    title: "26곳, 순서도 경로도 자유",
+    desc: "체크포인트 26곳을 어떤 순서로 어떻게 돌아도 괜찮아요. 다만 4시간 안에 전부 도는 건 불가능해요. 어디를 가고 어디를 버릴지가 이 게임의 전부예요.",
   },
   {
-    icon: Trophy,
-    title: "둘레길에 가장 큰 점수",
-    desc: "이만봉 50점, 속리산둘레길 분지리 40점, 쌍천 30점. 한국등산트레킹지원센터와 함께 여는 코스라 둘레길 축에 최고 배점을 뒀어요.",
+    icon: Lock,
+    title: "진돌 — 점수를 쌓아야 정상이 열려요",
+    desc: "배점이 높은 체크포인트는 누적 점수가 그 배점 이상일 때만 찍을 수 있어요. 50점짜리 봉우리에 가려면 먼저 50점을 모아야 해요. 낮은 곳부터 차근히 올라가는 순서가 자연스럽게 만들어져요.",
   },
   {
-    icon: Gift,
-    title: "100점이면 기념품함이 열려요",
-    desc: "베이스캠프의 기념품함은 100점을 모은 팀이 피니시에서 모두가 보는 앞에서 열어요. 둘레길만 돌아도 닿는 기준이라 모든 팀이 열 수 있어요.",
+    icon: Footprints,
+    title: "두 발로만",
+    desc: "자전거·킥보드 등 탈것은 쓸 수 없어요. 걷거나 달려서 모은 점수만 인정돼요.",
   },
   {
     icon: Ticket,
-    title: "넘긴 점수는 추첨권으로",
-    desc: "100점을 넘긴 만큼 10점당 추첨권 1장. 티타임에 경품 추첨을 열어요. 많이 돌수록 장수는 늘지만 당첨은 운이에요.",
+    title: "모은 점수는 기념품과 추첨권으로",
+    desc: "300점을 모으면 기념품함이 열리고, 넘긴 점수는 추첨권으로 바꿔 피니시 경품 추첨에 써요. 많이 돌수록 장수는 늘지만 당첨은 운이에요.",
   },
   {
     icon: Clock,
     title: "같은 시각에 모여요",
-    desc: "감점도 실격도 없어요. 다만 모두가 같은 귀환 시각에 은티마을로 돌아와 티타임을 함께해요. 늦어지면 관제가 확인하고 차량이 모시러 가요.",
+    desc: "감점도 실격도 없어요. 다만 4시간 뒤 모두가 광교산 산림욕장으로 돌아와 티타임을 함께해요. 늦어지면 관제가 확인하고 운영진이 찾아가요.",
   },
 ] as const
 
 const PROVIDED = [
-  { icon: Navigation, text: "서울 ↔ 은티마을 왕복 전용 차량" },
+  { icon: Navigation, text: "광교산 산림욕장 집결 · 주차 안내" },
   { icon: Package, text: "파밍박스·파밍백 보급 (물·음료·에너지젤)" },
   { icon: Radio, text: "실시간 GPS 관제 — 가족·지인 응원 시청" },
   { icon: Gift, text: "기념품 + 티타임 경품 추첨" },
-  { icon: Compass, text: "사진·영상 기록 제공" },
+  { icon: Flag, text: "사진·영상 기록 제공" },
 ] as const
 
 const SAFETY = [
   "2인 1조 이동이 원칙이에요. 혼자 다니지 않아요.",
   "운영본부가 전원의 위치를 실시간으로 봐요. 경로 이탈·장시간 정지 시 바로 연락해요.",
-  "일몰 약 1시간 전 전원 복귀가 원칙이고, 늦어지면 운영 차량이 모시러 가요.",
-  "언제든 기권할 수 있어요. 기권하면 차량이 데리러 가요.",
+  "제한 시각까지 광교산 산림욕장 복귀가 원칙이고, 늦어지면 운영진이 위치를 확인해 찾아가요.",
+  "언제든 기권할 수 있어요. 가장 가까운 날머리로 안내할게요.",
   "참가자 전원 행사 상해보험에 가입해요.",
 ] as const
 
@@ -130,10 +123,7 @@ const GEAR = [
 ] as const
 
 export default function NatseongotPage() {
-  const mountain = STAMPS.filter((s) => s.zone === "산길")
-  const dullegil = STAMPS.filter((s) => s.zone === "둘레길")
-  const sum = (arr: readonly { pt: number }[]) =>
-    arr.reduce((a, b) => a + b.pt, 0)
+  const hasCoords = CPS.length > 0
 
   return (
     <main className="mx-auto max-w-6xl px-6">
@@ -157,16 +147,16 @@ export default function NatseongotPage() {
         <Reveal>
           <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#DC2F55]" />
-            HillyHeally × 한국등산트레킹지원센터
+            2026. 11. 14. 토요일 · 수원 광교산
           </p>
           <h1 className="mt-5 text-4xl font-bold leading-[1.08] tracking-tighter sm:text-5xl xl:text-6xl">
             <span className="text-[#DC2F55]">낯선곳</span>으로
             <br />
-            은티마을 스탬프 게임
+            광교산 스탬프 게임
           </h1>
           <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            숲길에서 펼쳐지는 팀 전략 게임. 배점이 다른 스탬프 8곳을 자유
-            순서로 모으고, 해가 지기 전 은티마을로 돌아와요.
+            숲길에서 펼쳐지는 팀 전략 게임. 배점이 다른 체크포인트 26곳을 자유
+            순서로 모으고, 4시간 안에 광교산 산림욕장으로 돌아와요.
           </p>
           <p className="mt-3 text-sm font-medium text-[#DC2F55]">
             순위는 없어요. 팀이 정한 목표만 있어요.
@@ -265,26 +255,30 @@ export default function NatseongotPage() {
       <section id="course" className="scroll-mt-8 border-t py-20">
         <Reveal>
           <h2 className="text-2xl font-bold tracking-tighter sm:text-3xl">
-            스탬프 8곳 · 총 {sum(STAMPS)}점
+            체크포인트 {COURSE.cpCount}곳 · 총 {totalPoints()}점
           </h2>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            멀고 높을수록 점수가 커요. 베이스캠프는 은티마을이에요.
+            멀고 높을수록 점수가 커요. 출발과 도착은 {COURSE.startName}이에요.
           </p>
         </Reveal>
 
         <div className="mt-8 grid gap-4 lg:grid-cols-5">
           <Reveal className="lg:col-span-3">
             <div className="overflow-hidden rounded-2xl border bg-card">
-              <Image
-                src="/events/course.jpg"
-                alt="은티마을 스탬프 게임 코스 지도"
-                width={1600}
-                height={1149}
-                className="h-auto w-full"
-                priority
-              />
+              {hasCoords ? (
+                <CourseMapLazy className="h-[420px] w-full sm:h-[520px]" />
+              ) : (
+                <Image
+                  src="/events/course.jpg"
+                  alt="광교산 스탬프 게임 코스 지도"
+                  width={1600}
+                  height={1468}
+                  className="h-auto w-full"
+                  priority
+                />
+              )}
               <p className="border-t px-6 py-4 text-xs leading-relaxed text-muted-foreground">
-                배치는 예시예요. 실제 스탬프 위치는 합동 답사에서 확정해
+                배치는 예시예요. 실제 체크포인트 위치는 답사에서 확정해
                 참가자에게 안내해요.
               </p>
             </div>
@@ -293,21 +287,33 @@ export default function NatseongotPage() {
           <div className="space-y-4 lg:col-span-2">
             <Reveal delay={0.08}>
               <div className="rounded-2xl border bg-card">
-                <div className="flex items-center justify-between border-b px-6 py-4">
-                  <span className="font-semibold">산길 축</span>
-                  <span className="text-sm font-semibold text-muted-foreground tabular-nums">
-                    {sum(mountain)}점
-                  </span>
+                <div className="border-b px-6 py-4">
+                  <span className="font-semibold">배점</span>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    멀고 높은 곳일수록 큰 점수
+                  </p>
                 </div>
                 <ul>
-                  {mountain.map((s) => (
+                  {TIERS.map((t) => (
                     <li
-                      key={s.name}
-                      className="flex items-center justify-between border-b px-6 py-2.5 text-sm last:border-0"
+                      key={t}
+                      className="flex items-center gap-3 border-b px-6 py-2.5 text-sm last:border-0"
                     >
-                      <span className="text-muted-foreground">{s.name}</span>
-                      <span className="font-semibold tabular-nums">
-                        {s.pt}점
+                      <span
+                        className="h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-background"
+                        style={{ backgroundColor: TIER_COLOR[t] }}
+                      />
+                      <span className="font-semibold tabular-nums">{t}점</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t === 50
+                          ? "정상·최원거리"
+                          : t === 40
+                            ? "주요 봉우리"
+                            : t === 30
+                              ? "능선·갈림길"
+                              : t === 20
+                                ? "산중 지점"
+                                : "초입·가까운 곳"}
                       </span>
                     </li>
                   ))}
@@ -316,49 +322,46 @@ export default function NatseongotPage() {
             </Reveal>
 
             <Reveal delay={0.14}>
-              <div className="rounded-2xl border border-[#DC2F55]/30 bg-[radial-gradient(120%_120%_at_0%_0%,rgba(220,47,85,0.10),transparent_55%)]">
-                <div className="flex items-center justify-between border-b px-6 py-4">
-                  <span className="font-semibold">
-                    둘레길 축{" "}
-                    <span className="ml-1 text-xs font-bold text-[#DC2F55]">
-                      최고 배점
-                    </span>
-                  </span>
-                  <span className="text-sm font-semibold text-[#DC2F55] tabular-nums">
-                    {sum(dullegil)}점
-                  </span>
+              <div className="rounded-2xl border border-[#DC2F55]/30 bg-[radial-gradient(120%_120%_at_0%_0%,rgba(220,47,85,0.10),transparent_55%)] p-6">
+                <div className="flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-[#DC2F55]" strokeWidth={1.8} />
+                  <span className="font-semibold">진돌 규칙</span>
                 </div>
-                <ul>
-                  {dullegil.map((s) => (
-                    <li
-                      key={s.name}
-                      className="flex items-center justify-between border-b px-6 py-2.5 text-sm last:border-0"
-                    >
-                      <span>{s.name}</span>
-                      <span className="font-semibold text-[#DC2F55] tabular-nums">
-                        {s.pt}점
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  배점이 높은 체크포인트는{" "}
+                  <b className="font-semibold text-foreground">
+                    누적 점수가 그 배점 이상
+                  </b>
+                  일 때만 찍을 수 있어요. 50점짜리 정상에 가려면 먼저 50점을
+                  모아야 해요.
+                </p>
               </div>
             </Reveal>
 
             <Reveal delay={0.2}>
-              <div className="flex gap-3 rounded-2xl border bg-card p-6">
-                <Gift
-                  className="h-5 w-5 shrink-0 text-[#DC2F55]"
-                  strokeWidth={1.5}
-                />
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  <b className="font-semibold text-foreground">100점</b>이면
-                  기념품함이 열리고, 넘긴 점수는{" "}
-                  <b className="font-semibold text-foreground">
-                    10점당 추첨권 1장
-                  </b>
-                  으로 바꿔 티타임 경품 추첨에 써요.
-                </p>
-              </div>
+              <dl className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl border bg-card px-5 py-4">
+                  <dt className="text-xs text-muted-foreground">제한 시간</dt>
+                  <dd className="mt-0.5 font-semibold tabular-nums">
+                    {COURSE.timeLimitHours}시간
+                  </dd>
+                </div>
+                <div className="rounded-2xl border bg-card px-5 py-4">
+                  <dt className="text-xs text-muted-foreground">이동 수단</dt>
+                  <dd className="mt-0.5 font-semibold">두 발로만</dd>
+                </div>
+                <div className="col-span-2 rounded-2xl border bg-card px-5 py-4">
+                  <dt className="text-xs text-muted-foreground">
+                    기념품함 개봉 기준
+                  </dt>
+                  <dd className="mt-0.5 font-semibold tabular-nums">
+                    300점{" "}
+                    <span className="text-xs font-normal text-muted-foreground">
+                      · 넘긴 점수는 추첨권으로
+                    </span>
+                  </dd>
+                </div>
+              </dl>
             </Reveal>
           </div>
         </div>
@@ -487,7 +490,7 @@ export default function NatseongotPage() {
 
       {/* 푸터 */}
       <footer className="flex flex-col items-center justify-between gap-4 border-t py-10 text-xs text-muted-foreground sm:flex-row">
-        <span>주최 힐리힐리 · 협력 한국등산트레킹지원센터</span>
+        <span>주최 힐리힐리(HillyHeally)</span>
         <Link href="/" className="hover:text-foreground">
           힐리힐리 그라운드 홈
         </Link>

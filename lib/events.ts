@@ -22,9 +22,9 @@ export const NATSEONGOT: EventInfo = {
   fee: 100_000,
   capacity: 16,
   dateLabel: "2026. 11. 14. (토)",
-  timeLabel: "09:00 ~ 17:00 · 일몰 전 복귀",
-  placeLabel: "충북 괴산 은티마을",
-  placeSub: "구왕봉·희양산 + 속리산둘레길 9구간",
+  timeLabel: "제한 4시간 · 일몰 전 복귀",
+  placeLabel: "경기 수원 광교산",
+  placeSub: "광교산 산림욕장 출발 · 도착",
   path: "/events/natseongot",
 }
 
