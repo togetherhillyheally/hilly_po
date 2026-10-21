@@ -18,7 +18,7 @@ export type EventInfo = {
 export const NATSEONGOT: EventInfo = {
   slug: "natseongot-2026-11",
   title: "낯선곳으로",
-  subtitle: "은티마을 스탬프 게임",
+  subtitle: "광교산 스탬프 게임",
   fee: 100_000,
   capacity: 16,
   dateLabel: "2026. 11. 14. (토)",
