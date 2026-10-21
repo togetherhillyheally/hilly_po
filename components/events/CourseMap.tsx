@@ -10,10 +10,13 @@ import { NATSEONGOT } from "@/lib/events"
 const COURSE_TRAIL_ID = NATSEONGOT.courseTrailId
 
 function markerEl(cp: CheckPoint): HTMLDivElement {
-  // 스탬프(도장) 스타일 — 배점 숫자 + 톱니 테두리 느낌의 점선 링
+  // 스탬프(도장) 스타일 — 배점 숫자 + 톱니 테두리 느낌의 점선 링.
+  // 바깥 el 의 transform 은 Mapbox 가 위치 지정에 쓰므로 절대 건드리지 않고,
+  // 디자인·호버 효과는 안쪽 chip 에만 건다 (transition 이 밖에 있으면 지도 팬 시 마커가 뒤따라옴).
   const color = TIER_COLOR[cp.points]
   const el = document.createElement("div")
-  el.style.cssText = `
+  const chip = document.createElement("div")
+  chip.style.cssText = `
     width: 30px; height: 30px; border-radius: 50%;
     background: ${color};
     border: 2px solid #fff;
@@ -26,9 +29,13 @@ function markerEl(cp: CheckPoint): HTMLDivElement {
     font-variant-numeric: tabular-nums;
     transition: transform .15s;
   `
-  el.textContent = String(cp.points)
-  el.addEventListener("mouseenter", () => (el.style.transform = "scale(1.2)"))
-  el.addEventListener("mouseleave", () => (el.style.transform = "scale(1)"))
+  chip.textContent = String(cp.points)
+  chip.addEventListener(
+    "mouseenter",
+    () => (chip.style.transform = "scale(1.2)")
+  )
+  chip.addEventListener("mouseleave", () => (chip.style.transform = "scale(1)"))
+  el.appendChild(chip)
   el.setAttribute("aria-label", `${cp.name} ${cp.points}점`)
   return el
 }
