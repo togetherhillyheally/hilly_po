@@ -26,6 +26,7 @@ import { CourseMapLazy } from "@/components/events/CourseMapLazy"
 import { NATSEONGOT as EV } from "@/lib/events"
 import { COURSE, CPS, TIERS, TIER_COLOR, totalPoints } from "@/lib/events/gwanggyo-cps"
 import { SignupSheet } from "./SignupSheet"
+import { UserChip } from "./UserChip"
 
 export const metadata: Metadata = {
   title: "낯선곳으로 — 광교산 스탬프 게임 | 힐리힐리",
@@ -142,14 +143,17 @@ export default function NatseongotPage() {
         <Link href="/" className="text-sm font-bold tracking-tight">
           HILLY HEALLY <span className="text-muted-foreground">GROUND</span>
         </Link>
-        <SignupSheet>
-          <Button
-            size="sm"
-            className="bg-[#DC2F55] text-white hover:bg-[#DC2F55]/90"
-          >
-            신청하기
-          </Button>
-        </SignupSheet>
+        <div className="flex items-center gap-1.5">
+          <UserChip />
+          <SignupSheet>
+            <Button
+              size="sm"
+              className="bg-[#DC2F55] text-white hover:bg-[#DC2F55]/90"
+            >
+              신청하기
+            </Button>
+          </SignupSheet>
+        </div>
       </header>
 
       {/* 히어로 */}
@@ -513,12 +517,47 @@ export default function NatseongotPage() {
         </Reveal>
       </section>
 
-      {/* 푸터 */}
-      <footer className="flex flex-col items-center justify-between gap-4 border-t py-10 text-xs text-muted-foreground sm:flex-row">
-        <span>주최 힐리힐리(HillyHeally)</span>
-        <Link href="/" className="hover:text-foreground">
-          힐리힐리 그라운드 홈
-        </Link>
+      {/* 푸터 — hillyheally.com 과 동일한 사업자 정보 (결제 페이지 필수 표기) */}
+      <footer className="border-t py-10 text-xs leading-relaxed text-muted-foreground">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-foreground">
+              Hilly Heally{" "}
+              <span className="font-medium text-muted-foreground">
+                주식회사 힐리힐리
+              </span>
+            </p>
+            <p>대표자: 박준섭 · 사업자번호: 720-86-03798</p>
+            <p>주소: 서울시 서초구 서초중앙로 123, 지하 1층 1003호</p>
+            <p>Tel: 1800-5191 · Fax: 02-6455-6023 · Mail: service@hillyheally.com</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <a
+              href="https://hillyheally.com/terms"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-foreground"
+            >
+              서비스 이용약관
+            </a>
+            <span className="text-border">|</span>
+            <a
+              href="https://hillyheally.com/privacy-policy"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-foreground"
+            >
+              개인정보처리방침
+            </a>
+            <span className="text-border">|</span>
+            <Link href="/" className="hover:text-foreground">
+              그라운드 홈
+            </Link>
+          </div>
+        </div>
+        <p className="mt-8 border-t pt-6 text-center">
+          © 2026 Hilly Heally. All rights reserved.
+        </p>
       </footer>
     </main>
   )
