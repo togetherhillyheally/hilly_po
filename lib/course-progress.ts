@@ -392,7 +392,9 @@ export function rankEntries(
     const distance24hKm =
       rawDist == null || rawDist === "" ? null : Number(rawDist)
     const lowBattery =
-      entry.battery_mv != null && entry.battery_mv < LOW_BATTERY_MV
+      entry.battery_pct != null
+        ? entry.battery_pct <= 20
+        : entry.battery_mv != null && entry.battery_mv < LOW_BATTERY_MV
 
     return {
       entry,

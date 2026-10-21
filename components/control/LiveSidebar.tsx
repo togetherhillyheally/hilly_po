@@ -54,11 +54,15 @@ const PODIUM_ROW = "bg-foreground/[0.04]"
 /** 1~3위 순위 원 — 중립(전경색 채움) */
 const PODIUM_CIRCLE = "bg-foreground text-background"
 
-/** MT710 리튬셀 대략치: 3500mV(0%) ~ 4200mV(100%) */
-function batteryPercent(mv: number | null | undefined): string | null {
+/** 기기가 %로 보고하면 그대로, 아니면 MT710 리튬셀 대략치(3500mV=0% ~ 4200mV=100%)로 환산 */
+function batteryPercent(
+  mv: number | null | undefined,
+  pct?: number | null,
+): string | null {
+  if (pct != null) return `${pct}%`
   if (mv == null) return null
-  const pct = Math.min(100, Math.max(0, Math.round(((mv - 3500) / 700) * 100)))
-  return `${pct}%`
+  const est = Math.min(100, Math.max(0, Math.round(((mv - 3500) / 700) * 100)))
+  return `${est}%`
 }
 
 function StatusBadge({ r }: { r: RankedEntry }) {
@@ -181,7 +185,9 @@ function EntryRow({
   const dimmed =
     (r.status === "stale" || r.status === "noSignal") && !r.finished
   const podium = isRace && r.rank != null && r.rank <= 3
-  const battery = isAdmin ? batteryPercent(r.entry.battery_mv) : null
+  const battery = isAdmin
+    ? batteryPercent(r.entry.battery_mv, r.entry.battery_pct)
+    : null
   const eta = isRace ? formatEta(r.etaAt) : null
   // 레이스: 여기까지의 누적 상승 / 모니터: 현재 해발고도(지형 조회)
   const ascent = isRace && !dimmed ? r.ascentM : null

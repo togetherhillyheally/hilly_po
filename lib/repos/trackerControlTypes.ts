@@ -55,6 +55,8 @@ export interface LiveEntry {
   fix?: string | null
   imei?: string
   battery_mv?: number | null
+  /** 배터리 잔량 % (ML100G 등 % 보고 기기 — 있으면 mV 환산보다 우선) */
+  battery_pct?: number | null
   device_last_seen_at?: string | null
   sos_at?: string | null
   /** 현재 위치에서 30m 이상 떨어진 가장 최근 fix 시각 — 정지 감지용 */
@@ -70,6 +72,7 @@ export interface DeviceLiveRow {
   label: string | null
   device_status: string | null
   battery_mv: number | null
+  battery_pct: number | null
   last_seen_at: string | null
   lat: number | null
   lng: number | null

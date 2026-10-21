@@ -214,16 +214,19 @@ export default function LiveTableWide({
               const selected = selectedId === r.entry.entry_id
               const color = categoryColor(r.entry.category, categories)
               const fav = favs.has(r.entry.entry_id)
-              const battery =
-                isAdmin && r.entry.battery_mv != null
-                  ? Math.min(
-                      100,
-                      Math.max(
-                        0,
-                        Math.round(((r.entry.battery_mv - 3500) / 700) * 100),
-                      ),
-                    )
-                  : null
+              const battery = !isAdmin
+                ? null
+                : r.entry.battery_pct != null
+                  ? r.entry.battery_pct
+                  : r.entry.battery_mv != null
+                    ? Math.min(
+                        100,
+                        Math.max(
+                          0,
+                          Math.round(((r.entry.battery_mv - 3500) / 700) * 100),
+                        ),
+                      )
+                    : null
               const rowBg = selected
                 ? "bg-gradient-to-r from-[#8a1b38] to-[#DC2F55] text-white"
                 : i % 2 === 0
