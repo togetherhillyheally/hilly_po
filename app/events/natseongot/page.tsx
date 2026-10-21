@@ -337,11 +337,7 @@ export default function NatseongotPage() {
 
             <Reveal delay={0.14}>
               <div className="rounded-2xl border border-[#DC2F55]/30 bg-[radial-gradient(120%_120%_at_0%_0%,rgba(220,47,85,0.10),transparent_55%)] p-6">
-                <div className="flex items-center gap-2">
-                  <Lock className="h-4 w-4 text-[#DC2F55]" strokeWidth={1.8} />
-                  <span className="font-semibold">진돌 규칙</span>
-                </div>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                <p className="text-sm leading-relaxed text-muted-foreground">
                   <b className="font-semibold text-foreground">정상석</b>{" "}
                   체크포인트만큼은{" "}
                   <b className="font-semibold text-foreground">
