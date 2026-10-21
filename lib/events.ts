@@ -13,6 +13,8 @@ export type EventInfo = {
   placeLabel: string
   placeSub: string
   path: string
+  /** 코스 포인트를 담은 스탬프지도 trail id — 지도 만들기 에디터에서 위치 수정 가능 */
+  courseTrailId?: string
 }
 
 export const NATSEONGOT: EventInfo = {
@@ -26,6 +28,7 @@ export const NATSEONGOT: EventInfo = {
   placeLabel: "경기 수원 광교산",
   placeSub: "광교산 산림욕장 출발 · 도착",
   path: "/events/natseongot",
+  courseTrailId: "8b710f9d-2a53-4720-9c5a-da34e9375e93",
 }
 
 /** 토스 결제위젯 클라이언트 키(공개 키) — hilly_rn app.config 와 동일 정책.
