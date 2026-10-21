@@ -7,14 +7,25 @@ import { applyKoreanLabels } from "@/lib/mapbox-locale"
 import { CPS, START, TIER_COLOR, type CheckPoint } from "@/lib/events/gwanggyo-cps"
 
 function markerEl(cp: CheckPoint): HTMLDivElement {
+  // 스탬프(도장) 스타일 — 배점 숫자 + 톱니 테두리 느낌의 점선 링
+  const color = TIER_COLOR[cp.points]
   const el = document.createElement("div")
   el.style.cssText = `
-    width: 24px; height: 24px; border-radius: 50%;
-    background: ${TIER_COLOR[cp.points]};
+    width: 30px; height: 30px; border-radius: 50%;
+    background: ${color};
     border: 2px solid #fff;
-    box-shadow: 0 1px 4px rgba(0,0,0,.35);
+    outline: 2px dashed ${color};
+    outline-offset: 1.5px;
+    box-shadow: 0 1px 5px rgba(0,0,0,.35);
     cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 11px; font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    transition: transform .15s;
   `
+  el.textContent = String(cp.points)
+  el.addEventListener("mouseenter", () => (el.style.transform = "scale(1.2)"))
+  el.addEventListener("mouseleave", () => (el.style.transform = "scale(1)"))
   el.setAttribute("aria-label", `${cp.name} ${cp.points}점`)
   return el
 }
