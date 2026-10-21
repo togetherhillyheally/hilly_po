@@ -144,7 +144,6 @@ export default function NatseongotPage() {
           HILLY HEALLY <span className="text-muted-foreground">GROUND</span>
         </Link>
         <div className="flex items-center gap-1.5">
-          <UserChip />
           <SignupSheet>
             <Button
               size="sm"
@@ -153,6 +152,7 @@ export default function NatseongotPage() {
               신청하기
             </Button>
           </SignupSheet>
+          <UserChip />
         </div>
       </header>
 
