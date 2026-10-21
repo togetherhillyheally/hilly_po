@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { AlertCircle, CheckCircle2, Loader2, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -70,10 +70,77 @@ export function SignupForm() {
     photo: false,
   })
   const [status, setStatus] = useState<
-    "idle" | "submitting" | "paying" | "transfer" | "error"
+    "idle" | "submitting" | "paying" | "widget" | "transfer" | "error"
   >("idle")
   const [message, setMessage] = useState("")
   const [orderId, setOrderId] = useState("")
+  const [order, setOrder] = useState<{
+    orderId: string
+    amount: number
+    orderName: string
+  } | null>(null)
+  const [widgetReady, setWidgetReady] = useState(false)
+  const widgetsRef = useRef<import("./toss").TossWidgets | null>(null)
+
+  // 결제위젯 렌더 — 신청서 접수(orderId 발급) 후 위젯 단계에서 1회
+  useEffect(() => {
+    if (status !== "widget" || !order) return
+    let cancelled = false
+    setWidgetReady(false)
+    ;(async () => {
+      try {
+        const { loadTossPayments } = await import("./toss")
+        const TossPayments = await loadTossPayments()
+        const widgets = TossPayments(TOSS_CLIENT_KEY).widgets({
+          customerKey: order.orderId,
+        })
+        await widgets.setAmount({ currency: "KRW", value: order.amount })
+        if (cancelled) return
+        await Promise.all([
+          widgets.renderPaymentMethods({
+            selector: "#toss-pm",
+            variantKey: "DEFAULT",
+          }),
+          widgets.renderAgreement({ selector: "#toss-agree" }),
+        ])
+        if (cancelled) return
+        widgetsRef.current = widgets
+        setWidgetReady(true)
+      } catch (err) {
+        if (cancelled) return
+        setMessage(
+          err instanceof Error ? err.message : "결제 모듈을 불러오지 못했어요."
+        )
+        setStatus("error")
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [status, order])
+
+  async function handlePay() {
+    const widgets = widgetsRef.current
+    if (!widgets || !order) return
+    try {
+      const origin = window.location.origin
+      await widgets.requestPayment({
+        orderId: order.orderId,
+        orderName: order.orderName,
+        successUrl: `${origin}${EV.path}/success`,
+        failUrl: `${origin}${EV.path}/fail`,
+        customerEmail: f.email,
+        customerName: f.name,
+        customerMobilePhone: f.phone.replace(/\D/g, ""),
+      })
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "결제를 완료하지 못했어요."
+      if (msg.includes("USER_CANCEL") || msg.includes("취소")) return
+      setMessage(msg)
+      setStatus("error")
+    }
+  }
 
   const set =
     (k: keyof Fields) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -111,30 +178,9 @@ export function SignupForm() {
       })
       setOrderId(created.orderId)
 
-      setStatus("paying")
-      const { loadTossPayments } = await import("./toss")
-      const TossPayments = await loadTossPayments()
-      const payment = TossPayments(TOSS_CLIENT_KEY).payment({
-        customerKey: created.orderId,
-      })
-      const origin = window.location.origin
-      await payment.requestPayment({
-        method: "CARD",
-        amount: { currency: "KRW", value: created.amount },
-        orderId: created.orderId,
-        orderName: created.orderName,
-        successUrl: `${origin}${EV.path}/success`,
-        failUrl: `${origin}${EV.path}/fail`,
-        customerEmail: f.email,
-        customerName: f.name,
-        customerMobilePhone: f.phone.replace(/\D/g, ""),
-        card: {
-          useEscrow: false,
-          flowMode: "DEFAULT",
-          useCardPoint: false,
-          useAppCardOnly: false,
-        },
-      })
+      // 결제위젯 단계로 — gck(위젯) 키는 payment() 가 아니라 widgets() 만 지원
+      setOrder(created)
+      setStatus("widget")
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : "문제가 생겼어요. 다시 시도해주세요."
@@ -145,6 +191,42 @@ export function SignupForm() {
       setMessage(msg)
       setStatus("error")
     }
+  }
+
+  if (status === "widget") {
+    return (
+      <div className="py-2">
+        <h3 className="text-lg font-semibold tracking-tight">
+          결제 수단을 선택해주세요
+        </h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {EV.title} 참가비{" "}
+          <b className="text-foreground tabular-nums">
+            {(order?.amount ?? EV.fee).toLocaleString()}원
+          </b>
+        </p>
+        {/* 토스 결제위젯 영역 — 위젯이 밝은 배경 기준이라 흰 카드로 감쌈 */}
+        <div className="mt-4 overflow-hidden rounded-xl bg-white">
+          <div id="toss-pm" />
+          <div id="toss-agree" />
+        </div>
+        {!widgetReady && (
+          <p className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            결제 수단을 불러오는 중…
+          </p>
+        )}
+        <Button
+          type="button"
+          disabled={!widgetReady}
+          onClick={handlePay}
+          className="mt-4 h-12 w-full bg-[#DC2F55] text-base text-white hover:bg-[#DC2F55]/90"
+        >
+          <Lock className="mr-2 h-4 w-4" />
+          {(order?.amount ?? EV.fee).toLocaleString()}원 결제하기
+        </Button>
+      </div>
+    )
   }
 
   if (status === "transfer") {

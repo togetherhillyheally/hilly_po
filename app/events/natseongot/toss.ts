@@ -20,10 +20,36 @@ type PaymentRequest = {
   }
 }
 
+/** 결제위젯 요청 — 결제수단은 위젯 UI 가 담당하므로 method/card 없음 */
+type WidgetPaymentRequest = {
+  orderId: string
+  orderName: string
+  successUrl: string
+  failUrl: string
+  customerEmail?: string
+  customerName?: string
+  customerMobilePhone?: string
+}
+
+export type TossWidgets = {
+  setAmount: (a: { currency: string; value: number }) => Promise<void>
+  renderPaymentMethods: (o: {
+    selector: string
+    variantKey?: string
+  }) => Promise<unknown>
+  renderAgreement: (o: {
+    selector: string
+    variantKey?: string
+  }) => Promise<unknown>
+  requestPayment: (req: WidgetPaymentRequest) => Promise<void>
+}
+
 export type TossPaymentsFn = (clientKey: string) => {
   payment: (opts: { customerKey: string }) => {
     requestPayment: (req: PaymentRequest) => Promise<void>
   }
+  /** 결제위젯(gck 키용) — hilly_rn 앱과 동일한 연동 방식 */
+  widgets: (opts: { customerKey: string }) => TossWidgets
 }
 
 declare global {
