@@ -54,6 +54,53 @@ export default function LandingPage() {
         </div>
       </header>
 
+      {/* 모집 중 이벤트 — 낯선곳으로 (가장 먼저, 가장 크게) */}
+      <section className="pb-4 pt-6">
+        <Reveal>
+          <Link
+            href={NATSEONGOT.path}
+            className="group grid overflow-hidden rounded-2xl border border-[#DC2F55]/30 bg-[radial-gradient(120%_120%_at_100%_0%,rgba(220,47,85,0.08),transparent_55%)] transition-colors hover:border-[#DC2F55]/60 lg:grid-cols-5"
+          >
+            <div className="relative min-h-[220px] lg:col-span-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/events/course.jpg"
+                alt="광교산 코스"
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              />
+              <span className="absolute left-4 top-4 animate-pulse rounded-full bg-[#DC2F55] px-3 py-1 text-xs font-bold text-white">
+                모집 중
+              </span>
+            </div>
+            <div className="flex flex-col justify-center gap-3 p-7 lg:col-span-3 lg:p-10">
+              <p className="text-sm font-medium text-muted-foreground">
+                힐리힐리가 직접 여는 오프라인 이벤트
+              </p>
+              <p className="text-3xl font-bold tracking-tight sm:text-4xl">
+                {NATSEONGOT.title}
+                <span className="ml-2.5 text-lg font-medium text-muted-foreground">
+                  {NATSEONGOT.subtitle}
+                </span>
+              </p>
+              <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <CalendarDays className="h-4 w-4" />
+                  {NATSEONGOT.dateLabel}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4" />
+                  {NATSEONGOT.placeLabel}
+                </span>
+                <span>정원 {NATSEONGOT.capacity}명</span>
+              </p>
+              <p className="mt-2 text-base font-semibold text-[#DC2F55]">
+                자세히 보고 신청하기 →
+              </p>
+            </div>
+          </Link>
+        </Reveal>
+      </section>
+
       {/* 히어로 — 좌: 카피 / 우: 실제 Mapbox 데모 지도 */}
       <section className="grid items-center gap-10 py-12 lg:min-h-[78dvh] lg:grid-cols-12 lg:gap-8 lg:py-8">
         <Reveal className="lg:col-span-5">
@@ -83,53 +130,6 @@ export default function LandingPage() {
         </Reveal>
         <Reveal delay={0.15} className="lg:col-span-7">
           <HeroMapLazy className="h-[320px] sm:h-[420px] lg:h-[540px]" />
-        </Reveal>
-      </section>
-
-      {/* 모집 중 이벤트 — 낯선곳으로 */}
-      <section className="py-6">
-        <Reveal>
-          <Link
-            href={NATSEONGOT.path}
-            className="group grid overflow-hidden rounded-2xl border transition-colors hover:border-[#DC2F55]/50 lg:grid-cols-5"
-          >
-            <div className="relative min-h-[200px] lg:col-span-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/events/course.jpg"
-                alt="광교산 코스"
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-              />
-              <span className="absolute left-4 top-4 rounded-full bg-[#DC2F55] px-3 py-1 text-xs font-bold text-white">
-                모집 중
-              </span>
-            </div>
-            <div className="flex flex-col justify-center gap-3 p-7 lg:col-span-3 lg:p-9">
-              <p className="text-sm font-medium text-muted-foreground">
-                힐리힐리가 직접 여는 오프라인 이벤트
-              </p>
-              <p className="text-2xl font-bold tracking-tight sm:text-3xl">
-                {NATSEONGOT.title}
-                <span className="ml-2 text-base font-medium text-muted-foreground">
-                  {NATSEONGOT.subtitle}
-                </span>
-              </p>
-              <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <CalendarDays className="h-4 w-4" />
-                  {NATSEONGOT.dateLabel}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4" />
-                  {NATSEONGOT.placeLabel}
-                </span>
-                <span>정원 {NATSEONGOT.capacity}명</span>
-              </p>
-              <p className="mt-2 text-sm font-semibold text-[#DC2F55]">
-                자세히 보고 신청하기 →
-              </p>
-            </div>
-          </Link>
         </Reveal>
       </section>
 
