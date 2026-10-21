@@ -54,31 +54,44 @@ function startEl(): HTMLDivElement {
   return el
 }
 
-/** DB(스탬프지도) 포인트 → 체크포인트. 제목 끝 "(배점)" 규약 — 없으면 출발점으로 간주 */
+/** DB(스탬프지도) 포인트 → 체크포인트. 제목 끝 "(배점)" 규약 — 없으면 출발점으로 간주.
+ *  event_course_points RPC 사용: 지도의 공개 설정(visibility)과 무관하게
+ *  BO 에디터에서 저장한 최신 포인트가 그대로 반영된다. */
 async function loadFromTrail(): Promise<{
   cps: CheckPoint[]
   start: { name: string; lng: number; lat: number } | null
 } | null> {
   if (!COURSE_TRAIL_ID) return null
   try {
-    const { loadPublicMap } = await import("@/lib/repos/publicMapRepo")
-    const data = await loadPublicMap(COURSE_TRAIL_ID)
-    if (!data || data.points.length === 0) return null
+    const { getSupabase } = await import("@/lib/supabase/client")
+    const { data, error } = await getSupabase().rpc("event_course_points", {
+      p_trail_id: COURSE_TRAIL_ID,
+    })
+    if (error) return null
+    const raw = (data ?? {}) as {
+      points?: { title?: unknown; lat?: unknown; lng?: unknown }[]
+    }
+    const points = Array.isArray(raw.points) ? raw.points : []
+    if (points.length === 0) return null
     const cps: CheckPoint[] = []
     let start: { name: string; lng: number; lat: number } | null = null
-    for (const p of data.points) {
-      const m = p.title.match(/[(（]\s*(\d{1,3})\s*[)）]\s*$/)
+    for (const p of points) {
+      const title = typeof p.title === "string" ? p.title : ""
+      const lat = typeof p.lat === "number" ? p.lat : null
+      const lng = typeof p.lng === "number" ? p.lng : null
+      if (lat == null || lng == null) continue
+      const m = title.match(/[(（]\s*(\d{1,3})\s*[)）]\s*$/)
       if (m) {
         const tier = Number(m[1]) as CheckPoint["points"]
         if (!(tier in TIER_COLOR)) continue
         cps.push({
-          name: p.title.replace(/[(（]\s*\d{1,3}\s*[)）]\s*$/, "").trim(),
+          name: title.replace(/[(（]\s*\d{1,3}\s*[)）]\s*$/, "").trim(),
           points: tier,
-          lng: p.lng,
-          lat: p.lat,
+          lng,
+          lat,
         })
       } else if (!start) {
-        start = { name: p.title, lng: p.lng, lat: p.lat }
+        start = { name: title, lng, lat }
       }
     }
     return cps.length > 0 ? { cps, start } : null
