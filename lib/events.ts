@@ -28,15 +28,31 @@ export const NATSEONGOT: EventInfo = {
   path: "/events/natseongot",
 }
 
-/** Edge Function 호출 — 신청서 저장 / 결제 승인 */
+/** 토스 결제위젯 클라이언트 키(공개 키) — hilly_rn app.config 와 동일 정책.
+ *  시크릿 키는 웹에 두지 않고 Edge Function 시크릿(TOSS_SECRET_KEY)에만 존재.
+ *  prod 빌드=라이브 키 / 로컬 dev=테스트 키, env 로 덮어쓰기 가능. */
+export const TOSS_CLIENT_KEY =
+  process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY ??
+  (process.env.NODE_ENV === "production"
+    ? "live_gck_Z1aOwX7K8mBnXoX4XLBQ3yQxzvNP"
+    : "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm")
+
+/** Edge Function 호출 — 신청서 저장 / 결제 승인 (로그인 필수: 세션 토큰 전달) */
 export async function callEventFn<T>(
   body: Record<string, unknown>
 ): Promise<T> {
+  const { getSupabase } = await import("@/lib/supabase/client")
+  const {
+    data: { session },
+  } = await getSupabase().auth.getSession()
+  if (!session) throw new Error("로그인이 필요해요.")
+
   const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/event-signup`
   const res = await fetch(url, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+      Authorization: `Bearer ${session.access_token}`,
+      apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),

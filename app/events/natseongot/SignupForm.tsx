@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { NATSEONGOT as EV, callEventFn } from "@/lib/events"
+import { NATSEONGOT as EV, TOSS_CLIENT_KEY, callEventFn } from "@/lib/events"
 
 type Fields = {
   name: string
@@ -111,16 +111,10 @@ export function SignupForm() {
       })
       setOrderId(created.orderId)
 
-      const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY
-      if (!clientKey) {
-        setStatus("transfer")
-        return
-      }
-
       setStatus("paying")
       const { loadTossPayments } = await import("./toss")
       const TossPayments = await loadTossPayments()
-      const payment = TossPayments(clientKey).payment({
+      const payment = TossPayments(TOSS_CLIENT_KEY).payment({
         customerKey: created.orderId,
       })
       const origin = window.location.origin
