@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     title: "낯선곳으로 — 광교산 스탬프 게임",
     description:
       "숲길에서 펼쳐지는 팀 전략 게임. 2026.11.14 수원 광교산, 16명 한정 모집.",
-    images: ["/events/course.jpg"],
+    images: ["/events/og.png"],
   },
 }
 
