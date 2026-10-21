@@ -126,23 +126,39 @@ export function CourseMap({ className }: { className?: string }) {
 
       const esc = (s: string) =>
         s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      const markers: mapboxgl.Marker[] = []
       for (const cp of cps) {
-        new mapboxgl.Marker({ element: markerEl(cp) })
-          .setLngLat([cp.lng, cp.lat])
-          .setPopup(
-            new mapboxgl.Popup({ offset: 14, closeButton: false }).setHTML(
-              `<div style="font-size:12px;font-weight:700">${esc(cp.name)}</div>
-               <div style="font-size:12px;color:#666">${cp.points}점</div>`
+        markers.push(
+          new mapboxgl.Marker({ element: markerEl(cp) })
+            .setLngLat([cp.lng, cp.lat])
+            .setPopup(
+              new mapboxgl.Popup({ offset: 14, closeButton: false }).setHTML(
+                `<div style="font-size:12px;font-weight:700">${esc(cp.name)}</div>
+                 <div style="font-size:12px;color:#666">${cp.points}점</div>`
+              )
             )
-          )
-          .addTo(m)
+            .addTo(m)
+        )
       }
 
       if (start) {
-        new mapboxgl.Marker({ element: startEl(), anchor: "bottom" })
-          .setLngLat([start.lng, start.lat])
-          .addTo(m)
+        markers.push(
+          new mapboxgl.Marker({ element: startEl(), anchor: "bottom" })
+            .setLngLat([start.lng, start.lat])
+            .addTo(m)
+        )
       }
+
+      // 초기 레이아웃이 안정되기 전에 추가된 마커가 낡은 투영값으로
+      // 모서리에 찍히는 문제 — 로드/유휴 시점에 위치를 강제 재계산
+      const reproject = () => {
+        m.resize()
+        for (const mk of markers) mk.setLngLat(mk.getLngLat())
+      }
+      m.once("load", reproject)
+      m.once("idle", reproject)
+      const lateFix = setTimeout(reproject, 1200)
+      m.once("remove", () => clearTimeout(lateFix))
     })
 
     return () => {
