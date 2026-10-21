@@ -8,6 +8,7 @@ import {
   Compass,
   Flag,
   Footprints,
+  Palette,
   Gift,
   Lock,
   MapPin,
@@ -82,6 +83,11 @@ const RULES = [
     desc: "정상석 체크포인트만큼은 누적 점수가 그 배점 이상일 때 찍을 수 있어요. 50점짜리 정상석에 가려면 먼저 50점을 모아야 해요. 나머지 체크포인트는 순서 제한 없이 자유롭게 찍어요.",
   },
   {
+    icon: Palette,
+    title: "오색 수집 — 다섯 색을 모으면 +50",
+    desc: "10·20·30·40·50, 다섯 가지 색을 전부 하나 이상 찍으면 보너스 50점. 고배점만 노릴지, 세트를 완성하러 10점짜리까지 들를지 — 동선 고민이 하나 더 늘어요.",
+  },
+  {
     icon: Footprints,
     title: "두 발로만",
     desc: "자전거·킥보드 등 탈것은 쓸 수 없어요. 걷거나 달려서 모은 점수만 인정돼요.",
@@ -93,8 +99,8 @@ const RULES = [
   },
   {
     icon: Clock,
-    title: "같은 시각에 모여요",
-    desc: "감점도 실격도 없어요. 다만 4시간 뒤 모두가 광교산 산림욕장으로 돌아와 티타임을 함께해요. 늦어지면 관제가 확인하고 운영진이 찾아가요.",
+    title: "4시간 — 늦으면 1분마다 −10점",
+    desc: "마감을 넘기면 1분마다 10점씩 깎여요. “하나만 더 찍고 갈까”의 아슬아슬함이 마지막까지 이어져요. 4시간 뒤 모두 광교산 산림욕장에 모여 티타임을 함께하고, 많이 늦어지면 관제가 확인하고 운영진이 찾아가요.",
   },
 ] as const
 
@@ -318,6 +324,10 @@ export default function NatseongotPage() {
                     </li>
                   ))}
                 </ul>
+                <p className="border-t px-6 py-3 text-xs leading-relaxed text-muted-foreground">
+                  🎨 다섯 색을 전부 모으면{" "}
+                  <b className="font-semibold text-foreground">보너스 +50점</b>
+                </p>
               </div>
             </Reveal>
 
@@ -344,7 +354,10 @@ export default function NatseongotPage() {
                 <div className="rounded-2xl border bg-card px-5 py-4">
                   <dt className="text-xs text-muted-foreground">제한 시간</dt>
                   <dd className="mt-0.5 font-semibold tabular-nums">
-                    {COURSE.timeLimitHours}시간
+                    {COURSE.timeLimitHours}시간{" "}
+                    <span className="text-xs font-normal text-muted-foreground">
+                      · 초과 1분당 −10점
+                    </span>
                   </dd>
                 </div>
                 <div className="rounded-2xl border bg-card px-5 py-4">
