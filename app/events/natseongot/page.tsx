@@ -78,8 +78,8 @@ const RULES = [
   },
   {
     icon: Lock,
-    title: "진돌 — 점수를 쌓아야 정상이 열려요",
-    desc: "배점이 높은 체크포인트는 누적 점수가 그 배점 이상일 때만 찍을 수 있어요. 50점짜리 봉우리에 가려면 먼저 50점을 모아야 해요. 낮은 곳부터 차근히 올라가는 순서가 자연스럽게 만들어져요.",
+    title: "진돌 — 점수를 쌓아야 정상석이 열려요",
+    desc: "정상석 체크포인트만큼은 누적 점수가 그 배점 이상일 때 찍을 수 있어요. 50점짜리 정상석에 가려면 먼저 50점을 모아야 해요. 나머지 체크포인트는 순서 제한 없이 자유롭게 찍어요.",
   },
   {
     icon: Footprints,
@@ -328,12 +328,13 @@ export default function NatseongotPage() {
                   <span className="font-semibold">진돌 규칙</span>
                 </div>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  배점이 높은 체크포인트는{" "}
+                  <b className="font-semibold text-foreground">정상석</b>{" "}
+                  체크포인트만큼은{" "}
                   <b className="font-semibold text-foreground">
                     누적 점수가 그 배점 이상
                   </b>
-                  일 때만 찍을 수 있어요. 50점짜리 정상에 가려면 먼저 50점을
-                  모아야 해요.
+                  일 때 찍을 수 있어요. 50점짜리 정상석에 가려면 먼저 50점을
+                  모아야 해요. 나머지 체크포인트는 순서 제한 없이 자유예요.
                 </p>
               </div>
             </Reveal>
