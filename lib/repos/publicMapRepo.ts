@@ -24,6 +24,11 @@ export interface PublicMapData {
   coordinates: Trail["coordinates"]
   thumbnail_path: string | null
   segments_colored: boolean
+  /** BO 에서 수동 지정한 출발/도착 좌표 — 없을 수 있음 */
+  start_lat: number | null
+  start_lng: number | null
+  end_lat: number | null
+  end_lng: number | null
   points: EventCourseCheckpoint[]
 }
 
@@ -51,6 +56,10 @@ export async function loadPublicMap(id: string): Promise<PublicMapData | null> {
     thumbnail_path:
       typeof o.thumbnail_path === "string" ? o.thumbnail_path : null,
     segments_colored: o.segments_colored === true,
+    start_lat: toNumberOrNull(o.start_lat),
+    start_lng: toNumberOrNull(o.start_lng),
+    end_lat: toNumberOrNull(o.end_lat),
+    end_lng: toNumberOrNull(o.end_lng),
     points: rawPoints
       .map((p): EventCourseCheckpoint | null => {
         const cp = p as Record<string, unknown>

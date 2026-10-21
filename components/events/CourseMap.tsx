@@ -54,9 +54,11 @@ function startEl(): HTMLDivElement {
   return el
 }
 
-/** DB(스탬프지도) 포인트 → 체크포인트. 제목 끝 "(배점)" 규약 — 없으면 출발점으로 간주.
+/** DB(스탬프지도) 포인트 → 체크포인트. 제목 끝 "(배점)" 규약.
  *  event_course_points RPC 사용: 지도의 공개 설정(visibility)과 무관하게
- *  BO 에디터에서 저장한 최신 포인트가 그대로 반영된다. */
+ *  BO 에디터에서 저장한 최신 포인트가 그대로 반영된다.
+ *  START 는 trails.start_lat/lng(BO 상세의 "출발 · 도착" UI) 가 있으면 그걸
+ *  쓰고, 없으면 "(배점)" 없는 레거시 stamp_point 를 START 로 폴백한다. */
 async function loadFromTrail(): Promise<{
   cps: CheckPoint[]
   start: { name: string; lng: number; lat: number } | null
@@ -70,11 +72,13 @@ async function loadFromTrail(): Promise<{
     if (error) return null
     const raw = (data ?? {}) as {
       points?: { title?: unknown; lat?: unknown; lng?: unknown }[]
+      start_lat?: unknown
+      start_lng?: unknown
     }
     const points = Array.isArray(raw.points) ? raw.points : []
     if (points.length === 0) return null
     const cps: CheckPoint[] = []
-    let start: { name: string; lng: number; lat: number } | null = null
+    let legacyStart: { name: string; lng: number; lat: number } | null = null
     for (const p of points) {
       const rawTitle = typeof p.title === "string" ? p.title : ""
       const lat = typeof p.lat === "number" ? p.lat : null
@@ -94,10 +98,17 @@ async function loadFromTrail(): Promise<{
           lng,
           lat,
         })
-      } else if (!start) {
-        start = { name: title, lng, lat }
+      } else if (!legacyStart) {
+        legacyStart = { name: title, lng, lat }
       }
     }
+    // 우선순위: trails.start_lat/lng → 레거시 "(배점) 없는" 포인트
+    const sLat = typeof raw.start_lat === "number" ? raw.start_lat : null
+    const sLng = typeof raw.start_lng === "number" ? raw.start_lng : null
+    const start =
+      sLat != null && sLng != null
+        ? { name: "출발", lat: sLat, lng: sLng }
+        : legacyStart
     return cps.length > 0 ? { cps, start } : null
   } catch {
     return null // 네트워크/RPC 실패 — 하드코딩 좌표로 폴백
