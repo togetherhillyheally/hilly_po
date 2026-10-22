@@ -61,6 +61,7 @@ function startEl(): HTMLDivElement {
  *  쓰고, 없으면 "(배점)" 없는 레거시 stamp_point 를 START 로 폴백한다. */
 type CourseData = {
   revealed: boolean
+  adminPreview: boolean
   revealAt: string | null
   cps: CheckPoint[]
   start: { name: string; lng: number; lat: number } | null
@@ -76,12 +77,14 @@ async function loadFromTrail(): Promise<CourseData | null> {
     if (error) return null
     const raw = (data ?? {}) as {
       revealed?: unknown
+      admin_preview?: unknown
       reveal_at?: unknown
       points?: { title?: unknown; lat?: unknown; lng?: unknown }[]
       start_lat?: unknown
       start_lng?: unknown
     }
     const revealed = raw.revealed !== false
+    const adminPreview = raw.admin_preview === true
     const revealAt = typeof raw.reveal_at === "string" ? raw.reveal_at : null
     const points = Array.isArray(raw.points) ? raw.points : []
     const cps: CheckPoint[] = []
@@ -116,7 +119,13 @@ async function loadFromTrail(): Promise<CourseData | null> {
       sLat != null && sLng != null
         ? { name: "출발", lat: sLat, lng: sLng }
         : legacyStart
-    return { revealed: revealed && cps.length > 0, revealAt, cps, start }
+    return {
+      revealed: revealed && cps.length > 0,
+      adminPreview,
+      revealAt,
+      cps,
+      start,
+    }
   } catch {
     return null // 네트워크/RPC 실패 — 티저(비공개) 지도로 폴백
   }
@@ -187,6 +196,18 @@ export function CourseMap({ className }: { className?: string }) {
         attributionControl: false,
       })
       map.current = m
+
+      if (revealed && db?.adminPreview) {
+        // 관리자 미리보기 배지 — 참가자에겐 아직 비공개임을 알림
+        const badge = document.createElement("div")
+        badge.style.cssText =
+          "position:absolute;left:12px;top:12px;z-index:5;pointer-events:none;" +
+          "background:#DC2F55;color:#fff;font-size:12px;font-weight:700;" +
+          "padding:6px 12px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.35)"
+        badge.textContent = "관리자 미리보기 — 참가자에겐 13:05까지 비공개"
+        box.current.appendChild(badge)
+        m.once("remove", () => badge.remove())
+      }
 
       if (!revealed) {
         // 작전 구역 점선 원 + 공개 예고 오버레이
