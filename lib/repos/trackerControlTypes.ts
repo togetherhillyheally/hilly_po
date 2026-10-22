@@ -86,6 +86,15 @@ export interface DeviceLiveRow {
   entry_display_name: string | null
 }
 
+/** 조별 스탬프 점수 한 줄 (tracker_event_stamp_scores) */
+export interface StampScore {
+  entry_id: string
+  score: number
+  stamp_count: number
+  bonus_count: number
+  last_stamp_at: string | null
+}
+
 export interface TailPoint {
   entry_id: string
   lat: number

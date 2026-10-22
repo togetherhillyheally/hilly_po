@@ -102,7 +102,9 @@ function markerLabel(r: RankedEntry): string {
   const flag = r.finished ? "✓ " : ""
   const rank = r.rank != null && r.rank <= 3 ? `${r.rank}위 ` : ""
   const bib = r.entry.bib_no ? `#${r.entry.bib_no} ` : ""
-  return `${flag}${rank}${bib}${markerShortName(r.entry.display_name)}`
+  // 스탬프 게임 이벤트 — 조별 실시간 점수를 마커에 함께 표시
+  const score = r.gameScore != null ? ` · ${r.gameScore}점` : ""
+  return `${flag}${rank}${bib}${markerShortName(r.entry.display_name)}${score}`
 }
 
 /** 겹침 대비 z-index: 선택 > SOS > 순위 높은 순. 호버 시 일시적으로 최상단 */

@@ -46,6 +46,11 @@ export function useLiveEvent(options: {
   const [info, setInfo] = useState<PublicEventInfo | null>(null)
   const [ranked, setRanked] = useState<RankedEntry[]>([])
   const [tails, setTails] = useState<TailPoint[]>([])
+  // 조별 스탬프 점수 — 스탬프지도(코스 좌표 없는 trail) 연결 이벤트에서만
+  const [scores, setScores] = useState<Map<
+    string,
+    { score: number; stampCount: number }
+  > | null>(null)
   const [lastPolledAt, setLastPolledAt] = useState<number | null>(null)
   const [notFound, setNotFound] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -121,6 +126,32 @@ export function useLiveEvent(options: {
 
   // 상시 관제(모니터)는 긴 궤적(6시간)이 안전 확인에 유용 — 레이스는 30분
   const tailsMinutes = info?.event_type === "monitor" ? 360 : 30
+  // 스탬프 게임 점수 집계 대상: trail 이 연결된 모니터 이벤트
+  const hasStampGame = info?.event_type === "monitor" && info?.trail != null
+
+  const pollScores = useCallback(async () => {
+    if (!hasStampGame || document.visibilityState === "hidden") return
+    try {
+      const rows = await trackerControlRepo.eventStampScores(token)
+      setScores(
+        new Map(
+          rows.map((r) => [
+            r.entry_id,
+            { score: r.score, stampCount: r.stamp_count },
+          ]),
+        ),
+      )
+    } catch {
+      // 점수는 부가 정보 — 조용히 다음 주기에 재시도
+    }
+  }, [token, hasStampGame])
+
+  useEffect(() => {
+    if (!info || !hasStampGame) return
+    pollScores()
+    const timer = setInterval(pollScores, 15_000)
+    return () => clearInterval(timer)
+  }, [info, hasStampGame, pollScores])
 
   const pollTails = useCallback(async () => {
     if (document.visibilityState === "hidden") return
@@ -170,5 +201,24 @@ export function useLiveEvent(options: {
     return () => clearInterval(timer)
   }, [info, pollTails])
 
-  return { info, courseIndex, ranked, tails, lastPolledAt, notFound, loading }
+  // 점수 주입 — 점수 있는 이벤트면 RankedEntry 에 gameScore/stampCount 병합
+  const rankedWithScores = useMemo(() => {
+    if (!scores) return ranked
+    return ranked.map((r) => {
+      const sc = scores.get(r.entry.entry_id)
+      return sc
+        ? { ...r, gameScore: sc.score, stampCount: sc.stampCount }
+        : r
+    })
+  }, [ranked, scores])
+
+  return {
+    info,
+    courseIndex,
+    ranked: rankedWithScores,
+    tails,
+    lastPolledAt,
+    notFound,
+    loading,
+  }
 }

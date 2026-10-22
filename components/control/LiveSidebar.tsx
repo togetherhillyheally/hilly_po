@@ -242,8 +242,16 @@ function EntryRow({
           {r.entry.display_name}
         </span>
         <span className="ml-auto shrink-0">
-          {isRace && r.rank != null && r.rank > 1 && (
-            <span className="text-sm tabular-nums">{formatGap(r.gapM)}</span>
+          {r.gameScore != null ? (
+            <span className="text-sm font-bold tabular-nums text-[#DC2F55]">
+              {r.gameScore}점
+            </span>
+          ) : (
+            isRace &&
+            r.rank != null &&
+            r.rank > 1 && (
+              <span className="text-sm tabular-nums">{formatGap(r.gapM)}</span>
+            )
           )}
         </span>
         <span
@@ -300,6 +308,9 @@ function EntryRow({
         )}
         {altitude != null && (
           <span className="whitespace-nowrap">⛰{Math.round(altitude)}m</span>
+        )}
+        {r.stampCount != null && r.gameScore != null && (
+          <span className="whitespace-nowrap">도장 {r.stampCount}개</span>
         )}
         {!isRace && r.distance24hKm != null && (
           <span className="whitespace-nowrap font-medium text-foreground/80">
@@ -379,6 +390,12 @@ export default function LiveSidebar({
       if (isAdmin) {
         if (a.status === "sos" && b.status !== "sos") return -1
         if (b.status === "sos" && a.status !== "sos") return 1
+      }
+      // 스탬프 게임 이벤트: 점수 내림차순이 곧 리더보드
+      if (!isRace && (a.gameScore != null || b.gameScore != null)) {
+        const diff = (b.gameScore ?? -1) - (a.gameScore ?? -1)
+        if (diff !== 0) return diff
+        return a.entry.display_name.localeCompare(b.entry.display_name)
       }
       // 모니터(상시 관제): 이상 상태 우선 — SOS > 신호없음 > 장시간 정지 > 배터리 부족 > 정상
       if (!isRace) {

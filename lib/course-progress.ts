@@ -267,6 +267,10 @@ export interface RankedEntry {
   distance24hKm: number | null
   /** 배터리 부족 (3.6V 미만, 관리자 응답 전용) */
   lowBattery: boolean
+  /** 이벤트 스탬프 게임 점수 — 스탬프지도 연결 이벤트에서만 (훅이 주입) */
+  gameScore?: number | null
+  /** 찍은 스탬프 수 */
+  stampCount?: number
 }
 
 /** 클라이언트 정지 감지용 앵커 — 폴링 간 유지 (훅이 ref 로 보관) */

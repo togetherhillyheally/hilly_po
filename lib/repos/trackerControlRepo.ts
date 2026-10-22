@@ -11,6 +11,7 @@ import {
   type FinalizeResultInput,
   type LiveEntry,
   type PublicEventInfo,
+  type StampScore,
   type TailPoint,
   type TrackerDevice,
   type TrackerEvent,
@@ -264,6 +265,16 @@ export const trackerControlRepo = {
     })
     if (error) throw error
     return (data ?? []) as AthleteRecord[]
+  },
+
+  /** 조별 스탬프 점수 (이벤트에 스탬프지도 trail 연결 시) */
+  async eventStampScores(token: string): Promise<StampScore[]> {
+    const { data, error } = await getSupabase().rpc(
+      "tracker_event_stamp_scores",
+      { p_token: token },
+    )
+    if (error) throw error
+    return (data ?? []) as StampScore[]
   },
 
   async eventTails(token: string, minutes = 30): Promise<TailPoint[]> {

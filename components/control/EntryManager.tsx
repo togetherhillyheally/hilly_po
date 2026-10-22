@@ -367,9 +367,13 @@ export default function EntryManager({ eventId }: { eventId: string }) {
                   id="entry-category"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  placeholder="예: 남자"
+                  placeholder="예: 남자 / 1팀"
                   list="entry-category-options"
                 />
+                <p className="text-xs text-muted-foreground">
+                  팀전이면 팀명을 적어주세요 — 같은 구분은 지도에서 같은 색,
+                  구분이 다르면 색이 겹치지 않아요.
+                </p>
                 <datalist id="entry-category-options">
                   {existingCategories.map((c) => (
                     <option key={c} value={c} />
