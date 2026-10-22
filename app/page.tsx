@@ -78,9 +78,11 @@ export default function LandingPage() {
               </p>
               <p className="text-3xl font-bold tracking-tight sm:text-4xl">
                 {NATSEONGOT.title}
-                <span className="ml-2.5 text-lg font-medium text-muted-foreground">
-                  {NATSEONGOT.subtitle}
-                </span>
+                {NATSEONGOT.subtitle && (
+                  <span className="ml-2.5 text-lg font-medium text-muted-foreground">
+                    {NATSEONGOT.subtitle}
+                  </span>
+                )}
               </p>
               <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5">
