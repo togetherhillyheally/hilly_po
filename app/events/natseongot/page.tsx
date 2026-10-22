@@ -188,7 +188,6 @@ const SAFETY = [
   "운영본부가 전원의 위치를 실시간으로 봐요.",
   "제한 시각까지 광교산 산림욕장 복귀가 원칙이고, 늦어지면 운영진이 위치를 확인해 찾아가요.",
   "언제든 기권할 수 있어요. 가장 가까운 날머리로 안내할게요.",
-  "참가자 전원 행사 상해보험에 가입해요.",
 ] as const
 
 const GEAR = [
@@ -313,8 +312,7 @@ export default function NatseongotPage() {
             점수를 모으는 팀 전략 게임
           </h2>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            로게이닝(점수 오리엔티어링)에서 전략만 가져왔어요. 경쟁은 덜고,
-            선택의 재미만 남겼어요.
+            경쟁은 덜고, 어디로 갈지 고르는 재미만 남겼어요.
           </p>
         </Reveal>
 

@@ -18,9 +18,17 @@ type Participant = {
   phone: string
   birth: string
   gender: string
+  /** 뒤풀이 식사 참석 */
+  dinner: boolean
 }
 
-const EMPTY_P: Participant = { name: "", phone: "", birth: "", gender: "" }
+const EMPTY_P: Participant = {
+  name: "",
+  phone: "",
+  birth: "",
+  gender: "",
+  dinner: false,
+}
 
 type Fields = {
   email: string
@@ -68,7 +76,7 @@ const AGREEMENTS = [
     key: "privacy" as const,
     required: true,
     label:
-      "행사 운영과 상해보험 가입을 위해 입력한 개인정보가 수집·이용되는 데 동의해요. (행사 종료 후 6개월 내 파기)",
+      "행사 운영과 조 편성을 위해 입력한 개인정보가 수집·이용되는 데 동의해요. (행사 종료 후 6개월 내 파기)",
   },
   {
     key: "photo" as const,
@@ -82,7 +90,6 @@ export function SignupForm() {
   const [f, setF] = useState<Fields>(EMPTY)
   // 단체 신청 — 첫 번째가 대표(본인), 최대 EV.maxParty 명
   const [party, setParty] = useState<Participant[]>([{ ...EMPTY_P }])
-  const [dinner, setDinner] = useState(false)
   const [agree, setAgree] = useState({
     terms: false,
     privacy: false,
@@ -185,7 +192,11 @@ export function SignupForm() {
     (k: keyof Fields) => (e: React.ChangeEvent<HTMLInputElement>) =>
       setF((p) => ({ ...p, [k]: e.target.value }))
 
-  const setP = (i: number, k: keyof Participant, v: string) =>
+  const setP = <K extends keyof Participant>(
+    i: number,
+    k: K,
+    v: Participant[K]
+  ) =>
     setParty((list) =>
       list.map((p, idx) => (idx === i ? { ...p, [k]: v } : p))
     )
@@ -225,7 +236,6 @@ export function SignupForm() {
         eventSlug: EV.slug,
         participants: party,
         ...f,
-        dinner,
         agreePhoto: agree.photo,
       })
       setOrderId(created.orderId)
@@ -371,7 +381,7 @@ export function SignupForm() {
                       inputMode="tel"
                     />
                   </Field>
-                  <Field label="생년월일 (보험 가입용)" required>
+                  <Field label="생년월일" required>
                     <Input
                       value={p.birth}
                       onChange={(e) => setP(i, "birth", e.target.value)}
@@ -380,7 +390,7 @@ export function SignupForm() {
                       maxLength={8}
                     />
                   </Field>
-                  <Field label="성별 (보험 가입용)" required>
+                  <Field label="성별" required>
                     <div className="grid grid-cols-2 gap-2">
                       {["남", "여"].map((g) => (
                         <Button
@@ -520,14 +530,9 @@ export function SignupForm() {
 
         {/* 뒤풀이 */}
         <section>
-          <label className="flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors hover:border-foreground/20">
-            <Checkbox
-              checked={dinner}
-              onCheckedChange={(v) => setDinner(v === true)}
-              className="mt-0.5 data-[state=checked]:border-[#DC2F55] data-[state=checked]:bg-[#DC2F55]"
-            />
-            <span className="text-sm leading-relaxed">
-              <b className="font-semibold">🍲 뒤풀이 식사 참석 (17:30)</b>
+          <div className="rounded-xl border p-4">
+            <p className="text-sm leading-relaxed">
+              <b className="font-semibold">🍲 뒤풀이 식사 (17:30)</b>
               <span className="mt-0.5 block text-xs text-muted-foreground">
                 행사 후{" "}
                 <a
@@ -535,14 +540,34 @@ export function SignupForm() {
                   target="_blank"
                   rel="noreferrer"
                   className="underline underline-offset-2"
-                  onClick={(e) => e.stopPropagation()}
                 >
                   자선농원
                 </a>
-                에서 소감 나누며 저녁을 같이 먹어요. 신청 인원 전원 기준이에요.
+                에서 소감 나누며 저녁을 같이 먹어요. 참석할 분을 체크해주세요.
               </span>
-            </span>
-          </label>
+            </p>
+            <div className="mt-3 space-y-2">
+              {party.map((p, i) => (
+                <label
+                  key={i}
+                  className="flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors hover:border-foreground/20"
+                >
+                  <Checkbox
+                    checked={p.dinner}
+                    onCheckedChange={(v) => setP(i, "dinner", v === true)}
+                    className="data-[state=checked]:border-[#DC2F55] data-[state=checked]:bg-[#DC2F55]"
+                  />
+                  <span className="font-medium">
+                    {p.name.trim() ||
+                      (i === 0 ? "대표 신청자" : `참가자 ${i + 1}`)}
+                  </span>
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    {p.dinner ? "참석" : "불참"}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
         </section>
 
         {/* 4. 동의 */}

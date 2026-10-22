@@ -19,6 +19,7 @@ type EditableParticipant = {
   phone: string
   birth: string
   gender: string
+  dinner?: boolean
 }
 
 export type MySignupData = {
@@ -32,6 +33,7 @@ export type MySignupData = {
   paidAt: string | null
   canceledAt: string | null
   dinner?: boolean
+  dinnerCount?: number
   receipt: string | null
   cancelableUntil: string
   cancelable: boolean
@@ -58,9 +60,18 @@ export function MySignup({
   const [canceling, setCanceling] = useState(false)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<EditableParticipant[]>([])
-  const [dinnerDraft, setDinnerDraft] = useState(false)
   const [saving, setSaving] = useState(false)
   const paid = data.status === "paid"
+  const dinnerNames = (data.participants ?? [])
+    .filter((p) => p.dinner)
+    .map((p) => p.name)
+  const dinnerLabel = data.participants?.some((p) => "dinner" in p)
+    ? dinnerNames.length > 0
+      ? `${dinnerNames.length}명 참석 (${dinnerNames.join(", ")})`
+      : "불참"
+    : data.dinner
+      ? "참석"
+      : "불참"
 
   const startEdit = () => {
     setDraft(
@@ -69,13 +80,17 @@ export function MySignup({
         phone: p.phone ?? "",
         birth: p.birth ?? "",
         gender: p.gender ?? "",
+        dinner: p.dinner === true,
       }))
     )
-    setDinnerDraft(data.dinner === true)
     setEditing(true)
   }
 
-  const setD = (i: number, k: keyof EditableParticipant, v: string) =>
+  const setD = <K extends keyof EditableParticipant>(
+    i: number,
+    k: K,
+    v: EditableParticipant[K]
+  ) =>
     setDraft((list) =>
       list.map((p, idx) => (idx === i ? { ...p, [k]: v } : p))
     )
@@ -87,7 +102,6 @@ export function MySignup({
         action: "update",
         eventSlug: EV.slug,
         participants: draft,
-        dinner: dinnerDraft,
       })
       toast.success("신청 정보를 수정했어요.")
       setEditing(false)
@@ -171,24 +185,20 @@ export function MySignup({
                   ))}
                 </div>
               </div>
+              <label className="mt-3 flex cursor-pointer items-center gap-2.5 border-t pt-3 text-sm">
+                <input
+                  type="checkbox"
+                  checked={p.dinner === true}
+                  onChange={(e) => setD(i, "dinner", e.target.checked)}
+                  className="h-4 w-4 accent-[#DC2F55]"
+                />
+                🍲 뒤풀이 식사 참석
+                <span className="text-xs text-muted-foreground">
+                  17:30 자선농원
+                </span>
+              </label>
             </div>
           ))}
-          <label className="flex cursor-pointer items-start gap-3 rounded-xl border p-4">
-            <input
-              type="checkbox"
-              checked={dinnerDraft}
-              onChange={(e) => setDinnerDraft(e.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-[#DC2F55]"
-            />
-            <span className="text-sm">
-              <span className="font-semibold">
-                🍲 뒤풀이 식사 참석 (17:30 자선농원)
-              </span>
-              <span className="mt-0.5 block text-xs text-muted-foreground">
-                신청 인원 전원 기준이에요.
-              </span>
-            </span>
-          </label>
         </div>
         <div className="mt-5 flex gap-2">
           <Button
@@ -266,10 +276,10 @@ export function MySignup({
             {formatDate(paid ? data.paidAt : data.canceledAt)}
           </dd>
         </div>
-        <div className="flex justify-between">
-          <dt className="text-muted-foreground">뒤풀이 식사 (17:30)</dt>
-          <dd className="font-semibold">
-            {data.dinner ? "참석" : "불참"}
+        <div className="flex justify-between gap-6">
+          <dt className="shrink-0 text-muted-foreground">뒤풀이 식사 (17:30)</dt>
+          <dd className="text-right font-semibold">
+            {dinnerLabel}
           </dd>
         </div>
         <div className="flex justify-between border-t pt-3">
