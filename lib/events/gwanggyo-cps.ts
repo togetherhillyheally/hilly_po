@@ -39,7 +39,7 @@ export const START: { name: string; lng: number; lat: number } | null = {
   lat: 37.307128,
 }
 
-// 좌표는 비공개 — 실제 위치는 행사 시작 5분 뒤 서버(event_course_points)가 공개한다.
+// 좌표는 비공개 — 실제 위치는 관제 이벤트가 진행중이 되는 순간 서버(event_course_points)가 공개한다.
 // 여기는 배점 구성(개수·총점 계산)용 목록만 유지 — 번들에 실좌표를 싣지 않는다.
 export const CPS: CheckPoint[] = [
   { name: "CP1", points: 50, lng: 0, lat: 0 },

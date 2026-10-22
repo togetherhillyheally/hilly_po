@@ -161,10 +161,13 @@ export function CourseMap({ className }: { className?: string }) {
       if (document.visibilityState === "visible") load()
     }
     load()
+    // 공개는 관제에서 모험을 시작하는 순간 — 보고 있는 화면도 새로고침 없이 열리도록
+    const poll = setInterval(load, 30_000)
     window.addEventListener("focus", load)
     document.addEventListener("visibilitychange", onVisible)
     return () => {
       alive = false
+      clearInterval(poll)
       window.removeEventListener("focus", load)
       document.removeEventListener("visibilitychange", onVisible)
     }
@@ -207,7 +210,7 @@ export function CourseMap({ className }: { className?: string }) {
           "position:absolute;left:12px;top:12px;z-index:5;pointer-events:none;" +
           "background:#DC2F55;color:#fff;font-size:12px;font-weight:700;" +
           "padding:6px 12px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.35)"
-        badge.textContent = "관리자 미리보기 — 참가자에겐 13:05까지 비공개"
+        badge.textContent = "관리자 미리보기 — 참가자에겐 모험 시작 전까지 비공개"
         box.current.appendChild(badge)
         m.once("remove", () => badge.remove())
       }

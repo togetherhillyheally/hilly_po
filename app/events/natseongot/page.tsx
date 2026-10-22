@@ -79,10 +79,10 @@ const RULES = [
   },
   {
     icon: Compass,
-    title: "13:05 지도 공개, 그리고 목표 선언",
+    title: "시작과 함께 지도 공개, 그리고 목표 선언",
     desc: (
       <>
-        체크포인트 위치는 <B>행사 시작 5분 뒤(13:05)</B>에야 공개돼요. 미리
+        체크포인트 위치는 <B>모험이 시작되는 순간</B>에야 공개돼요. 미리
         외워 올 수 없어요. 공개된 지도와 배점을 보고 그 자리에서 두 조의
         동선을 짜고, 팀의 목표를 선언해요 — “우리는 오늘 몇 점.” 남을 이기는
         게 아니라 <B>우리 팀을 정확히 읽는 게 승부</B>예요.
@@ -149,13 +149,13 @@ const RULES = [
 const TIMELINE = [
   {
     time: "13:00",
-    title: "시작 · 광교산 산림욕장",
+    title: "집결 · 광교산 산림욕장",
     desc: "팀 확인과 안내",
   },
   {
-    time: "13:05",
-    title: "지도 공개 · 작전 타임",
-    desc: "동선을 짜고 목표를 선언한 뒤 출발",
+    time: "START",
+    title: "모험 시작 · 지도 공개",
+    desc: "그 자리에서 동선을 짜고 목표를 선언한 뒤 출발",
     highlight: true,
   },
   {
@@ -401,7 +401,7 @@ export default function NatseongotPage() {
               )}
               <p className="border-t px-6 py-4 text-xs leading-relaxed text-muted-foreground">
                 지금 지도의 스탬프는 게임 감을 잡기 위한 예시 배치예요. 실제
-                체크포인트 위치는 행사 시작 5분 뒤(13:05)에 이 지도에서 일제히
+                체크포인트 위치는 모험이 시작되는 순간 이 지도에서 일제히
                 공개돼요.
               </p>
             </div>
