@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import mapboxgl from "mapbox-gl"
 import "mapbox-gl/dist/mapbox-gl.css"
 import { applyKoreanLabels } from "@/lib/mapbox-locale"
@@ -160,16 +160,43 @@ function formatRevealAt(iso: string | null): string {
 export function CourseMap({ className }: { className?: string }) {
   const box = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
+  // undefined = 아직 로딩 중, null = 로드 실패(티저 폴백)
+  const [course, setCourse] = useState<CourseData | null | undefined>(
+    undefined
+  )
+  const courseSig = useRef<string | null>(null)
+
+  // BO 에서 포인트를 고친 뒤 이 탭으로 돌아오면 다시 불러와 바뀐 경우에만 지도를 다시 그린다
+  useEffect(() => {
+    let alive = true
+    const load = () =>
+      loadFromTrail().then((d) => {
+        if (!alive) return
+        const sig = JSON.stringify(d)
+        if (sig === courseSig.current) return
+        courseSig.current = sig
+        setCourse(d)
+      })
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load()
+    }
+    load()
+    window.addEventListener("focus", load)
+    document.addEventListener("visibilitychange", onVisible)
+    return () => {
+      alive = false
+      window.removeEventListener("focus", load)
+      document.removeEventListener("visibilitychange", onVisible)
+    }
+  }, [])
 
   useEffect(() => {
     const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
-    if (!box.current || map.current || !token) return
+    if (course === undefined || !box.current || map.current || !token) return
 
     mapboxgl.accessToken = token
-    let cancelled = false
-
-    loadFromTrail().then((db) => {
-      if (cancelled || !box.current || map.current) return
+    const db = course
+    {
       // 공개 여부는 서버가 결정 — 비공개면 체크포인트 없이 티저만
       const revealed = db?.revealed === true
       const cps = revealed ? db!.cps : []
@@ -287,14 +314,13 @@ export function CourseMap({ className }: { className?: string }) {
       m.once("idle", reproject)
       const lateFix = setTimeout(reproject, 1200)
       m.once("remove", () => clearTimeout(lateFix))
-    })
+    }
 
     return () => {
-      cancelled = true
       map.current?.remove()
       map.current = null
     }
-  }, [])
+  }, [course])
 
   return <div ref={box} className={className} />
 }

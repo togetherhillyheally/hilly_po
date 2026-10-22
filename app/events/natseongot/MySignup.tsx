@@ -58,6 +58,7 @@ export function MySignup({
   const [canceling, setCanceling] = useState(false)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<EditableParticipant[]>([])
+  const [dinnerDraft, setDinnerDraft] = useState(false)
   const [saving, setSaving] = useState(false)
   const paid = data.status === "paid"
 
@@ -70,6 +71,7 @@ export function MySignup({
         gender: p.gender ?? "",
       }))
     )
+    setDinnerDraft(data.dinner === true)
     setEditing(true)
   }
 
@@ -85,8 +87,9 @@ export function MySignup({
         action: "update",
         eventSlug: EV.slug,
         participants: draft,
+        dinner: dinnerDraft,
       })
-      toast.success("참가자 정보를 수정했어요.")
+      toast.success("신청 정보를 수정했어요.")
       setEditing(false)
       onChanged()
     } catch (err) {
@@ -170,6 +173,22 @@ export function MySignup({
               </div>
             </div>
           ))}
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border p-4">
+            <input
+              type="checkbox"
+              checked={dinnerDraft}
+              onChange={(e) => setDinnerDraft(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-[#DC2F55]"
+            />
+            <span className="text-sm">
+              <span className="font-semibold">
+                🍲 뒤풀이 식사 참석 (17:30 자선농원)
+              </span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                신청 인원 전원 기준이에요.
+              </span>
+            </span>
+          </label>
         </div>
         <div className="mt-5 flex gap-2">
           <Button
@@ -274,7 +293,7 @@ export function MySignup({
         {paid && (data.participants?.length ?? 0) > 0 && (
           <Button variant="outline" className="h-11 w-full" onClick={startEdit}>
             <Pencil className="mr-2 h-4 w-4" />
-            참가자 정보 수정
+            참가자·뒤풀이 정보 수정
           </Button>
         )}
 
