@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react"
 import mapboxgl from "mapbox-gl"
 import "mapbox-gl/dist/mapbox-gl.css"
 import { applyKoreanLabels } from "@/lib/mapbox-locale"
-import { CPS, START, TIER_COLOR, type CheckPoint } from "@/lib/events/gwanggyo-cps"
+import { START, TIER_COLOR, type CheckPoint } from "@/lib/events/gwanggyo-cps"
 import { NATSEONGOT } from "@/lib/events"
 
 const COURSE_TRAIL_ID = NATSEONGOT.courseTrailId
@@ -59,10 +59,14 @@ function startEl(): HTMLDivElement {
  *  BO 에디터에서 저장한 최신 포인트가 그대로 반영된다.
  *  START 는 trails.start_lat/lng(BO 상세의 "출발 · 도착" UI) 가 있으면 그걸
  *  쓰고, 없으면 "(배점)" 없는 레거시 stamp_point 를 START 로 폴백한다. */
-async function loadFromTrail(): Promise<{
+type CourseData = {
+  revealed: boolean
+  revealAt: string | null
   cps: CheckPoint[]
   start: { name: string; lng: number; lat: number } | null
-} | null> {
+}
+
+async function loadFromTrail(): Promise<CourseData | null> {
   if (!COURSE_TRAIL_ID) return null
   try {
     const { getSupabase } = await import("@/lib/supabase/client")
@@ -71,12 +75,15 @@ async function loadFromTrail(): Promise<{
     })
     if (error) return null
     const raw = (data ?? {}) as {
+      revealed?: unknown
+      reveal_at?: unknown
       points?: { title?: unknown; lat?: unknown; lng?: unknown }[]
       start_lat?: unknown
       start_lng?: unknown
     }
+    const revealed = raw.revealed !== false
+    const revealAt = typeof raw.reveal_at === "string" ? raw.reveal_at : null
     const points = Array.isArray(raw.points) ? raw.points : []
-    if (points.length === 0) return null
     const cps: CheckPoint[] = []
     let legacyStart: { name: string; lng: number; lat: number } | null = null
     for (const p of points) {
@@ -109,10 +116,36 @@ async function loadFromTrail(): Promise<{
       sLat != null && sLng != null
         ? { name: "출발", lat: sLat, lng: sLng }
         : legacyStart
-    return cps.length > 0 ? { cps, start } : null
+    return { revealed: revealed && cps.length > 0, revealAt, cps, start }
   } catch {
-    return null // 네트워크/RPC 실패 — 하드코딩 좌표로 폴백
+    return null // 네트워크/RPC 실패 — 티저(비공개) 지도로 폴백
   }
+}
+
+/** 공개 전 티저 — 작전 구역 원(대략 범위)만 표시, 체크포인트 위치는 숨김 */
+function makeTeaserCircle(): GeoJSON.Feature<GeoJSON.Polygon> {
+  const [cx, cy] = [127.0245, 37.3325]
+  const rKm = 2.4
+  const coords: [number, number][] = []
+  for (let i = 0; i <= 64; i++) {
+    const a = (i / 64) * Math.PI * 2
+    coords.push([
+      cx + (rKm / (111.32 * Math.cos((cy * Math.PI) / 180))) * Math.cos(a),
+      cy + (rKm / 110.57) * Math.sin(a),
+    ])
+  }
+  return {
+    type: "Feature",
+    properties: {},
+    geometry: { type: "Polygon", coordinates: [coords] },
+  }
+}
+
+function formatRevealAt(iso: string | null): string {
+  if (!iso) return "행사 시작 후"
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${d.getMonth() + 1}. ${d.getDate()}. ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 export function CourseMap({ className }: { className?: string }) {
@@ -128,30 +161,69 @@ export function CourseMap({ className }: { className?: string }) {
 
     loadFromTrail().then((db) => {
       if (cancelled || !box.current || map.current) return
-      // DB 지도(에디터에서 수정 가능)가 우선, 실패 시 코드 내 근사 좌표
-      const cps = db?.cps ?? CPS
-      const start = db ? db.start : START
+      // 공개 여부는 서버가 결정 — 비공개면 체크포인트 없이 티저만
+      const revealed = db?.revealed === true
+      const cps = revealed ? db!.cps : []
+      const start = db?.start ?? START
 
       const pts: [number, number][] = [
         ...cps.map((c) => [c.lng, c.lat] as [number, number]),
         ...(start ? [[start.lng, start.lat] as [number, number]] : []),
       ]
-      if (pts.length === 0) return
-
-      const bounds = pts.reduce(
-        (b, p) => b.extend(p),
-        new mapboxgl.LngLatBounds(pts[0], pts[0])
-      )
 
       const m = new mapboxgl.Map({
         container: box.current,
         style: "mapbox://styles/mapbox/outdoors-v12",
-        bounds,
-        fitBoundsOptions: { padding: 56, maxZoom: 14 },
+        ...(revealed && pts.length > 0
+          ? {
+              bounds: pts.reduce(
+                (b, p) => b.extend(p),
+                new mapboxgl.LngLatBounds(pts[0], pts[0])
+              ),
+              fitBoundsOptions: { padding: 56, maxZoom: 14 },
+            }
+          : { center: [127.0245, 37.3325] as [number, number], zoom: 12 }),
         cooperativeGestures: true,
         attributionControl: false,
       })
       map.current = m
+
+      if (!revealed) {
+        // 작전 구역 점선 원 + 공개 예고 오버레이
+        m.on("load", () => {
+          m.addSource("teaser-zone", {
+            type: "geojson",
+            data: makeTeaserCircle(),
+          })
+          m.addLayer({
+            id: "teaser-zone-fill",
+            type: "fill",
+            source: "teaser-zone",
+            paint: { "fill-color": "#DC2F55", "fill-opacity": 0.08 },
+          })
+          m.addLayer({
+            id: "teaser-zone-line",
+            type: "line",
+            source: "teaser-zone",
+            paint: {
+              "line-color": "#DC2F55",
+              "line-width": 2,
+              "line-dasharray": [2, 2],
+            },
+          })
+        })
+        const overlay = document.createElement("div")
+        overlay.style.cssText =
+          "position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);" +
+          "background:rgba(14,14,16,.88);color:#fff;border-radius:14px;" +
+          "padding:16px 22px;text-align:center;z-index:5;pointer-events:none;" +
+          "box-shadow:0 4px 24px rgba(0,0,0,.4);max-width:85%"
+        overlay.innerHTML =
+          '<div style="font-size:15px;font-weight:700">🔒 체크포인트 위치는 비공개</div>' +
+          `<div style="font-size:12px;color:#bbb;margin-top:6px">${formatRevealAt(db?.revealAt ?? null)} 에 이 지도에서 공개돼요</div>`
+        box.current.appendChild(overlay)
+        m.once("remove", () => overlay.remove())
+      }
 
       m.addControl(
         new mapboxgl.NavigationControl({ showCompass: false }),

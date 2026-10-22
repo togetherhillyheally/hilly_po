@@ -31,6 +31,7 @@ export type MySignupData = {
   status: "paid" | "canceled"
   paidAt: string | null
   canceledAt: string | null
+  dinner?: boolean
   receipt: string | null
   cancelableUntil: string
   cancelable: boolean
@@ -221,6 +222,10 @@ export function MySignup({
 
       <dl className="mt-6 space-y-3 rounded-xl border bg-card p-5 text-sm">
         <div className="flex justify-between gap-6">
+          <dt className="shrink-0 text-muted-foreground">이벤트</dt>
+          <dd className="text-right font-semibold">{EV.title}</dd>
+        </div>
+        <div className="flex justify-between gap-6">
           <dt className="shrink-0 text-muted-foreground">
             참가자{(data.partySize ?? 1) > 1 && ` ${data.partySize}명`}
           </dt>
@@ -240,6 +245,12 @@ export function MySignup({
           </dt>
           <dd className="tabular-nums">
             {formatDate(paid ? data.paidAt : data.canceledAt)}
+          </dd>
+        </div>
+        <div className="flex justify-between">
+          <dt className="text-muted-foreground">뒤풀이 식사 (17:30)</dt>
+          <dd className="font-semibold">
+            {data.dinner ? "참석" : "불참"}
           </dd>
         </div>
         <div className="flex justify-between border-t pt-3">

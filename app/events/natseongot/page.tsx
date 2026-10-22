@@ -108,6 +108,11 @@ const PROVIDED = [
   { icon: Package, text: "파밍박스·파밍백 보급 (물·음료·에너지젤)" },
   { icon: Radio, text: "실시간 GPS 관제 — 가족·지인 응원 시청" },
   { icon: Gift, text: "기념품 + 티타임 경품 추첨" },
+  {
+    icon: Users,
+    text: "17:30 뒤풀이 — 자선농원에서 소감 나누며 저녁 식사 (신청 시 선택)",
+    href: "https://naver.me/F3Tj4xUX",
+  },
   { icon: Flag, text: "사진·영상 기록 제공" },
 ] as const
 
@@ -285,8 +290,8 @@ export default function NatseongotPage() {
                 />
               )}
               <p className="border-t px-6 py-4 text-xs leading-relaxed text-muted-foreground">
-                배치는 예시예요. 실제 체크포인트 위치는 답사에서 확정해
-                참가자에게 안내해요.
+                체크포인트 위치는 비공개 — 행사 시작 5분 뒤(13:05)에 이
+                지도에서 일제히 공개돼요.
               </p>
             </div>
           </Reveal>
