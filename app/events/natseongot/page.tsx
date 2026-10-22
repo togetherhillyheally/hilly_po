@@ -30,11 +30,11 @@ import { UserChip } from "./UserChip"
 export const metadata: Metadata = {
   title: "ROUTE @광교 — 광교산 스탬프 게임 | 힐리힐리",
   description:
-    "2026.11.14 수원 광교산. 배점이 다른 체크포인트 26곳을 4시간 안에 자유 순서로 모으는 숲길 팀 전략 게임. 순위는 없고, 팀이 정한 목표만 있어요. 16명 한정.",
+    "2026.11.14 수원 광교산. 배점이 다른 체크포인트 26곳을 4시간 안에 자유 순서로 모으는 숲길 팀 전략 게임. 순위는 없고, 팀이 정한 목표만 있어요. 32명 한정.",
   openGraph: {
     title: "ROUTE @광교 — 광교산 스탬프 게임",
     description:
-      "숲길에서 펼쳐지는 팀 전략 게임. 2026.11.14 수원 광교산, 16명 한정 모집.",
+      "숲길에서 펼쳐지는 팀 전략 게임. 2026.11.14 수원 광교산, 32명 한정 모집.",
     images: ["/events/og.png"],
   },
 }
@@ -51,7 +51,7 @@ const FACTS = [
     icon: Users,
     label: "모집",
     value: `${EV.capacity}명 한정`,
-    sub: "최대 4명 단체 신청 · 4인 1팀 × 4팀 (2인 1조 이동)",
+    sub: "최대 4명 단체 신청 · 4인 1팀 × 8팀 (2인 1조 이동)",
   },
   {
     icon: Wallet,
@@ -517,26 +517,25 @@ export default function NatseongotPage() {
         </Reveal>
       </section>
 
-      {/* 푸터 — hillyheally.com 과 동일한 사업자 정보 (결제 페이지 필수 표기) */}
-      <footer className="border-t py-10 text-xs leading-relaxed text-muted-foreground">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1">
-            <p className="text-sm font-bold text-foreground">
-              Hilly Heally{" "}
-              <span className="font-medium text-muted-foreground">
-                주식회사 힐리힐리
-              </span>
-            </p>
-            <p>대표자: 박준섭 · 사업자번호: 720-86-03798</p>
-            <p>주소: 서울시 서초구 서초중앙로 123, 지하 1층 1003호</p>
-            <p>Tel: 1800-5191 · Fax: 02-6455-6023 · Mail: service@hillyheally.com</p>
-          </div>
-          <div className="flex items-center gap-4">
+      {/* 푸터 — hillyheally.com 홈과 동일한 레이아웃·문구 */}
+      <footer className="border-t py-12 text-sm text-muted-foreground">
+        <div className="space-y-1.5">
+          <p className="mb-4 text-xl font-bold text-foreground">Hilly Heally</p>
+          <p>상호명: 주식회사 힐리힐리</p>
+          <p>대표자: 박준섭</p>
+          <p>주소: 서울시 서초구 서초중앙로 123, 지하 1층 1003호</p>
+          <p>사업자번호: 720-86-03798</p>
+          <p>Tel: 1800-5191 FAX: 02-6455-6023</p>
+          <p>Mail: service@hillyheally.com</p>
+        </div>
+        <div className="mt-8 border-t pt-8 text-center">
+          <p>&copy; 2025 Hilly Heally. All rights reserved.</p>
+          <div className="mt-3 flex items-center justify-center gap-6">
             <a
               href="https://hillyheally.com/terms"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-foreground"
+              className="transition-colors hover:text-foreground"
             >
               서비스 이용약관
             </a>
@@ -545,19 +544,21 @@ export default function NatseongotPage() {
               href="https://hillyheally.com/privacy-policy"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-foreground"
+              className="transition-colors hover:text-foreground"
             >
               개인정보처리방침
             </a>
             <span className="text-border">|</span>
-            <Link href="/" className="hover:text-foreground">
-              그라운드 홈
-            </Link>
+            <a
+              href="https://hillyheally.com/delete-account"
+              target="_blank"
+              rel="noreferrer"
+              className="transition-colors hover:text-foreground"
+            >
+              계정 삭제
+            </a>
           </div>
         </div>
-        <p className="mt-8 border-t pt-6 text-center">
-          © 2026 Hilly Heally. All rights reserved.
-        </p>
       </footer>
     </main>
   )

@@ -28,7 +28,7 @@ export const NATSEONGOT: EventInfo = {
   fee: 40_000,
   maxParty: 4,
   discountSizes: [2, 4],
-  capacity: 16,
+  capacity: 32,
   dateLabel: "2026. 11. 14. (토)",
   timeLabel: "13:00 ~ 17:00 · 제한 4시간",
   placeLabel: "경기 수원 광교산",
