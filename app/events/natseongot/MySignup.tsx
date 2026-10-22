@@ -6,16 +6,26 @@ import {
   CheckCircle2,
   ExternalLink,
   Loader2,
+  Pencil,
   RotateCcw,
   XCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { NATSEONGOT as EV, callEventFn } from "@/lib/events"
+
+type EditableParticipant = {
+  name: string
+  phone: string
+  birth: string
+  gender: string
+}
 
 export type MySignupData = {
   orderId: string
   name: string
   names?: string[]
+  participants?: EditableParticipant[]
   partySize?: number
   amount: number
   status: "paid" | "canceled"
@@ -45,7 +55,45 @@ export function MySignup({
 }) {
   const [confirming, setConfirming] = useState(false)
   const [canceling, setCanceling] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState<EditableParticipant[]>([])
+  const [saving, setSaving] = useState(false)
   const paid = data.status === "paid"
+
+  const startEdit = () => {
+    setDraft(
+      (data.participants ?? []).map((p) => ({
+        ...p,
+        phone: p.phone ?? "",
+        birth: p.birth ?? "",
+        gender: p.gender ?? "",
+      }))
+    )
+    setEditing(true)
+  }
+
+  const setD = (i: number, k: keyof EditableParticipant, v: string) =>
+    setDraft((list) =>
+      list.map((p, idx) => (idx === i ? { ...p, [k]: v } : p))
+    )
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      await callEventFn<{ success: boolean }>({
+        action: "update",
+        eventSlug: EV.slug,
+        participants: draft,
+      })
+      toast.success("참가자 정보를 수정했어요.")
+      setEditing(false)
+      onChanged()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "수정에 실패했어요.")
+    } finally {
+      setSaving(false)
+    }
+  }
 
   async function handleCancel() {
     setCanceling(true)
@@ -64,6 +112,87 @@ export function MySignup({
       setCanceling(false)
       setConfirming(false)
     }
+  }
+
+  if (editing) {
+    return (
+      <div className="py-4">
+        <h3 className="text-lg font-semibold tracking-tight">
+          참가자 정보 수정
+        </h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          인원수 변경은 금액이 달라져 취소 후 재신청이 필요해요. 사람을
+          바꾸는 건 여기서 바로 돼요.
+        </p>
+        <div className="mt-4 space-y-4">
+          {draft.map((p, i) => (
+            <div key={i} className="rounded-xl border p-4">
+              <p className="mb-3 text-sm font-semibold">
+                {i === 0 ? "대표 신청자" : `참가자 ${i + 1}`}
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Input
+                  value={p.name}
+                  onChange={(e) => setD(i, "name", e.target.value)}
+                  placeholder="이름"
+                />
+                <Input
+                  value={p.phone}
+                  onChange={(e) => setD(i, "phone", e.target.value)}
+                  placeholder="연락처 010-0000-0000"
+                  inputMode="tel"
+                />
+                <Input
+                  value={p.birth}
+                  onChange={(e) => setD(i, "birth", e.target.value)}
+                  placeholder="생년월일 19900101"
+                  inputMode="numeric"
+                  maxLength={8}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  {["남", "여"].map((g) => (
+                    <Button
+                      key={g}
+                      type="button"
+                      variant={p.gender === g ? "default" : "outline"}
+                      className={
+                        p.gender === g
+                          ? "bg-[#DC2F55] text-white hover:bg-[#DC2F55]/90"
+                          : ""
+                      }
+                      onClick={() => setD(i, "gender", g)}
+                    >
+                      {g}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-5 flex gap-2">
+          <Button
+            variant="outline"
+            className="h-11 flex-1"
+            disabled={saving}
+            onClick={() => setEditing(false)}
+          >
+            취소
+          </Button>
+          <Button
+            className="h-11 flex-1 bg-[#DC2F55] text-white hover:bg-[#DC2F55]/90"
+            disabled={saving}
+            onClick={handleSave}
+          >
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "저장"
+            )}
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -128,6 +257,13 @@ export function MySignup({
               <ExternalLink className="mr-2 h-4 w-4" />
               영수증 보기
             </a>
+          </Button>
+        )}
+
+        {paid && (data.participants?.length ?? 0) > 0 && (
+          <Button variant="outline" className="h-11 w-full" onClick={startEdit}>
+            <Pencil className="mr-2 h-4 w-4" />
+            참가자 정보 수정
           </Button>
         )}
 
