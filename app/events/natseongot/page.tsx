@@ -8,7 +8,6 @@ import {
   Compass,
   Flag,
   Footprints,
-  Palette,
   Gift,
   Lock,
   MapPin,
@@ -80,13 +79,8 @@ const RULES = [
   },
   {
     icon: Lock,
-    title: "50점의 열쇠 — 네 색 한 세트가 소모돼요",
-    desc: "50점 하나를 찍으려면 10·20·30·40점 스탬프 한 세트가 열쇠로 필요해요. 열쇠는 한 번 쓰면 소모돼요 — 두 번째 50점을 노린다면 네 가지 색을 한 벌 더 모아야 해요. 나머지 체크포인트는 순서 제한 없이 자유예요.",
-  },
-  {
-    icon: Palette,
-    title: "오색 수집 — 다섯 색을 모으면 +50",
-    desc: "10·20·30·40·50, 다섯 가지 색을 전부 하나 이상 찍으면 보너스 50점. 고배점만 노릴지, 세트를 완성하러 10점짜리까지 들를지 — 동선 고민이 하나 더 늘어요.",
+    title: "네 색을 모아 50을 찍으면 100점",
+    desc: "10·20·30·40점 스탬프 한 세트를 가진 채 50점을 찍으면 보너스 50점이 붙어 100점이 돼요. 세트는 그때 소모 — 또 다른 50점에서 보너스를 받으려면 네 가지 색을 새로 모아야 해요. 세트 없이 찍으면 50점만 받아요.",
   },
   {
     icon: Footprints,
@@ -333,8 +327,11 @@ export default function NatseongotPage() {
                   ))}
                 </ul>
                 <p className="border-t px-6 py-3 text-xs leading-relaxed text-muted-foreground">
-                  🎨 다섯 색을 전부 모으면{" "}
-                  <b className="font-semibold text-foreground">보너스 +50점</b>
+                  🔑 10·20·30·40 세트를 모아 50을 찍으면{" "}
+                  <b className="font-semibold text-foreground">
+                    보너스 +50 (총 100점)
+                  </b>{" "}
+                  · 세트는 소모돼요
                 </p>
               </div>
             </Reveal>
@@ -342,13 +339,15 @@ export default function NatseongotPage() {
             <Reveal delay={0.14}>
               <div className="rounded-2xl border border-[#DC2F55]/30 bg-[radial-gradient(120%_120%_at_0%_0%,rgba(220,47,85,0.10),transparent_55%)] p-6">
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  <b className="font-semibold text-foreground">50점</b> 하나를
-                  찍을 때마다{" "}
                   <b className="font-semibold text-foreground">
-                    10·20·30·40점 스탬프 한 세트
+                    10·20·30·40점 한 세트
                   </b>
-                  가 열쇠로 소모돼요. 50점 두 개를 노린다면 두 세트가
-                  필요해요. 나머지 체크포인트는 순서 제한 없이 자유예요.
+                  를 모은 채 50점을 찍으면{" "}
+                  <b className="font-semibold text-foreground">
+                    보너스 +50, 총 100점
+                  </b>
+                  이에요 (세트 소모). 다음 50점 보너스엔 새 세트가 필요하고,
+                  세트 없이 찍으면 50점만 받아요. 순서는 전부 자유예요.
                 </p>
               </div>
             </Reveal>
