@@ -136,12 +136,6 @@ async function loadFromTrail(): Promise<CourseData | null> {
   }
 }
 
-function formatRevealAt(iso: string | null): string {
-  if (!iso) return "행사 시작 후"
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, "0")
-  return `${d.getMonth() + 1}. ${d.getDate()}. ${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
 
 export function CourseMap({ className }: { className?: string }) {
   const box = useRef<HTMLDivElement>(null)
@@ -226,19 +220,8 @@ export function CourseMap({ className }: { className?: string }) {
           "background:rgba(14,14,16,.88);color:#fff;font-size:12px;font-weight:700;" +
           "padding:6px 12px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.35)"
         badge.textContent = "예시 배치 — 실제 위치와 무관해요"
-        const banner = document.createElement("div")
-        banner.style.cssText =
-          "position:absolute;left:50%;bottom:14px;transform:translateX(-50%);" +
-          "background:rgba(14,14,16,.88);color:#fff;border-radius:12px;" +
-          "padding:9px 16px;text-align:center;z-index:5;pointer-events:none;" +
-          "box-shadow:0 4px 16px rgba(0,0,0,.35);font-size:12px;white-space:nowrap"
-        banner.innerHTML = `🔒 실제 체크포인트는 <b>${formatRevealAt(db?.revealAt ?? null)}</b> 에 공개돼요`
         box.current.appendChild(badge)
-        box.current.appendChild(banner)
-        m.once("remove", () => {
-          badge.remove()
-          banner.remove()
-        })
+        m.once("remove", () => badge.remove())
       }
 
       m.addControl(
