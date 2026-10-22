@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     title: "ROUTE @광교",
     description:
       "숲길에서 펼쳐지는 팀 전략 게임. 2026.11.14 수원 광교산, 32명 한정 모집.",
-    images: ["/events/og.png"],
+    images: ["/events/og-route-gwanggyo.png"],
   },
 }
 
