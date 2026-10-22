@@ -28,11 +28,11 @@ import { SignupSheet } from "./SignupSheet"
 import { UserChip } from "./UserChip"
 
 export const metadata: Metadata = {
-  title: "낯선곳으로 — 광교산 스탬프 게임 | 힐리힐리",
+  title: "ROUTE @광교 — 광교산 스탬프 게임 | 힐리힐리",
   description:
     "2026.11.14 수원 광교산. 배점이 다른 체크포인트 26곳을 4시간 안에 자유 순서로 모으는 숲길 팀 전략 게임. 순위는 없고, 팀이 정한 목표만 있어요. 16명 한정.",
   openGraph: {
-    title: "낯선곳으로 — 광교산 스탬프 게임",
+    title: "ROUTE @광교 — 광교산 스탬프 게임",
     description:
       "숲길에서 펼쳐지는 팀 전략 게임. 2026.11.14 수원 광교산, 16명 한정 모집.",
     images: ["/events/og.png"],
@@ -158,7 +158,8 @@ export default function NatseongotPage() {
             2026. 11. 14. 토요일 · 수원 광교산
           </p>
           <h1 className="mt-5 text-4xl font-bold leading-[1.08] tracking-tighter sm:text-5xl xl:text-6xl">
-            <span className="text-[#DC2F55]">낯선곳</span>으로
+            <span className="tracking-[0.3em]">ROUTE</span>
+            <span className="ml-1 text-[#DC2F55]">@광교</span>
             <br />
             광교산 스탬프 게임
           </h1>
@@ -218,7 +219,7 @@ export default function NatseongotPage() {
           </h2>
           <p className="mt-7 text-base leading-relaxed text-muted-foreground">
             기록에 도전하는 날도, 숲에서 쉬어 가는 날도, 낯선 길을 찾아 나서는
-            날도 있어요. 이번 낯선곳으로는{" "}
+            날도 있어요. 이번 ROUTE @광교는{" "}
             <b className="font-semibold text-foreground">세 번째 날</b>을 위한
             하루예요.
           </p>

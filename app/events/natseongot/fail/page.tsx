@@ -7,7 +7,7 @@ import { NATSEONGOT as EV } from "@/lib/events"
 import { FailMessage } from "./FailMessage"
 
 export const metadata: Metadata = {
-  title: "결제 실패 — 낯선곳으로",
+  title: "결제 실패 — ROUTE @광교",
   robots: { index: false, follow: false },
 }
 
