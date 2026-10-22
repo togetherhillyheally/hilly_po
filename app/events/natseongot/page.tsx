@@ -516,7 +516,7 @@ export default function NatseongotPage() {
       </section>
 
       {/* 푸터 — hillyheally.com 홈과 동일한 레이아웃·문구 */}
-      <footer className="border-t py-12 text-sm text-muted-foreground">
+      <footer className="border-t border-white/[0.05] py-12 text-sm text-gray-600">
         <div className="space-y-1.5">
           <div className="mb-4 flex items-center gap-2">
             <Image
@@ -536,32 +536,32 @@ export default function NatseongotPage() {
           <p>Tel: 1800-5191 FAX: 02-6455-6023</p>
           <p>Mail: service@hillyheally.com</p>
         </div>
-        <div className="mt-8 border-t pt-8 text-center">
+        <div className="mt-8 border-t border-white/[0.05] pt-8 text-center">
           <p>&copy; 2025 Hilly Heally. All rights reserved.</p>
           <div className="mt-3 flex items-center justify-center gap-6">
             <a
               href="https://hillyheally.com/terms"
               target="_blank"
               rel="noreferrer"
-              className="transition-colors hover:text-foreground"
+              className="transition-colors hover:text-white"
             >
               서비스 이용약관
             </a>
-            <span className="text-border">|</span>
+            <span className="text-gray-700">|</span>
             <a
               href="https://hillyheally.com/privacy-policy"
               target="_blank"
               rel="noreferrer"
-              className="transition-colors hover:text-foreground"
+              className="transition-colors hover:text-white"
             >
               개인정보처리방침
             </a>
-            <span className="text-border">|</span>
+            <span className="text-gray-700">|</span>
             <a
               href="https://hillyheally.com/delete-account"
               target="_blank"
               rel="noreferrer"
-              className="transition-colors hover:text-foreground"
+              className="transition-colors hover:text-white"
             >
               계정 삭제
             </a>
