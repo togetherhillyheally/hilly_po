@@ -83,7 +83,7 @@ export function UserChip() {
   return (
     <>
       {/* 신청 내역 메뉴에서 여는 숨은 트리거 */}
-      <SignupSheet>
+      <SignupSheet intent="history">
         <button ref={sheetTriggerRef} className="hidden" aria-hidden />
       </SignupSheet>
 

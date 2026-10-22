@@ -24,6 +24,7 @@ const EMPTY_P: Participant = { name: "", phone: "", birth: "", gender: "" }
 
 type Fields = {
   email: string
+  playStyle: string
   emergencyName: string
   emergencyRelation: string
   emergencyPhone: string
@@ -33,6 +34,7 @@ type Fields = {
 
 const EMPTY: Fields = {
   email: "",
+  playStyle: "",
   emergencyName: "",
   emergencyRelation: "",
   emergencyPhone: "",
@@ -40,11 +42,19 @@ const EMPTY: Fields = {
   note: "",
 }
 
-const EXPERIENCE = [
-  "트레일러닝 대회 완주 경험 있어요",
-  "장거리 산행(20km+) 경험 있어요",
-  "산행은 자주 하지만 장거리는 처음이에요",
-  "러닝은 하지만 산은 많지 않아요",
+/** 조(2인) 편성 기준 — 같은 조는 페이스가 비슷해야 4시간이 즐겁다 */
+const PACE = [
+  "산에서 뛰는 게 편해요 — 트레일러닝 해봤어요",
+  "빠른 걸음 — 20km+ 장거리 산행 경험 있어요",
+  "보통 걸음 — 산행은 자주, 장거리는 아직이에요",
+  "쉬엄쉬엄 — 등산이 아직 익숙하지 않아요",
+] as const
+
+/** 팀(4인) 궁합 기준 — 목표가 다른 사람끼리 묶이면 서로 괴롭다 */
+const PLAY_STYLE = [
+  "도전파 — 고득점, 정상석까지 노려요",
+  "전략파 — 머리 쓰는 재미, 효율 좋은 동선으로",
+  "소풍파 — 풍경 즐기며 걷다 오면 충분해요",
 ] as const
 
 const AGREEMENTS = [
@@ -444,19 +454,49 @@ export function SignupForm() {
         {/* 3. 경험 */}
         <section>
           <SectionTitle n={3}>
-            산행·러닝 경험
+            페이스 & 플레이 스타일
             <span className="ml-2 text-xs font-normal text-muted-foreground">
-              팀 배정에 참고해요
+              조 편성과 팀 배정에 그대로 써요
             </span>
           </SectionTitle>
+
+          <p className="mb-2 text-sm font-medium">
+            우리의 산 페이스는?
+            <span className="ml-2 text-xs font-normal text-muted-foreground">
+              같은 조(2인)는 페이스가 비슷해야 4시간이 즐거워요
+            </span>
+          </p>
           <div className="space-y-2">
-            {EXPERIENCE.map((opt) => (
+            {PACE.map((opt) => (
               <button
                 key={opt}
                 type="button"
                 onClick={() => setF((p) => ({ ...p, experience: opt }))}
                 className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition-colors ${
                   f.experience === opt
+                    ? "border-[#DC2F55]/50 bg-[#DC2F55]/5 font-medium"
+                    : "hover:border-foreground/20"
+                }`}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+
+          <p className="mb-2 mt-6 text-sm font-medium">
+            이날의 목표는?
+            <span className="ml-2 text-xs font-normal text-muted-foreground">
+              비슷한 목표의 팀끼리 묶어드려요
+            </span>
+          </p>
+          <div className="space-y-2">
+            {PLAY_STYLE.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => setF((p) => ({ ...p, playStyle: opt }))}
+                className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition-colors ${
+                  f.playStyle === opt
                     ? "border-[#DC2F55]/50 bg-[#DC2F55]/5 font-medium"
                     : "hover:border-foreground/20"
                 }`}
