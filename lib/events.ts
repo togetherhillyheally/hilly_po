@@ -8,6 +8,10 @@ export type EventInfo = {
   subtitle: string
   fee: number
   capacity: number
+  /** 단체 신청 최대 인원 */
+  maxParty: number
+  /** 이 인원수로 신청하면 10% 할인 (예: 2인·4인) */
+  discountSizes: number[]
   dateLabel: string
   timeLabel: string
   placeLabel: string
@@ -21,7 +25,9 @@ export const NATSEONGOT: EventInfo = {
   slug: "natseongot-2026-11",
   title: "낯선곳으로",
   subtitle: "광교산 스탬프 게임",
-  fee: 1_000, // ⚠️ 결제 리허설용 임시 금액 — 모집 오픈 전 100_000 으로 복구
+  fee: 40_000,
+  maxParty: 4,
+  discountSizes: [2, 4],
   capacity: 16,
   dateLabel: "2026. 11. 14. (토)",
   timeLabel: "13:00 ~ 17:00 · 제한 4시간",
@@ -29,6 +35,17 @@ export const NATSEONGOT: EventInfo = {
   placeSub: "광교산 산림욕장 출발 · 도착",
   path: "/events/natseongot",
   courseTrailId: "8b710f9d-2a53-4720-9c5a-da34e9375e93",
+}
+
+/** 인원수별 가격 — 2·4인 신청 시 1인 요금 10% 할인 (서버와 동일 규칙) */
+export function partyPricing(size: number): {
+  per: number
+  total: number
+  discounted: boolean
+} {
+  const discounted = NATSEONGOT.discountSizes.includes(size)
+  const per = discounted ? Math.round(NATSEONGOT.fee * 0.9) : NATSEONGOT.fee
+  return { per, total: per * size, discounted }
 }
 
 /** 토스 결제위젯 클라이언트 키(공개 키) — hilly_rn app.config 와 동일 정책.

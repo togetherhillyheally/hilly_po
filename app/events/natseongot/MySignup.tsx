@@ -15,6 +15,8 @@ import { NATSEONGOT as EV, callEventFn } from "@/lib/events"
 export type MySignupData = {
   orderId: string
   name: string
+  names?: string[]
+  partySize?: number
   amount: number
   status: "paid" | "canceled"
   paidAt: string | null
@@ -89,9 +91,13 @@ export function MySignup({
       </div>
 
       <dl className="mt-6 space-y-3 rounded-xl border bg-card p-5 text-sm">
-        <div className="flex justify-between">
-          <dt className="text-muted-foreground">참가자</dt>
-          <dd className="font-semibold">{data.name}</dd>
+        <div className="flex justify-between gap-6">
+          <dt className="shrink-0 text-muted-foreground">
+            참가자{(data.partySize ?? 1) > 1 && ` ${data.partySize}명`}
+          </dt>
+          <dd className="text-right font-semibold">
+            {(data.names ?? [data.name]).join(", ")}
+          </dd>
         </div>
         <div className="flex justify-between">
           <dt className="text-muted-foreground">결제 금액</dt>
@@ -132,7 +138,8 @@ export function MySignup({
                 <p className="text-sm">
                   정말 취소할까요?{" "}
                   <b>{data.amount.toLocaleString()}원 전액</b>이 환불되고 자리는
-                  다른 분에게 돌아가요.
+                  다른 분에게 돌아가요. 단체 신청은 주문 전체가 한 번에
+                  취소돼요.
                 </p>
                 <div className="mt-3 flex gap-2">
                   <Button

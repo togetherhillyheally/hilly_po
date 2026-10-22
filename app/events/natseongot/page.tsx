@@ -52,13 +52,13 @@ const FACTS = [
     icon: Users,
     label: "모집",
     value: `${EV.capacity}명 한정`,
-    sub: "4인 1팀 × 4팀 (2인 1조 이동)",
+    sub: "최대 4명 단체 신청 · 4인 1팀 × 4팀 (2인 1조 이동)",
   },
   {
     icon: Wallet,
     label: "참가비",
     value: `${EV.fee.toLocaleString()}원`,
-    sub: "보급 · 기념품 · 기록 포함",
+    sub: "2인·4인 신청 10% 할인 · 보급·기념품·기록 포함",
   },
 ] as const
 

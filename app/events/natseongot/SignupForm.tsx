@@ -6,15 +6,24 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { NATSEONGOT as EV, TOSS_CLIENT_KEY, callEventFn } from "@/lib/events"
+import {
+  NATSEONGOT as EV,
+  TOSS_CLIENT_KEY,
+  callEventFn,
+  partyPricing,
+} from "@/lib/events"
 
-type Fields = {
+type Participant = {
   name: string
   phone: string
-  companionPhone: string
-  email: string
   birth: string
   gender: string
+}
+
+const EMPTY_P: Participant = { name: "", phone: "", birth: "", gender: "" }
+
+type Fields = {
+  email: string
   emergencyName: string
   emergencyRelation: string
   emergencyPhone: string
@@ -23,12 +32,7 @@ type Fields = {
 }
 
 const EMPTY: Fields = {
-  name: "",
-  phone: "",
-  companionPhone: "",
   email: "",
-  birth: "",
-  gender: "",
   emergencyName: "",
   emergencyRelation: "",
   emergencyPhone: "",
@@ -66,6 +70,8 @@ const AGREEMENTS = [
 
 export function SignupForm() {
   const [f, setF] = useState<Fields>(EMPTY)
+  // 단체 신청 — 첫 번째가 대표(본인), 최대 EV.maxParty 명
+  const [party, setParty] = useState<Participant[]>([{ ...EMPTY_P }])
   const [agree, setAgree] = useState({
     terms: false,
     privacy: false,
@@ -132,8 +138,8 @@ export function SignupForm() {
         successUrl: `${origin}${EV.path}/success`,
         failUrl: `${origin}${EV.path}/fail`,
         customerEmail: f.email,
-        customerName: f.name,
-        customerMobilePhone: f.phone.replace(/\D/g, ""),
+        customerName: party[0]?.name ?? "",
+        customerMobilePhone: (party[0]?.phone ?? "").replace(/\D/g, ""),
       })
     } catch (err) {
       const msg =
@@ -155,7 +161,9 @@ export function SignupForm() {
       if (cancelled || !user?.phone) return
       const digits = user.phone.replace(/\D/g, "")
       const local = digits.startsWith("82") ? "0" + digits.slice(2) : digits
-      setF((p) => (p.phone ? p : { ...p, phone: local }))
+      setParty((list) =>
+        list[0]?.phone ? list : [{ ...list[0], phone: local }, ...list.slice(1)]
+      )
     })()
     return () => {
       cancelled = true
@@ -166,13 +174,24 @@ export function SignupForm() {
     (k: keyof Fields) => (e: React.ChangeEvent<HTMLInputElement>) =>
       setF((p) => ({ ...p, [k]: e.target.value }))
 
+  const setP = (i: number, k: keyof Participant, v: string) =>
+    setParty((list) =>
+      list.map((p, idx) => (idx === i ? { ...p, [k]: v } : p))
+    )
+
+  const pricing = partyPricing(party.length)
+
   const busy = status === "submitting" || status === "paying"
+  const partyValid = party.every(
+    (p) =>
+      p.name.trim().length >= 2 &&
+      p.phone.replace(/\D/g, "").length >= 10 &&
+      p.birth.replace(/\D/g, "").length === 8 &&
+      p.gender !== ""
+  )
   const canSubmit =
-    f.name.trim().length >= 2 &&
-    f.phone.replace(/\D/g, "").length >= 10 &&
+    partyValid &&
     f.email.includes("@") &&
-    f.birth.replace(/\D/g, "").length === 8 &&
-    f.gender !== "" &&
     f.emergencyName.trim().length >= 2 &&
     f.emergencyPhone.replace(/\D/g, "").length >= 10 &&
     agree.terms &&
@@ -193,6 +212,7 @@ export function SignupForm() {
       }>({
         action: "create",
         eventSlug: EV.slug,
+        participants: party,
         ...f,
         agreePhoto: agree.photo,
       })
@@ -222,7 +242,7 @@ export function SignupForm() {
         <p className="mt-1 text-sm text-muted-foreground">
           {EV.title} 참가비{" "}
           <b className="text-foreground tabular-nums">
-            {(order?.amount ?? EV.fee).toLocaleString()}원
+            {(order?.amount ?? pricing.total).toLocaleString()}원
           </b>
         </p>
         {/* 토스 결제위젯 영역 — 위젯이 밝은 배경 기준이라 흰 카드로 감쌈 */}
@@ -243,7 +263,7 @@ export function SignupForm() {
           className="mt-4 h-12 w-full bg-[#DC2F55] text-base text-white hover:bg-[#DC2F55]/90"
         >
           <Lock className="mr-2 h-4 w-4" />
-          {(order?.amount ?? EV.fee).toLocaleString()}원 결제하기
+          {(order?.amount ?? pricing.total).toLocaleString()}원 결제하기
         </Button>
       </div>
     )
@@ -272,12 +292,12 @@ export function SignupForm() {
           <div className="flex justify-between">
             <dt className="text-muted-foreground">입금 금액</dt>
             <dd className="font-semibold text-[#DC2F55] tabular-nums">
-              {EV.fee.toLocaleString()}원
+              {pricing.total.toLocaleString()}원
             </dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-muted-foreground">입금자명</dt>
-            <dd className="font-semibold">{f.name}</dd>
+            <dd className="font-semibold">{party[0]?.name}</dd>
           </div>
           <div className="flex justify-between border-t pt-3">
             <dt className="text-muted-foreground">신청번호</dt>
@@ -298,69 +318,96 @@ export function SignupForm() {
       <div className="space-y-8">
         {/* 1. 참가자 */}
         <section>
-          <SectionTitle n={1}>참가자 정보</SectionTitle>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="이름" required>
-              <Input value={f.name} onChange={set("name")} placeholder="홍길동" />
-            </Field>
-            <Field label="연락처" required>
-              <Input
-                value={f.phone}
-                onChange={set("phone")}
-                placeholder="010-0000-0000"
-                inputMode="tel"
-              />
-            </Field>
-            <Field label="이메일" required className="sm:col-span-2">
+          <SectionTitle n={1}>
+            참가자 정보
+            <span className="ml-2 text-xs font-normal text-muted-foreground">
+              최대 {EV.maxParty}명 단체 신청
+            </span>
+          </SectionTitle>
+          <div className="space-y-4">
+            {party.map((p, i) => (
+              <div key={i} className="rounded-xl border p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="text-sm font-semibold">
+                    {i === 0 ? "대표 신청자 (본인)" : `참가자 ${i + 1}`}
+                  </span>
+                  {i > 0 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setParty((list) => list.filter((_, idx) => idx !== i))
+                      }
+                      className="text-xs text-muted-foreground hover:text-destructive"
+                    >
+                      삭제
+                    </button>
+                  )}
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="이름" required>
+                    <Input
+                      value={p.name}
+                      onChange={(e) => setP(i, "name", e.target.value)}
+                      placeholder="홍길동"
+                    />
+                  </Field>
+                  <Field label="연락처" required>
+                    <Input
+                      value={p.phone}
+                      onChange={(e) => setP(i, "phone", e.target.value)}
+                      placeholder="010-0000-0000"
+                      inputMode="tel"
+                    />
+                  </Field>
+                  <Field label="생년월일 (보험 가입용)" required>
+                    <Input
+                      value={p.birth}
+                      onChange={(e) => setP(i, "birth", e.target.value)}
+                      placeholder="19900101"
+                      inputMode="numeric"
+                      maxLength={8}
+                    />
+                  </Field>
+                  <Field label="성별 (보험 가입용)" required>
+                    <div className="grid grid-cols-2 gap-2">
+                      {["남", "여"].map((g) => (
+                        <Button
+                          key={g}
+                          type="button"
+                          variant={p.gender === g ? "default" : "outline"}
+                          className={
+                            p.gender === g
+                              ? "bg-[#DC2F55] text-white hover:bg-[#DC2F55]/90"
+                              : ""
+                          }
+                          onClick={() => setP(i, "gender", g)}
+                        >
+                          {g}
+                        </Button>
+                      ))}
+                    </div>
+                  </Field>
+                </div>
+              </div>
+            ))}
+            {party.length < EV.maxParty && (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 w-full border-dashed"
+                onClick={() => setParty((list) => [...list, { ...EMPTY_P }])}
+              >
+                + 참가자 추가 ({party.length}/{EV.maxParty}명) — 2인·4인은 10%
+                할인
+              </Button>
+            )}
+            <Field label="이메일 (대표자)" required>
               <Input
                 type="email"
                 value={f.email}
                 onChange={set("email")}
                 placeholder="hello@example.com"
               />
-            </Field>
-            <Field label="생년월일 (보험 가입용)" required>
-              <Input
-                value={f.birth}
-                onChange={set("birth")}
-                placeholder="19900101"
-                inputMode="numeric"
-                maxLength={8}
-              />
-            </Field>
-            <Field label="성별 (보험 가입용)" required>
-              <div className="grid grid-cols-2 gap-2">
-                {["남", "여"].map((g) => (
-                  <Button
-                    key={g}
-                    type="button"
-                    variant={f.gender === g ? "default" : "outline"}
-                    className={
-                      f.gender === g
-                        ? "bg-[#DC2F55] text-white hover:bg-[#DC2F55]/90"
-                        : ""
-                    }
-                    onClick={() => setF((p) => ({ ...p, gender: g }))}
-                  >
-                    {g}
-                  </Button>
-                ))}
-              </div>
-            </Field>
-            <Field
-              label="함께 신청하는 분 연락처 (선택)"
-              className="sm:col-span-2"
-            >
-              <Input
-                value={f.companionPhone}
-                onChange={set("companionPhone")}
-                placeholder="010-0000-0000"
-                inputMode="tel"
-              />
-              <p className="mt-1.5 text-xs text-muted-foreground">
-                친구와 함께 신청했다면 서로 적어주세요 — 같은 팀 배정에
-                참고해요.
-              </p>
             </Field>
           </div>
         </section>
@@ -467,10 +514,20 @@ export function SignupForm() {
 
         {/* 결제 — 시트 하단 고정 (스크롤해도 항상 보임) */}
         <section className="sticky -bottom-6 -mx-6 border-t bg-background px-6 pb-5 pt-4">
+          <div className="mb-1.5 flex items-center justify-between text-sm text-muted-foreground">
+            <span>
+              참가비 {EV.fee.toLocaleString()}원 × {party.length}명
+            </span>
+            {pricing.discounted && (
+              <span className="font-medium text-[#DC2F55]">
+                {party.length}인 신청 10% 할인
+              </span>
+            )}
+          </div>
           <div className="mb-4 flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">참가비</span>
+            <span className="text-sm text-muted-foreground">총 결제 금액</span>
             <span className="text-2xl font-bold tabular-nums">
-              {EV.fee.toLocaleString()}
+              {pricing.total.toLocaleString()}
               <span className="ml-1 text-sm font-medium text-muted-foreground">
                 원
               </span>
