@@ -290,8 +290,9 @@ export default function NatseongotPage() {
                 />
               )}
               <p className="border-t px-6 py-4 text-xs leading-relaxed text-muted-foreground">
-                체크포인트 위치는 비공개 — 행사 시작 5분 뒤(13:05)에 이
-                지도에서 일제히 공개돼요.
+                지금 지도의 스탬프는 게임 감을 잡기 위한 예시 배치예요. 실제
+                체크포인트 위치는 행사 시작 5분 뒤(13:05)에 이 지도에서 일제히
+                공개돼요.
               </p>
             </div>
           </Reveal>

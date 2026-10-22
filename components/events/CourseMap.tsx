@@ -4,7 +4,12 @@ import { useEffect, useRef, useState } from "react"
 import mapboxgl from "mapbox-gl"
 import "mapbox-gl/dist/mapbox-gl.css"
 import { applyKoreanLabels } from "@/lib/mapbox-locale"
-import { START, TIER_COLOR, type CheckPoint } from "@/lib/events/gwanggyo-cps"
+import {
+  EXAMPLE_CPS,
+  START,
+  TIER_COLOR,
+  type CheckPoint,
+} from "@/lib/events/gwanggyo-cps"
 import { NATSEONGOT } from "@/lib/events"
 
 const COURSE_TRAIL_ID = NATSEONGOT.courseTrailId
@@ -131,25 +136,6 @@ async function loadFromTrail(): Promise<CourseData | null> {
   }
 }
 
-/** 공개 전 티저 — 작전 구역 원(대략 범위)만 표시, 체크포인트 위치는 숨김 */
-function makeTeaserCircle(): GeoJSON.Feature<GeoJSON.Polygon> {
-  const [cx, cy] = [127.0245, 37.3325]
-  const rKm = 2.4
-  const coords: [number, number][] = []
-  for (let i = 0; i <= 64; i++) {
-    const a = (i / 64) * Math.PI * 2
-    coords.push([
-      cx + (rKm / (111.32 * Math.cos((cy * Math.PI) / 180))) * Math.cos(a),
-      cy + (rKm / 110.57) * Math.sin(a),
-    ])
-  }
-  return {
-    type: "Feature",
-    properties: {},
-    geometry: { type: "Polygon", coordinates: [coords] },
-  }
-}
-
 function formatRevealAt(iso: string | null): string {
   if (!iso) return "행사 시작 후"
   const d = new Date(iso)
@@ -197,9 +183,9 @@ export function CourseMap({ className }: { className?: string }) {
     mapboxgl.accessToken = token
     const db = course
     {
-      // 공개 여부는 서버가 결정 — 비공개면 체크포인트 없이 티저만
+      // 공개 여부는 서버가 결정 — 비공개면 실제 위치 대신 예시 스탬프
       const revealed = db?.revealed === true
-      const cps = revealed ? db!.cps : []
+      const cps = revealed ? db!.cps : EXAMPLE_CPS
       const start = db?.start ?? START
 
       const pts: [number, number][] = [
@@ -210,15 +196,11 @@ export function CourseMap({ className }: { className?: string }) {
       const m = new mapboxgl.Map({
         container: box.current,
         style: "mapbox://styles/mapbox/outdoors-v12",
-        ...(revealed && pts.length > 0
-          ? {
-              bounds: pts.reduce(
-                (b, p) => b.extend(p),
-                new mapboxgl.LngLatBounds(pts[0], pts[0])
-              ),
-              fitBoundsOptions: { padding: 56, maxZoom: 14 },
-            }
-          : { center: [127.0245, 37.3325] as [number, number], zoom: 12 }),
+        bounds: pts.reduce(
+          (b, p) => b.extend(p),
+          new mapboxgl.LngLatBounds(pts[0], pts[0])
+        ),
+        fitBoundsOptions: { padding: 56, maxZoom: 14 },
         cooperativeGestures: true,
         attributionControl: false,
       })
@@ -237,40 +219,26 @@ export function CourseMap({ className }: { className?: string }) {
       }
 
       if (!revealed) {
-        // 작전 구역 점선 원 + 공개 예고 오버레이
-        m.on("load", () => {
-          m.addSource("teaser-zone", {
-            type: "geojson",
-            data: makeTeaserCircle(),
-          })
-          m.addLayer({
-            id: "teaser-zone-fill",
-            type: "fill",
-            source: "teaser-zone",
-            paint: { "fill-color": "#DC2F55", "fill-opacity": 0.08 },
-          })
-          m.addLayer({
-            id: "teaser-zone-line",
-            type: "line",
-            source: "teaser-zone",
-            paint: {
-              "line-color": "#DC2F55",
-              "line-width": 2,
-              "line-dasharray": [2, 2],
-            },
-          })
+        // 예시 배치임을 분명히 — 참가자가 이 위치로 동선을 짜지 않도록
+        const badge = document.createElement("div")
+        badge.style.cssText =
+          "position:absolute;left:12px;top:12px;z-index:5;pointer-events:none;" +
+          "background:rgba(14,14,16,.88);color:#fff;font-size:12px;font-weight:700;" +
+          "padding:6px 12px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.35)"
+        badge.textContent = "예시 배치 — 실제 위치와 무관해요"
+        const banner = document.createElement("div")
+        banner.style.cssText =
+          "position:absolute;left:50%;bottom:14px;transform:translateX(-50%);" +
+          "background:rgba(14,14,16,.88);color:#fff;border-radius:12px;" +
+          "padding:9px 16px;text-align:center;z-index:5;pointer-events:none;" +
+          "box-shadow:0 4px 16px rgba(0,0,0,.35);font-size:12px;white-space:nowrap"
+        banner.innerHTML = `🔒 실제 체크포인트는 <b>${formatRevealAt(db?.revealAt ?? null)}</b> 에 공개돼요`
+        box.current.appendChild(badge)
+        box.current.appendChild(banner)
+        m.once("remove", () => {
+          badge.remove()
+          banner.remove()
         })
-        const overlay = document.createElement("div")
-        overlay.style.cssText =
-          "position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);" +
-          "background:rgba(14,14,16,.88);color:#fff;border-radius:14px;" +
-          "padding:16px 22px;text-align:center;z-index:5;pointer-events:none;" +
-          "box-shadow:0 4px 24px rgba(0,0,0,.4);max-width:85%"
-        overlay.innerHTML =
-          '<div style="font-size:15px;font-weight:700">🔒 체크포인트 위치는 비공개</div>' +
-          `<div style="font-size:12px;color:#bbb;margin-top:6px">${formatRevealAt(db?.revealAt ?? null)} 에 이 지도에서 공개돼요</div>`
-        box.current.appendChild(overlay)
-        m.once("remove", () => overlay.remove())
       }
 
       m.addControl(
@@ -288,8 +256,11 @@ export function CourseMap({ className }: { className?: string }) {
             .setLngLat([cp.lng, cp.lat])
             .setPopup(
               new mapboxgl.Popup({ offset: 14, closeButton: false }).setHTML(
-                `<div style="font-size:12px;font-weight:700">${esc(cp.name)}</div>
+                revealed
+                  ? `<div style="font-size:12px;font-weight:700">${esc(cp.name)}</div>
                  <div style="font-size:12px;color:#666">${cp.points}점</div>`
+                  : `<div style="font-size:12px;font-weight:700">예시 스탬프 · ${cp.points}점</div>
+                 <div style="font-size:11px;color:#666">실제 위치는 당일 공개돼요</div>`
               )
             )
             .addTo(m)

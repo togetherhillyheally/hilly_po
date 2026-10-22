@@ -70,6 +70,23 @@ export const CPS: CheckPoint[] = [
   { name: "CP26", points: 10, lng: 0, lat: 0 },
 ]
 
+/** 공개 전 지도에 보여줄 예시 스탬프 — 게임 감만 잡도록 지어낸 배치.
+ *  실제 체크포인트에서 모두 300m 이상 떨어진 곳만 골라 위치 힌트가 되지 않게 했다. */
+export const EXAMPLE_CPS: CheckPoint[] = [
+  { name: "예시", points: 20, lng: 127.0229, lat: 37.3242 },
+  { name: "예시", points: 50, lng: 127.0349, lat: 37.3401 },
+  { name: "예시", points: 30, lng: 127.0441, lat: 37.3273 },
+  { name: "예시", points: 10, lng: 127.0291, lat: 37.3421 },
+  { name: "예시", points: 40, lng: 127.0415, lat: 37.3443 },
+  { name: "예시", points: 10, lng: 127.016, lat: 37.3493 },
+  { name: "예시", points: 40, lng: 127.0163, lat: 37.3234 },
+  { name: "예시", points: 30, lng: 127.0141, lat: 37.3318 },
+  { name: "예시", points: 20, lng: 127.0339, lat: 37.3255 },
+  { name: "예시", points: 10, lng: 127.0197, lat: 37.3281 },
+  { name: "예시", points: 30, lng: 127.0296, lat: 37.3207 },
+  { name: "예시", points: 20, lng: 127.0345, lat: 37.3353 },
+]
+
 /** 코스 요약 */
 export const COURSE = {
   cpCount: 26,
