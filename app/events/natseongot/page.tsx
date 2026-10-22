@@ -61,41 +61,113 @@ const FACTS = [
   },
 ] as const
 
+const B = ({ children }: { children: React.ReactNode }) => (
+  <b className="font-semibold text-foreground">{children}</b>
+)
+
 const RULES = [
   {
     icon: Users,
     title: "4명 한 팀, 2명씩 한 조",
-    desc: "팀 안에서 2인 1조로 나뉘어 움직이고, 조마다 트래커를 하나씩 들어요. 팀 점수는 두 조가 찍은 체크포인트를 합쳐 계산하니, 갈라져서 다른 곳을 찍는 쪽이 이득이에요.",
+    desc: (
+      <>
+        팀 안에서 <B>2인 1조</B>로 나뉘어 움직이고, 조마다 트래커를 하나씩
+        들어요. 팀 점수는 두 조가 찍은 체크포인트를 합쳐 계산하니,{" "}
+        <B>갈라져서 다른 곳을 찍는 쪽이 이득</B>이에요.
+      </>
+    ),
   },
   {
     icon: Compass,
-    title: "작전 타임, 그리고 목표 선언",
-    desc: "출발 전 지도와 배점을 보고 두 조의 동선을 짜요. 그리고 팀의 목표를 선언해요 — “우리는 오늘 몇 점.” 남을 이기는 게 아니라 우리 팀을 정확히 읽는 게 승부예요.",
+    title: "13:05 지도 공개, 그리고 목표 선언",
+    desc: (
+      <>
+        체크포인트 위치는 <B>행사 시작 5분 뒤(13:05)</B>에야 공개돼요. 미리
+        외워 올 수 없어요. 공개된 지도와 배점을 보고 그 자리에서 두 조의
+        동선을 짜고, 팀의 목표를 선언해요 — “우리는 오늘 몇 점.” 남을 이기는
+        게 아니라 <B>우리 팀을 정확히 읽는 게 승부</B>예요.
+      </>
+    ),
   },
   {
     icon: Navigation,
     title: "26곳, 순서도 경로도 자유",
-    desc: "체크포인트 26곳을 어떤 순서로 어떻게 돌아도 괜찮아요. 다만 4시간 안에 전부 도는 건 불가능해요. 어디를 가고 어디를 버릴지가 이 게임의 전부예요.",
+    desc: (
+      <>
+        체크포인트 26곳을 어떤 순서로 어떻게 돌아도 괜찮아요. 다만{" "}
+        <B>4시간 안에 전부 도는 건 불가능</B>해요. 어디를 가고 어디를 버릴지가
+        이 게임의 전부예요.
+      </>
+    ),
   },
   {
     icon: Lock,
     title: "네 색을 모아 50을 찍으면 100점",
-    desc: "10·20·30·40점 스탬프 한 세트를 가진 채 50점을 찍으면 보너스 50점이 붙어 100점이 돼요. 세트는 그때 소모 — 또 다른 50점에서 보너스를 받으려면 네 가지 색을 새로 모아야 해요. 세트 없이 찍으면 50점만 받아요.",
+    desc: (
+      <>
+        <B>10·20·30·40점 스탬프 한 세트</B>를 가진 채 50점을 찍으면 보너스
+        50점이 붙어 <B>100점</B>이 돼요. 세트는 그때 소모 — 또 다른 50점에서
+        보너스를 받으려면 네 가지 색을 새로 모아야 해요. 세트 없이 찍으면
+        50점만 받아요.
+      </>
+    ),
   },
   {
     icon: Footprints,
     title: "두 발로만",
-    desc: "자전거·킥보드 등 탈것은 쓸 수 없어요. 걷거나 달려서 모은 점수만 인정돼요.",
+    desc: (
+      <>
+        자전거·킥보드 등 탈것은 쓸 수 없어요. <B>걷거나 달려서</B> 모은
+        점수만 인정돼요.
+      </>
+    ),
   },
   {
     icon: Ticket,
     title: "모은 점수는 기념품과 추첨권으로",
-    desc: "300점을 모으면 기념품함이 열리고, 넘긴 점수는 추첨권으로 바꿔 피니시 경품 추첨에 써요. 많이 돌수록 장수는 늘지만 당첨은 운이에요.",
+    desc: (
+      <>
+        <B>300점</B>을 모으면 기념품함이 열리고, 넘긴 점수는 추첨권으로 바꿔
+        피니시 경품 추첨에 써요. 많이 돌수록 장수는 늘지만 당첨은 운이에요.
+      </>
+    ),
   },
   {
     icon: Clock,
     title: "4시간 — 늦으면 1분마다 −10점",
-    desc: "마감을 넘기면 1분마다 10점씩 깎여요. “하나만 더 찍고 갈까”의 아슬아슬함이 마지막까지 이어져요. 4시간 뒤 모두 광교산 산림욕장에 모여 티타임을 함께하고, 많이 늦어지면 관제가 확인하고 운영진이 찾아가요.",
+    desc: (
+      <>
+        마감을 넘기면 <B>1분마다 10점씩</B> 깎여요. “하나만 더 찍고 갈까”의
+        아슬아슬함이 마지막까지 이어져요. 많이 늦어지면 관제가 확인하고
+        운영진이 찾아가요.
+      </>
+    ),
+  },
+] as const
+
+/** 당일 흐름 */
+const TIMELINE = [
+  {
+    time: "13:00",
+    title: "시작 · 광교산 산림욕장",
+    desc: "팀 확인과 안내",
+  },
+  {
+    time: "13:05",
+    title: "지도 공개 · 작전 타임",
+    desc: "동선을 짜고 목표를 선언한 뒤 출발",
+    highlight: true,
+  },
+  {
+    time: "17:00",
+    title: "마감 · 산림욕장 복귀",
+    desc: "티타임 · 점수 집계 · 경품 추첨",
+  },
+  {
+    time: "17:30",
+    title: "뒤풀이 · 자선농원",
+    desc: "소감 나누며 저녁 식사 (신청 시 참석 여부 선택)",
+    href: "https://naver.me/F3Tj4xUX",
   },
 ] as const
 
@@ -108,11 +180,6 @@ const PROVIDED = [
   { icon: Package, text: "파밍박스·파밍백 보급 (물·음료·에너지젤)" },
   { icon: Radio, text: "실시간 GPS 관제 — 가족·지인 응원 시청" },
   { icon: Gift, text: "기념품 + 티타임 경품 추첨" },
-  {
-    icon: Users,
-    text: "17:30 뒤풀이 — 자선농원에서 소감 나누며 저녁 식사 (신청 시 선택)",
-    href: "https://naver.me/F3Tj4xUX",
-  },
   { icon: Flag, text: "사진·영상 기록 제공" },
 ] as const
 
@@ -221,15 +288,20 @@ export default function NatseongotPage() {
             </span>
           </h2>
           <p className="mt-7 text-base leading-relaxed text-muted-foreground">
-            기록에 도전하는 날도, 숲에서 쉬어 가는 날도, 낯선 길을 찾아 나서는
-            날도 있어요. 이번 ROUTE @광교는{" "}
-            <b className="font-semibold text-foreground">세 번째 날</b>을 위한
-            하루예요.
+            기록에 도전하는 날도, 숲에서 쉬어 가는 날도 있지만, ROUTE @광교는{" "}
+            <b className="font-semibold text-foreground">
+              낯선 길을 찾아 나서는 날
+            </b>
+            이에요.
           </p>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-            그래서 순위표를 두지 않았어요. 대신 출발 전 팀이 스스로 목표를
-            선언하고, 돌아와 그 선언과 비교해요. 무리한 목표로 못 지킨 팀보다
-            수수한 목표를 정확히 달성한 팀이 더 노련한 팀이니까요.
+            그래서 <b className="font-semibold text-foreground">순위표를 두지 않았어요.</b>{" "}
+            대신 출발 전 팀이 스스로 목표를 선언하고, 돌아와 그 선언과 비교해요.
+            무리한 목표로 못 지킨 팀보다{" "}
+            <b className="font-semibold text-foreground">
+              수수한 목표를 정확히 달성한 팀
+            </b>
+            이 더 노련한 팀이니까요.
           </p>
         </Reveal>
       </section>
@@ -256,6 +328,46 @@ export default function NatseongotPage() {
                 </p>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {r.desc}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal>
+          <h3 className="mt-16 text-lg font-semibold tracking-tight">
+            당일 흐름
+          </h3>
+        </Reveal>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {TIMELINE.map((t, i) => (
+            <Reveal key={t.time} delay={i * 0.06}>
+              <div
+                className={`h-full rounded-2xl border p-5 ${
+                  "highlight" in t
+                    ? "border-[#DC2F55]/40 bg-[radial-gradient(120%_120%_at_0%_0%,rgba(220,47,85,0.12),transparent_60%)]"
+                    : "bg-card"
+                }`}
+              >
+                <p className="font-mono text-sm font-semibold text-[#DC2F55] tabular-nums">
+                  {t.time}
+                </p>
+                <p className="mt-2 font-semibold">
+                  {"href" in t ? (
+                    <a
+                      href={t.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline decoration-muted-foreground/40 underline-offset-4 hover:text-[#DC2F55]"
+                    >
+                      {t.title} ↗
+                    </a>
+                  ) : (
+                    t.title
+                  )}
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  {t.desc}
                 </p>
               </div>
             </Reveal>
@@ -341,23 +453,8 @@ export default function NatseongotPage() {
               </div>
             </Reveal>
 
-            <Reveal delay={0.14}>
-              <div className="rounded-2xl border border-[#DC2F55]/30 bg-[radial-gradient(120%_120%_at_0%_0%,rgba(220,47,85,0.10),transparent_55%)] p-6">
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  <b className="font-semibold text-foreground">
-                    10·20·30·40점 한 세트
-                  </b>
-                  를 모은 채 50점을 찍으면{" "}
-                  <b className="font-semibold text-foreground">
-                    보너스 +50, 총 100점
-                  </b>
-                  이에요 (세트 소모). 다음 50점 보너스엔 새 세트가 필요하고,
-                  세트 없이 찍으면 50점만 받아요. 순서는 전부 자유예요.
-                </p>
-              </div>
-            </Reveal>
 
-            <Reveal delay={0.2}>
+            <Reveal delay={0.14}>
               <dl className="grid grid-cols-2 gap-3">
                 <div className="rounded-2xl border bg-card px-5 py-4">
                   <dt className="text-xs text-muted-foreground">제한 시간</dt>
@@ -398,7 +495,7 @@ export default function NatseongotPage() {
                 참가비에 포함된 것
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                1인 {EV.fee.toLocaleString()}원
+                1인 {EV.fee.toLocaleString()}원 · 2인·4인 신청 시 10% 할인
               </p>
               <ul className="mt-6 space-y-4">
                 {PROVIDED.map((p) => (
@@ -495,6 +592,9 @@ export default function NatseongotPage() {
                 <dt className="text-xs text-muted-foreground">참가비</dt>
                 <dd className="mt-0.5 font-semibold tabular-nums">
                   {EV.fee.toLocaleString()}원
+                </dd>
+                <dd className="mt-0.5 text-xs text-muted-foreground">
+                  2인·4인 10% 할인
                 </dd>
               </div>
               <div className="rounded-xl border bg-background px-4 py-3">
