@@ -80,8 +80,8 @@ const RULES = [
   },
   {
     icon: Lock,
-    title: "50점의 열쇠 — 네 가지 색을 모아야 열려요",
-    desc: "50점 체크포인트는 10·20·30·40점 스탬프를 각각 하나 이상 가진 조만 찍을 수 있어요. 빨간 스탬프는 네 색을 모은 뒤에 찍는 마침표예요. 나머지 체크포인트는 순서 제한 없이 자유롭게 찍어요.",
+    title: "50점의 열쇠 — 네 색 한 세트가 소모돼요",
+    desc: "50점 하나를 찍으려면 10·20·30·40점 스탬프 한 세트가 열쇠로 필요해요. 열쇠는 한 번 쓰면 소모돼요 — 두 번째 50점을 노린다면 네 가지 색을 한 벌 더 모아야 해요. 나머지 체크포인트는 순서 제한 없이 자유예요.",
   },
   {
     icon: Palette,
@@ -342,13 +342,13 @@ export default function NatseongotPage() {
             <Reveal delay={0.14}>
               <div className="rounded-2xl border border-[#DC2F55]/30 bg-[radial-gradient(120%_120%_at_0%_0%,rgba(220,47,85,0.10),transparent_55%)] p-6">
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  <b className="font-semibold text-foreground">50점</b>{" "}
-                  체크포인트는{" "}
+                  <b className="font-semibold text-foreground">50점</b> 하나를
+                  찍을 때마다{" "}
                   <b className="font-semibold text-foreground">
-                    10·20·30·40점 스탬프를 모두 모은 조
+                    10·20·30·40점 스탬프 한 세트
                   </b>
-                  만 찍을 수 있어요. 나머지 체크포인트는 순서 제한 없이
-                  자유예요.
+                  가 열쇠로 소모돼요. 50점 두 개를 노린다면 두 세트가
+                  필요해요. 나머지 체크포인트는 순서 제한 없이 자유예요.
                 </p>
               </div>
             </Reveal>
