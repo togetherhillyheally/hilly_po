@@ -178,7 +178,11 @@ const PROVIDED = [
     href: "https://naver.me/xnhfZnLP",
   },
   { icon: Package, text: "파밍박스·파밍백 보급 (물·음료·에너지젤)" },
-  { icon: Radio, text: "실시간 GPS 관제 — 가족·지인 응원 시청" },
+  {
+    icon: Radio,
+    text: "실시간 GPS 관제 — 가족·지인 응원 링크 (모험 시작 후 열려요)",
+    href: "/events/natseongot/live",
+  },
   { icon: Gift, text: "기념품 + 티타임 경품 추첨" },
   { icon: Flag, text: "사진·영상 기록 제공" },
 ] as const
