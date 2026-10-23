@@ -116,8 +116,7 @@ const RULES = [
     title: "모은 점수로 협찬품 뽑기",
     desc: (
       <>
-        17:00 피니시에서 협찬품을 소개하고 써 본 경험을 나눈 뒤,{" "}
-        <B>모은 점수를 써서 차례대로 추첨권을 뽑아요.</B> 당첨이면 그 제품을
+        17:00 피니시에서 <B>모은 점수를 써서 차례대로 추첨권을 뽑아요.</B> 당첨이면 그 제품을
         가져가고, 꽝일 수도 있어요. 많이 모을수록 여러 번 뽑을 수 있지만
         당첨은 운이에요.
       </>
@@ -144,12 +143,16 @@ const RULES = [
 /** 당일 흐름 */
 const TIMELINE = [
   {
-    time: "13:00",
+    time: "12:00",
     title: "집결 · 광교산 산림욕장",
     desc: "팀 확인과 안내",
+    link: {
+      label: "주차: 수원시환경성질환아토피센터",
+      href: "https://naver.me/xnhfZnLP",
+    },
   },
   {
-    time: "START",
+    time: "13:00",
     title: "모험 시작 · 지도 공개",
     desc: "그 자리에서 동선을 짜고 목표를 선언한 뒤 출발",
     highlight: true,
@@ -157,7 +160,7 @@ const TIMELINE = [
   {
     time: "17:00",
     title: "마감 · 산림욕장 복귀",
-    desc: "티타임 · 점수 집계 · 협찬품 소개와 후기 · 점수로 뽑기",
+    desc: "티타임 · 점수 집계 · 모은 점수로 협찬품 추첨",
   },
   {
     time: "17:30",
@@ -169,11 +172,6 @@ const TIMELINE = [
 
 const PROVIDED = [
   {
-    icon: Navigation,
-    text: "광교산 산림욕장 집결 · 주차: 수원시환경성질환아토피센터",
-    href: "https://naver.me/xnhfZnLP",
-  },
-  {
     icon: Package,
     text: "파밍박스 — 차로 닿는 코스 지점에 설치, 협찬품을 그 자리에서 바로 써 봐요",
   },
@@ -182,7 +180,7 @@ const PROVIDED = [
     text: "실시간 GPS 관제 — 가족·지인 응원 링크 (모험 시작 후 열려요)",
     href: "/events/natseongot/live",
   },
-  { icon: Gift, text: "17:00 협찬품 소개 · 모은 점수로 뽑는 추첨 (당첨 또는 꽝)" },
+  { icon: Gift, text: "모은 점수로 협찬품 추첨 (당첨 또는 꽝)" },
   { icon: Flag, text: "사진·영상 기록 제공" },
 ] as const
 
@@ -394,6 +392,16 @@ export default function NatseongotPage() {
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                   {t.desc}
                 </p>
+                {"link" in t && (
+                  <a
+                    href={t.link.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-block text-xs text-muted-foreground underline decoration-muted-foreground/40 underline-offset-4 hover:text-[#DC2F55]"
+                  >
+                    {t.link.label} ↗
+                  </a>
+                )}
               </div>
             </Reveal>
           ))}

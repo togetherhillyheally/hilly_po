@@ -111,7 +111,7 @@ export function SuccessClient() {
                   <div>
                     <dt className="text-sm font-semibold">{EV.placeLabel}</dt>
                     <dd className="text-xs text-muted-foreground">
-                      광교산 산림욕장 집결
+                      12:00까지 광교산 산림욕장 집결
                     </dd>
                   </div>
                 </div>

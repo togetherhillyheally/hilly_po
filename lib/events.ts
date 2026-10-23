@@ -30,7 +30,7 @@ export const NATSEONGOT: EventInfo = {
   discountSizes: [2, 4],
   capacity: 32,
   dateLabel: "2026. 11. 14. (토)",
-  timeLabel: "13:00 ~ 17:00 · 제한 4시간",
+  timeLabel: "12:00 집결 · 13:00 ~ 17:00 (4시간)",
   placeLabel: "경기 수원 광교산",
   placeSub: "광교산 산림욕장 출발 · 도착",
   path: "/events/natseongot",
