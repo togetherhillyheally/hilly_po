@@ -7,7 +7,6 @@ import {
   Clock,
   Compass,
   Flag,
-  Footprints,
   Gift,
   Lock,
   MapPin,
@@ -113,16 +112,6 @@ const RULES = [
     ),
   },
   {
-    icon: Footprints,
-    title: "두 발로만",
-    desc: (
-      <>
-        자전거·킥보드 등 탈것은 쓸 수 없어요. <B>걷거나 달려서</B> 모은
-        점수만 인정돼요.
-      </>
-    ),
-  },
-  {
     icon: Ticket,
     title: "모은 점수로 협찬품 뽑기",
     desc: (
@@ -136,12 +125,17 @@ const RULES = [
   },
   {
     icon: Clock,
-    title: "4시간 — 늦으면 1분마다 −10점",
+    title: (
+      <>
+        두 발로 4시간 — 늦으면 1분마다{" "}
+        <span className="text-[#DC2F55]">−10점</span>
+      </>
+    ),
     desc: (
       <>
-        마감을 넘기면 <B>1분마다 10점씩</B> 깎여요. “하나만 더 찍고 갈까”의
-        아슬아슬함이 마지막까지 이어져요. 많이 늦어지면 관제가 확인하고
-        운영진이 찾아가요.
+        탈것 없이 <B>걷거나 달려서</B> 모은 점수만 인정돼요. 마감을 넘기면{" "}
+        <B>1분마다 10점씩</B> 깎여요. 많이 늦어지면 관제가 확인하고 운영진이
+        찾아가요.
       </>
     ),
   },
@@ -214,8 +208,23 @@ export default function NatseongotPage() {
     <main className="mx-auto max-w-6xl px-6">
       {/* 헤더 */}
       <header className="flex h-16 items-center justify-between">
-        <Link href="/" className="text-sm font-bold tracking-tight">
-          HILLY HEALLY <span className="text-muted-foreground">GROUND</span>
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-sm font-bold tracking-tight"
+        >
+          <Image
+            src="/images/logo.png"
+            alt="Hilly Heally 로고"
+            width={28}
+            height={28}
+            priority
+          />
+          <span>
+            HILLY HEALLY{" "}
+            <span className="hidden text-muted-foreground sm:inline">
+              GROUND
+            </span>
+          </span>
         </Link>
         <div className="flex items-center gap-1.5">
           <SignupSheet>
@@ -290,7 +299,9 @@ export default function NatseongotPage() {
       {/* 철학 */}
       <section className="border-t py-20">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-medium text-muted-foreground">WHY</p>
+          <p className="text-sm font-bold tracking-[0.2em] text-[#DC2F55]">
+            WHY
+          </p>
           <h2 className="mt-4 text-2xl font-bold leading-snug tracking-tighter sm:text-4xl">
             산을 잘 탄다는 것 —
             <br />
@@ -299,7 +310,8 @@ export default function NatseongotPage() {
             </span>
           </h2>
           <p className="mt-7 text-base leading-relaxed text-muted-foreground">
-            기록에 도전하는 날도, 숲에서 쉬어 가는 날도 있지만, ROUTE @광교산은{" "}
+            기록에 도전하는 날도, 숲에서 쉬어 가는 날도 있지만,{" "}
+            <span className="whitespace-nowrap">ROUTE @광교산은</span>{" "}
             <b className="font-semibold text-foreground">
               낯선 길을 찾아 나서는 날
             </b>
@@ -330,11 +342,14 @@ export default function NatseongotPage() {
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {RULES.map((r, i) => (
-            <Reveal key={r.title} delay={(i % 3) * 0.06}>
-              <div className="h-full rounded-2xl border bg-card p-7 transition-colors hover:border-foreground/20">
-                <r.icon className="h-6 w-6 text-[#DC2F55]" strokeWidth={1.5} />
-                <p className="mt-4 text-lg font-semibold leading-snug">
-                  {r.title}
+            <Reveal key={i} delay={(i % 3) * 0.06}>
+              <div className="h-full rounded-2xl border bg-card px-5 py-5 transition-colors hover:border-foreground/20">
+                <p className="flex items-start gap-2 font-semibold leading-snug">
+                  <r.icon
+                    className="mt-0.5 h-4 w-4 shrink-0 text-[#DC2F55]"
+                    strokeWidth={1.75}
+                  />
+                  <span>{r.title}</span>
                 </p>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {r.desc}
