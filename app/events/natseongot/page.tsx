@@ -55,7 +55,7 @@ const FACTS = [
     icon: Wallet,
     label: "참가비",
     value: `${EV.fee.toLocaleString()}원`,
-    sub: "2·4인 10% 할인 · 보급·협찬품·기록",
+    sub: "2·4인 10% 할인 · 보급·추첨·기록",
   },
 ] as const
 
@@ -101,11 +101,11 @@ const RULES = [
   },
   {
     icon: Ticket,
-    title: "모은 점수로 협찬품 뽑기",
+    title: "모은 점수로 추첨",
     desc: (
       <>
-        17:00 피니시에서 <B>모은 점수를 써서 차례대로 추첨권을 뽑아요.</B> 당첨이면 그 제품을
-        가져가고, 꽝일 수도 있어요. 많이 모을수록 여러 번 뽑을 수 있지만
+        17:00 피니시에서 <B>모은 점수를 써서 차례대로 추첨권을 뽑아요.</B> 당첨이면 상품을 받고,
+        꽝일 수도 있어요. 많이 모을수록 여러 번 뽑을 수 있지만
         당첨은 운이에요.
       </>
     ),
@@ -151,7 +151,7 @@ const HOW_TO_PLAY = [
     목표와 비교해요.
   </>,
   <>
-    <B>모은 점수로 협찬품 추첨</B> — 점수를 써서 차례대로 추첨권을 뽑아요.
+    <B>모은 점수로 추첨</B> — 점수를 써서 차례대로 추첨권을 뽑아요.
     당첨 또는 꽝!
   </>,
 ]
@@ -176,7 +176,7 @@ const TIMELINE = [
   {
     time: "17:00",
     title: "마감 · 산림욕장 복귀",
-    desc: "티타임 · 점수 집계 · 모은 점수로 협찬품 추첨",
+    desc: "티타임 · 점수 집계 · 모은 점수로 추첨",
   },
   {
     time: "17:30",
@@ -189,14 +189,14 @@ const TIMELINE = [
 const PROVIDED = [
   {
     icon: Package,
-    text: "파밍박스 — 차로 닿는 코스 지점에 설치, 협찬품을 그 자리에서 바로 써 봐요",
+    text: "파밍박스 — 차로 닿는 코스 지점에 설치, 그 자리에서 바로 꺼내 써요",
   },
   {
     icon: Radio,
     text: "실시간 GPS 관제 — 가족·지인 응원 링크 (모험 시작 후 열려요)",
     href: "/events/natseongot/live",
   },
-  { icon: Gift, text: "모은 점수로 협찬품 추첨 (당첨 또는 꽝)" },
+  { icon: Gift, text: "모은 점수로 추첨 (당첨 또는 꽝)" },
   { icon: Flag, text: "사진·영상 기록 제공" },
 ] as const
 
@@ -533,7 +533,7 @@ export default function NatseongotPage() {
                     모은 점수는
                   </dt>
                   <dd className="mt-0.5 font-semibold">
-                    협찬품 뽑기에 써요{" "}
+                    추첨에 써요{" "}
                     <span className="text-xs font-normal text-muted-foreground">
                       · 점수를 내고 추첨권을 뽑아요 (당첨 또는 꽝)
                     </span>
