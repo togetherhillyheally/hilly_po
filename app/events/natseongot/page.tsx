@@ -8,7 +8,6 @@ import {
   Compass,
   Flag,
   Gift,
-  Lock,
   MapPin,
   Navigation,
   Package,
@@ -71,7 +70,8 @@ const RULES = [
     desc: (
       <>
         팀 안에서 <B>2인 1조</B>로 나뉘어 움직이고, 조마다 트래커를 하나씩
-        들어요. 팀 점수는 두 조가 찍은 체크포인트를 합쳐 계산하니,{" "}
+        들어요. 스탬프는 <B>같은 조 짝꿍이 50m 안에 함께 있어야</B> 인정돼요.
+        팀 점수는 두 조가 찍은 곳을 합쳐 계산하고 같은 곳은 한 번만 쳐주니,{" "}
         <B>갈라져서 다른 곳을 찍는 쪽이 이득</B>이에요.
       </>
     ),
@@ -96,18 +96,6 @@ const RULES = [
         체크포인트를 어떤 순서로 어떻게 돌아도 괜찮아요. 다만{" "}
         <B>4시간 안에 전부 도는 건 불가능</B>해요. 어디를 가고 어디를 버릴지가
         이 게임의 전부예요.
-      </>
-    ),
-  },
-  {
-    icon: Lock,
-    title: "네 색을 모아 50을 찍으면 100점",
-    desc: (
-      <>
-        <B>10·20·30·40점 스탬프 한 세트</B>를 가진 채 50점을 찍으면 보너스
-        50점이 붙어 <B>100점</B>이 돼요. 세트는 그때 소모 — 또 다른 50점에서
-        보너스를 받으려면 네 가지 색을 새로 모아야 해요. 세트 없이 찍으면
-        50점만 받아요.
       </>
     ),
   },
@@ -139,6 +127,34 @@ const RULES = [
     ),
   },
 ] as const
+
+/** 게임 방법 — 처음 보는 사람도 순서대로 따라올 수 있게 */
+const HOW_TO_PLAY = [
+  <>
+    <B>12:00 집결</B> — 4명 한 팀, 그 안에서 2명씩 두 조를 확인하고 조마다
+    트래커를 받아요. 힐리힐리 앱으로 모험에 참가해요.
+  </>,
+  <>
+    <B>13:00 시작과 함께 지도 공개</B> — 체크포인트 위치와 배점을 보고 동선을
+    짠 뒤, 팀 목표 점수를 선언하고 출발해요.
+  </>,
+  <>
+    <B>짝꿍과 함께 도착하면 스탬프</B> — 체크포인트에 가면 앱이 위치로
+    도착을 확인해요. 같은 조 짝꿍이 50m 안에 있어야 인정돼요.
+  </>,
+  <>
+    <B>10~50점 모으기</B> — 멀고 높은 곳일수록 큰 점수예요. 4시간 안에 다
+    돌 수는 없으니 어디를 갈지 골라요.
+  </>,
+  <>
+    <B>17:00까지 산림욕장으로 복귀</B> — 늦으면 1분마다 −10점. 돌아와 선언한
+    목표와 비교해요.
+  </>,
+  <>
+    <B>모은 점수로 협찬품 추첨</B> — 점수를 써서 차례대로 추첨권을 뽑아요.
+    당첨 또는 꽝!
+  </>,
+]
 
 /** 당일 흐름 */
 const TIMELINE = [
@@ -338,9 +354,26 @@ export default function NatseongotPage() {
           </p>
         </Reveal>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Reveal>
+          <ol className="mt-8 grid gap-x-6 gap-y-3 rounded-2xl border bg-card px-5 py-5 sm:grid-cols-2">
+            {HOW_TO_PLAY.map((step, i) => (
+              <li key={i} className="flex gap-3 text-sm leading-relaxed">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#DC2F55]/15 text-xs font-bold text-[#DC2F55]">
+                  {i + 1}
+                </span>
+                <span className="text-muted-foreground">{step}</span>
+              </li>
+            ))}
+          </ol>
+        </Reveal>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
           {RULES.map((r, i) => (
-            <Reveal key={i} delay={(i % 3) * 0.06}>
+            <Reveal
+              key={i}
+              delay={(i % 3) * 0.06}
+              className={i < 3 ? "lg:col-span-2" : "lg:col-span-3"}
+            >
               <div className="h-full rounded-2xl border bg-card px-5 py-5 transition-colors hover:border-foreground/20">
                 <p className="flex items-start gap-2 font-semibold leading-snug">
                   <r.icon
@@ -476,13 +509,6 @@ export default function NatseongotPage() {
                     </li>
                   ))}
                 </ul>
-                <p className="border-t px-6 py-3 text-xs leading-relaxed text-muted-foreground">
-                  🔑 10·20·30·40 세트를 모아 50을 찍으면{" "}
-                  <b className="font-semibold text-foreground">
-                    보너스 +50 (총 100점)
-                  </b>{" "}
-                  · 세트는 소모돼요
-                </p>
               </div>
             </Reveal>
 
