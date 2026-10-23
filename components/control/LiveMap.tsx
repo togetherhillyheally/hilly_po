@@ -191,21 +191,29 @@ function styleMarkerEl(
   }
   // 사진(아바타) + 짧은 이름 — textContent/src 만 갱신 (XSS 안전). 묶인 마커는 아바타를 겹쳐 표시
   chip.replaceChildren()
-  const withAvatar = members.filter((m) => m.entry.avatar_url).slice(0, 4)
-  if (withAvatar.length > 0) {
-    const stack = document.createElement("span")
-    stack.className = "-ml-1 mr-1 flex shrink-0"
-    withAvatar.forEach((m, i) => {
+  // 사진이 없으면 닉네임 첫 글자 동그라미
+  const stack = document.createElement("span")
+  stack.className = "-ml-1 mr-1 flex shrink-0"
+  members.slice(0, 4).forEach((m, i) => {
+    const overlap = i > 0 ? " -ml-2" : ""
+    if (m.entry.avatar_url) {
       const img = document.createElement("img")
-      img.src = m.entry.avatar_url!
+      img.src = m.entry.avatar_url
       img.alt = ""
       img.className =
         "h-[18px] w-[18px] rounded-full border border-white/70 object-cover" +
-        (i > 0 ? " -ml-2" : "")
+        overlap
       stack.appendChild(img)
-    })
-    chip.appendChild(stack)
-  }
+    } else {
+      const initial = document.createElement("span")
+      initial.textContent = (m.entry.display_name.trim() || "?").slice(0, 1)
+      initial.className =
+        "flex h-[18px] w-[18px] items-center justify-center rounded-full border border-white/70 bg-gray-100 text-[9px] font-bold text-gray-800" +
+        overlap
+      stack.appendChild(initial)
+    }
+  })
+  chip.appendChild(stack)
   const text = document.createElement("span")
   text.textContent = members.length > 1 ? `${label} · ${members.length}명` : label
   chip.appendChild(text)
