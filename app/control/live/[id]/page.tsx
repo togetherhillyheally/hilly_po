@@ -13,12 +13,16 @@ import {
   ViewModeSwitch,
   filterDisplayEntries,
 } from "@/components/control/DisplayFilter"
+import AdventureScoreboard, {
+  teamLabel,
+} from "@/components/control/AdventureScoreboard"
 import ElevationProfile from "@/components/control/ElevationProfile"
 import LiveMap from "@/components/control/LiveMap"
 import LiveSidebar from "@/components/control/LiveSidebar"
 import LiveTableWide from "@/components/control/LiveTableWide"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useLiveAdventure } from "@/hooks/use-live-adventure"
+import { useSessionScoreboard } from "@/hooks/use-session-scoreboard"
 import { useSuperAdmin } from "@/hooks/use-super-admin"
 
 /** 경과 시간 시계 — 1초마다 갱신 */
@@ -45,8 +49,16 @@ function ElapsedClock({ startsAt }: { startsAt: string }) {
 export default function LiveAdventureControlPage() {
   const params = useParams<{ id: string }>()
   const { isAdmin } = useSuperAdmin()
-  const { session, course, courseIndex, ranked, notFound, loading } =
-    useLiveAdventure(params.id)
+  const {
+    session,
+    course,
+    courseIndex,
+    ranked: rawRanked,
+    notFound,
+    loading,
+  } = useLiveAdventure(params.id)
+  // 배점형 코스 모험이면 팀·조 점수판 (앱과 동일한 계산)
+  const board = useSessionScoreboard(params.id, isAdmin === true)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [focusSignal, setFocusSignal] = useState(0)
   const [displayMode, setDisplayMode] = useState<DisplayMode>("all")
@@ -69,12 +81,39 @@ export default function LiveAdventureControlPage() {
     }
   }, [session?.title])
 
+  // 점수판이 있으면 구분 = 소속 팀(마커·목록 색 통일), 점수 = 사람별 점수
+  const ranked = useMemo(() => {
+    if (!board) return rawRanked
+    const teamOf = new Map<string, number>()
+    for (const sq of board.squads)
+      for (const uid of sq.member_ids) teamOf.set(uid, sq.team_no ?? 1)
+    return rawRanked.map((r) => {
+      const team = teamOf.get(r.entry.entry_id)
+      return {
+        ...r,
+        entry: {
+          ...r.entry,
+          category: team != null ? teamLabel(team) : r.entry.category,
+        },
+        gameScore: board.points_by_user[r.entry.entry_id] ?? 0,
+      }
+    })
+  }, [rawRanked, board])
+  const liveIds = useMemo(
+    () => new Set(rawRanked.map((r) => r.entry.entry_id)),
+    [rawRanked],
+  )
+
   const categories = useMemo(
     () =>
-      Array.from(
-        new Set(ranked.map((r) => r.entry.category).filter(Boolean)),
-      ) as string[],
-    [ranked],
+      board
+        ? [...board.teams]
+            .sort((a, b) => a.team_no - b.team_no)
+            .map((t) => teamLabel(t.team_no))
+        : (Array.from(
+            new Set(ranked.map((r) => r.entry.category).filter(Boolean)),
+          ) as string[]),
+    [ranked, board],
   )
   const visible = useMemo(
     () => filterDisplayEntries(ranked, displayMode, favs, categories),
@@ -172,6 +211,16 @@ export default function LiveAdventureControlPage() {
             height="100%"
             className="absolute inset-0"
           />
+          {board && (
+            <AdventureScoreboard
+              board={board}
+              categories={categories}
+              liveIds={liveIds}
+              selectedId={selectedId}
+              onSelect={handleSelect}
+              className="absolute left-3 top-3 z-30"
+            />
+          )}
           {/* 2D/3D — 좌측 아래 (모바일 하단 시트가 열려 있으면 시트 위로) */}
           <MapDimensionToggle
             is3d={is3d}
