@@ -23,14 +23,14 @@ import { Button } from "@/components/ui/button"
 import { Reveal } from "@/components/landing/Reveal"
 import { CourseMapLazy } from "@/components/events/CourseMapLazy"
 import { NATSEONGOT as EV } from "@/lib/events"
-import { COURSE, CPS, TIERS, TIER_COLOR, totalPoints } from "@/lib/events/gwanggyo-cps"
+import { COURSE, CPS, TIERS, TIER_COLOR } from "@/lib/events/gwanggyo-cps"
 import { SignupSheet } from "./SignupSheet"
 import { UserChip } from "./UserChip"
 
 export const metadata: Metadata = {
   title: "ROUTE @광교 | 힐리힐리",
   description:
-    "2026.11.14 수원 광교산. 배점이 다른 체크포인트 26곳을 4시간 안에 자유 순서로 모으는 숲길 팀 전략 게임. 순위는 없고, 팀이 정한 목표만 있어요. 32명 한정.",
+    "2026.11.14 수원 광교산. 배점이 다른 체크포인트를 4시간 안에 자유 순서로 모으는 숲길 팀 전략 게임. 순위는 없고, 팀이 정한 목표만 있어요. 32명 한정.",
   openGraph: {
     title: "ROUTE @광교",
     description:
@@ -91,10 +91,10 @@ const RULES = [
   },
   {
     icon: Navigation,
-    title: "26곳, 순서도 경로도 자유",
+    title: "순서도 경로도 자유",
     desc: (
       <>
-        체크포인트 26곳을 어떤 순서로 어떻게 돌아도 괜찮아요. 다만{" "}
+        체크포인트를 어떤 순서로 어떻게 돌아도 괜찮아요. 다만{" "}
         <B>4시간 안에 전부 도는 건 불가능</B>해요. 어디를 가고 어디를 버릴지가
         이 게임의 전부예요.
       </>
@@ -233,7 +233,7 @@ export default function NatseongotPage() {
             <span className="ml-1 text-[#DC2F55]">@광교</span>
           </h1>
           <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            숲길에서 펼쳐지는 팀 전략 게임. 배점이 다른 체크포인트 26곳을 자유
+            숲길에서 펼쳐지는 팀 전략 게임. 배점이 다른 체크포인트를 자유
             순서로 모으고, 4시간 안에 광교산 산림욕장으로 돌아와요.
           </p>
           <p className="mt-3 text-sm font-medium text-[#DC2F55]">
@@ -377,7 +377,7 @@ export default function NatseongotPage() {
       <section id="course" className="scroll-mt-8 border-t py-20">
         <Reveal>
           <h2 className="text-2xl font-bold tracking-tighter sm:text-3xl">
-            체크포인트 {COURSE.cpCount}곳 · 총 {totalPoints()}점
+            배점이 다른 체크포인트
           </h2>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
             멀고 높을수록 점수가 커요. 출발과 도착은 {COURSE.startName}이에요.
