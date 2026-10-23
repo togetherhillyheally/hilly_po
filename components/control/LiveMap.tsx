@@ -76,10 +76,26 @@ export type LiveMapProps = {
   mapStyle?: MapStyleKey
   /** true 면 각 세그먼트를 팔레트 색으로 순환 표시. */
   segmentsColored?: boolean
+  /** 앱에서 보낸 SOS 위치 — 빨간 맥박 마커 + 보낸 사람 (관제, 2026-10-23) */
+  sosPoints?: { id: string; lat: number; lng: number; label: string }[]
+  /** { id, n } — n 이 바뀔 때마다 그 SOS 로 flyTo */
+  sosFocus?: { id: string; n: number } | null
 }
 
 const DEM_SOURCE = "mapbox-dem"
 const TERRAIN_PITCH = 55
+
+/** geojson 소스를 지우지 않고 데이터만 교체 — 3D 지형이 켜진 상태에서
+ *  removeSource 를 하면 mapbox-gl 이 지형 갱신 중 예외를 던진다. */
+function upsertGeojsonSource(
+  map: mapboxgl.Map,
+  id: string,
+  data: GeoJSON.Feature | GeoJSON.FeatureCollection,
+) {
+  const src = map.getSource(id) as mapboxgl.GeoJSONSource | undefined
+  if (src) src.setData(data)
+  else map.addSource(id, { type: "geojson", data })
+}
 
 function ensureDemSource(map: mapboxgl.Map) {
   if (!map.getSource(DEM_SOURCE)) {
@@ -183,6 +199,8 @@ export default function LiveMap({
   enableGeolocate = false,
   mapStyle = "outdoors",
   segmentsColored = false,
+  sosPoints,
+  sosFocus,
 }: LiveMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
@@ -244,7 +262,6 @@ export default function LiveMap({
         const colored = segmentsColoredRef.current
 
         if (map.getLayer("course-line")) map.removeLayer("course-line")
-        if (map.getSource("course")) map.removeSource("course")
 
         if (colored && isMulti) {
           // 세그먼트별 팔레트 순환 컬러 — FeatureCollection 으로 index 부여
@@ -257,9 +274,9 @@ export default function LiveMap({
               coordinates: seg.map(([lng, lat]) => [lng, lat]),
             },
           }))
-          map.addSource("course", {
-            type: "geojson",
-            data: { type: "FeatureCollection", features },
+          upsertGeojsonSource(map, "course", {
+            type: "FeatureCollection",
+            features,
           })
           const colorExpr = [
             "match",
@@ -292,9 +309,10 @@ export default function LiveMap({
                   ([lng, lat]) => [lng, lat],
                 ),
               }
-          map.addSource("course", {
-            type: "geojson",
-            data: { type: "Feature", properties: {}, geometry },
+          upsertGeojsonSource(map, "course", {
+            type: "Feature",
+            properties: {},
+            geometry,
           })
           map.addLayer({
             id: "course-line",
@@ -312,11 +330,12 @@ export default function LiveMap({
 
       // 이동 궤적(꼬리) — setData 로 갱신
       if (map.getLayer("tails-line")) map.removeLayer("tails-line")
-      if (map.getSource("tails")) map.removeSource("tails")
-      map.addSource("tails", {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: [] },
-      })
+      if (!map.getSource("tails")) {
+        map.addSource("tails", {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+        })
+      }
       map.addLayer({
         id: "tails-line",
         type: "line",
@@ -518,6 +537,50 @@ export default function LiveMap({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId, focusSignal])
+
+  // SOS 마커 — 해제되면 사라지고, 새 SOS 는 바로 추가 (참가자 마커보다 위)
+  const sosMarkersRef = useRef<Map<string, mapboxgl.Marker>>(new Map())
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    const seen = new Set<string>()
+    for (const p of sosPoints ?? []) {
+      seen.add(p.id)
+      const existing = sosMarkersRef.current.get(p.id)
+      if (existing) {
+        existing.setLngLat([p.lng, p.lat])
+        continue
+      }
+      const el = document.createElement("div")
+      el.style.cssText = "display:flex;flex-direction:column;align-items:center;z-index:2000;pointer-events:none"
+      el.innerHTML = `
+        <div style="position:relative;width:34px;height:34px">
+          <div style="position:absolute;inset:0;border-radius:9999px;background:rgba(220,38,38,0.35);animation:sosPulse 1.4s ease-out infinite"></div>
+          <div style="position:absolute;inset:7px;border-radius:9999px;background:#DC2626;border:3px solid #fff;box-shadow:0 0 0 2px rgba(220,38,38,0.6)"></div>
+        </div>
+        <div style="margin-top:2px;padding:2px 6px;border-radius:6px;background:#DC2626;color:#fff;font-size:11px;font-weight:800;white-space:nowrap">SOS · ${p.label.replace(/[<>&"]/g, "")}</div>`
+      if (!document.getElementById("sos-pulse-style")) {
+        const st = document.createElement("style")
+        st.id = "sos-pulse-style"
+        st.textContent = "@keyframes sosPulse{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.8);opacity:0}}"
+        document.head.appendChild(st)
+      }
+      sosMarkersRef.current.set(p.id, new mapboxgl.Marker({ element: el, anchor: "top", offset: [0, -17] }).setLngLat([p.lng, p.lat]).addTo(map))
+    }
+    for (const [id, m] of sosMarkersRef.current) {
+      if (!seen.has(id)) {
+        m.remove()
+        sosMarkersRef.current.delete(id)
+      }
+    }
+  }, [sosPoints])
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !sosFocus) return
+    const p = (sosPoints ?? []).find((x) => x.id === sosFocus.id)
+    if (p) map.flyTo({ center: [p.lng, p.lat], zoom: Math.max(map.getZoom(), 16) })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sosFocus])
 
   // 꼬리 갱신
   useEffect(() => {

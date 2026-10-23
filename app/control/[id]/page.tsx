@@ -22,6 +22,7 @@ import LiveMap from "@/components/control/LiveMap"
 import LiveSidebar from "@/components/control/LiveSidebar"
 import LiveTableWide from "@/components/control/LiveTableWide"
 import RaceFinishBanner from "@/components/control/RaceFinishBanner"
+import { useEventSos } from "@/hooks/use-event-sos"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useLiveEvent } from "@/hooks/use-live-event"
 import { useSuperAdmin } from "@/hooks/use-super-admin"
@@ -161,7 +162,30 @@ function ControlRoom({
     return tails.filter((t) => ids.has(t.entry_id))
   }, [tails, visible, displayMode])
 
-  const sosCount = ranked.filter((r) => r.status === "sos").length
+  // 앱에서 보낸 SOS — 이 코스로 진행한 모험의 것만 (이벤트 시작 6시간 전부터)
+  const sosSince = event.starts_at
+    ? new Date(new Date(event.starts_at).getTime() - 6 * 3600_000).toISOString()
+    : null
+  const appSos = useEventSos(event.trail_id, sosSince)
+  const [sosFocus, setSosFocus] = useState<{ id: string; n: number } | null>(null)
+  const sosPoints = useMemo(
+    () =>
+      appSos.open
+        .filter((a) => a.lat != null && a.lng != null)
+        .map((a) => ({ id: a.id, lat: a.lat!, lng: a.lng!, label: a.nickname ?? "참가자" })),
+    [appSos.open],
+  )
+  async function resolveSos(id: string) {
+    if (!window.confirm("이 SOS 를 처리 완료로 표시할까요? 지도에서 사라져요.")) return
+    try {
+      await appSos.resolve(id)
+      toast.success("SOS 를 처리 완료로 표시했어요.")
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "처리하지 못했어요.")
+    }
+  }
+
+  const sosCount = ranked.filter((r) => r.status === "sos").length + appSos.open.length
   const hasProfileView = event.event_type === "race" && courseIndex != null
   const showMap = viewMode === "map" || !hasProfileView
 
@@ -283,7 +307,50 @@ function ControlRoom({
                 onElevations={setTerrainElevations}
                 height="100%"
                 className="absolute inset-0"
+                sosPoints={sosPoints}
+                sosFocus={sosFocus}
               />
+              {/* 앱 SOS 목록 — 좌측 위. 누르면 위치로 이동, 처리 완료로 지도에서 제거 */}
+              {appSos.open.length > 0 && (
+                <div className="absolute left-3 top-3 z-30 w-72 max-w-[calc(100%-1.5rem)] space-y-2">
+                  {appSos.open.map((a) => (
+                    <div
+                      key={a.id}
+                      className="rounded-xl border border-red-500 bg-red-600 p-3 text-white shadow-lg"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-extrabold">SOS · {a.nickname ?? "참가자"}</span>
+                        <span className="text-xs opacity-90">
+                          {new Date(a.createdAt).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                      {a.sessionTitle && <p className="mt-0.5 truncate text-xs opacity-90">{a.sessionTitle}</p>}
+                      {a.note && <p className="mt-1 text-xs">{a.note}</p>}
+                      <p className="mt-1 font-mono text-[11px] opacity-90">
+                        {a.lat != null && a.lng != null ? `${a.lat.toFixed(5)}, ${a.lng.toFixed(5)}` : "위치 없음"}
+                      </p>
+                      <div className="mt-2 flex gap-2">
+                        {a.lat != null && a.lng != null && (
+                          <button
+                            type="button"
+                            className="flex-1 rounded-md bg-white/20 px-2 py-1 text-xs font-bold hover:bg-white/30"
+                            onClick={() => setSosFocus((f) => ({ id: a.id, n: (f?.n ?? 0) + 1 }))}
+                          >
+                            위치 보기
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="flex-1 rounded-md bg-white px-2 py-1 text-xs font-bold text-red-700 hover:bg-white/90"
+                          onClick={() => void resolveSos(a.id)}
+                        >
+                          처리 완료
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
               {/* 2D/3D — 좌측 아래 (모바일 하단 시트가 열려 있으면 시트 위로) */}
               <MapDimensionToggle
                 is3d={is3d}
