@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { SuccessClient } from "./SuccessClient"
 
 export const metadata: Metadata = {
-  title: "신청 완료 — ROUTE @광교",
+  title: "신청 완료 — ROUTE @광교산",
   robots: { index: false, follow: false },
 }
 

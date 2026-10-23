@@ -28,14 +28,14 @@ import { SignupSheet } from "./SignupSheet"
 import { UserChip } from "./UserChip"
 
 export const metadata: Metadata = {
-  title: "ROUTE @광교 | 힐리힐리",
+  title: "ROUTE @광교산 | 힐리힐리",
   description:
     "2026.11.14 수원 광교산. 배점이 다른 체크포인트를 4시간 안에 자유 순서로 모으는 숲길 팀 전략 게임. 순위는 없고, 팀이 정한 목표만 있어요. 32명 한정.",
   openGraph: {
-    title: "ROUTE @광교",
+    title: "ROUTE @광교산",
     description:
       "숲길에서 펼쳐지는 팀 전략 게임. 2026.11.14 수원 광교산, 32명 한정 모집.",
-    images: ["/events/og-route-gwanggyo-v2.png"],
+    images: ["/events/og-route-gwanggyosan.png"],
   },
 }
 
@@ -51,13 +51,13 @@ const FACTS = [
     icon: Users,
     label: "모집",
     value: `${EV.capacity}명 한정`,
-    sub: "최대 4명 단체 신청 · 4인 1팀 × 8팀 (2인 1조 이동)",
+    sub: "4인 1팀 × 8팀 · 최대 4명 단체 신청",
   },
   {
     icon: Wallet,
     label: "참가비",
     value: `${EV.fee.toLocaleString()}원`,
-    sub: "2인·4인 신청 10% 할인 · 보급·협찬품 뽑기·기록 포함",
+    sub: "2·4인 10% 할인 · 보급·협찬품·기록",
   },
 ] as const
 
@@ -239,7 +239,7 @@ export default function NatseongotPage() {
           </p>
           <h1 className="mt-5 text-4xl font-bold leading-[1.08] tracking-tighter sm:text-5xl xl:text-6xl">
             <span>ROUTE</span>
-            <span className="ml-1 text-[#DC2F55]">@광교</span>
+            <span className="ml-1 text-[#DC2F55]">@광교산</span>
           </h1>
           <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             숲길에서 펼쳐지는 팀 전략 게임. 배점이 다른 체크포인트를 자유
@@ -269,12 +269,15 @@ export default function NatseongotPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {FACTS.map((f, i) => (
             <Reveal key={f.label} delay={i * 0.06}>
-              <div className="h-full rounded-2xl border bg-card p-6 transition-colors hover:border-foreground/20">
-                <f.icon className="h-5 w-5 text-[#DC2F55]" strokeWidth={1.5} />
-                <p className="mt-4 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+              <div className="h-full rounded-2xl border bg-card px-5 py-4 transition-colors hover:border-foreground/20">
+                <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  <f.icon
+                    className="h-3.5 w-3.5 text-[#DC2F55]"
+                    strokeWidth={1.75}
+                  />
                   {f.label}
                 </p>
-                <p className="mt-1.5 font-semibold leading-snug">{f.value}</p>
+                <p className="mt-2 font-semibold leading-snug">{f.value}</p>
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                   {f.sub}
                 </p>
@@ -296,7 +299,7 @@ export default function NatseongotPage() {
             </span>
           </h2>
           <p className="mt-7 text-base leading-relaxed text-muted-foreground">
-            기록에 도전하는 날도, 숲에서 쉬어 가는 날도 있지만, ROUTE @광교는{" "}
+            기록에 도전하는 날도, 숲에서 쉬어 가는 날도 있지만, ROUTE @광교산은{" "}
             <b className="font-semibold text-foreground">
               낯선 길을 찾아 나서는 날
             </b>

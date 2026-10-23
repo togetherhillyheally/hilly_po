@@ -23,7 +23,7 @@ export type EventInfo = {
 
 export const NATSEONGOT: EventInfo = {
   slug: "natseongot-2026-11",
-  title: "ROUTE @광교",
+  title: "ROUTE @광교산",
   subtitle: "",
   fee: 40_000,
   maxParty: 4,

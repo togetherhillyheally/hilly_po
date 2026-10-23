@@ -54,7 +54,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* 모집 중 이벤트 — ROUTE @광교 (가장 먼저, 가장 크게) */}
+      {/* 모집 중 이벤트 — ROUTE @광교산 (가장 먼저, 가장 크게) */}
       <section className="pb-4 pt-6">
         <Reveal>
           <Link

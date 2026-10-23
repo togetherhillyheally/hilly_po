@@ -92,7 +92,7 @@ export function SignupSheet({
       >
         <SheetHeader className="space-y-1 border-b px-6 py-5 text-left">
           <SheetTitle className="text-lg tracking-tight">
-            {showMine || showEmpty ? "신청 내역" : "ROUTE @광교 참가 신청"}
+            {showMine || showEmpty ? "신청 내역" : "ROUTE @광교산 참가 신청"}
           </SheetTitle>
           <SheetDescription className="text-xs">
             {EV.dateLabel} · {EV.placeLabel} · {EV.capacity}명 한정
@@ -115,7 +115,7 @@ export function SignupSheet({
                 아직 신청 내역이 없어요
               </h3>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                ROUTE @광교에 신청하면 여기서 결제 내역과
+                ROUTE @광교산에 신청하면 여기서 결제 내역과
                 <br />
                 영수증, 취소를 관리할 수 있어요.
               </p>

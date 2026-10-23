@@ -85,7 +85,7 @@ export function SuccessClient() {
                 신청이 확정됐어요
               </h1>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {name ? `${name}님, ` : ""}ROUTE @광교에서 만나요.
+                {name ? `${name}님, ` : ""}ROUTE @광교산에서 만나요.
                 <br />
                 팀 배정과 집결 안내는 행사 일주일 전에 문자로 보내드릴게요.
               </p>
