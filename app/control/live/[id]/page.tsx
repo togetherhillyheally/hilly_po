@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
@@ -23,6 +23,7 @@ import LiveTableWide from "@/components/control/LiveTableWide"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useLiveAdventure } from "@/hooks/use-live-adventure"
 import { useSessionScoreboard } from "@/hooks/use-session-scoreboard"
+import type { RankedEntry } from "@/lib/course-progress"
 import { useSuperAdmin } from "@/hooks/use-super-admin"
 
 /** 경과 시간 시계 — 1초마다 갱신 */
@@ -99,6 +100,19 @@ export default function LiveAdventureControlPage() {
       }
     })
   }, [rawRanked, board])
+  // 지도 마커 글자 = 소속 조 이름 (점수는 점수판에서). 조가 없으면 닉네임
+  const squadNameOf = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const sq of board?.squads ?? [])
+      for (const uid of sq.member_ids) m.set(uid, sq.name)
+    return m
+  }, [board])
+  const markerText = useCallback(
+    (r: RankedEntry) =>
+      squadNameOf.get(r.entry.entry_id) ?? r.entry.display_name,
+    [squadNameOf],
+  )
+
   const liveIds = useMemo(
     () => new Set(rawRanked.map((r) => r.entry.entry_id)),
     [rawRanked],
@@ -207,6 +221,8 @@ export default function LiveAdventureControlPage() {
             onSelect={handleSelect}
             focusSignal={focusSignal}
             enable3d={is3d}
+            markerText={markerText}
+            groupRadiusM={50}
             onElevations={setTerrainElevations}
             height="100%"
             className="absolute inset-0"

@@ -80,6 +80,10 @@ export type LiveMapProps = {
   sosPoints?: { id: string; lat: number; lng: number; label: string }[]
   /** { id, n } — n 이 바뀔 때마다 그 SOS 로 flyTo */
   sosFocus?: { id: string; n: number } | null
+  /** 마커 글자 지정 (예: 조 이름) — 없으면 이름·순위 기본 표기 */
+  markerText?: (r: RankedEntry) => string
+  /** 이 반경(m) 안에 모인 참가자는 마커 하나로 묶고 아바타를 겹쳐 표시 */
+  groupRadiusM?: number
 }
 
 const DEM_SOURCE = "mapbox-dem"
@@ -131,53 +135,108 @@ function markerZIndex(r: RankedEntry, selected: boolean): string {
   return "100"
 }
 
+/** 반경 안에 모인 참가자 묶기 — 반경이 없으면 한 사람당 마커 하나.
+ *  순서에 따라 묶음이 흔들리지 않도록 id 순으로 앞사람 기준 그리디 배정 */
+function groupEntries(
+  entries: RankedEntry[],
+  radiusM?: number,
+): { key: string; members: RankedEntry[]; lng: number; lat: number }[] {
+  const located = entries.filter(
+    (r) => r.entry.lat != null && r.entry.lng != null,
+  )
+  if (!radiusM) {
+    return located.map((r) => ({
+      key: r.entry.entry_id,
+      members: [r],
+      lng: r.entry.lng!,
+      lat: r.entry.lat!,
+    }))
+  }
+  const distM = (a: RankedEntry, b: RankedEntry) => {
+    const kx = 111_320 * Math.cos((a.entry.lat! * Math.PI) / 180)
+    return Math.hypot(
+      (a.entry.lng! - b.entry.lng!) * kx,
+      (a.entry.lat! - b.entry.lat!) * 110_570,
+    )
+  }
+  const groups: RankedEntry[][] = []
+  for (const r of [...located].sort((a, b) =>
+    a.entry.entry_id.localeCompare(b.entry.entry_id),
+  )) {
+    const g = groups.find((m) => distM(m[0], r) <= radiusM)
+    if (g) g.push(r)
+    else groups.push([r])
+  }
+  return groups.map((members) => ({
+    key: members.length === 1 ? members[0].entry.entry_id : `g:${members.map((m) => m.entry.entry_id).join(",")}`,
+    members,
+    lng: members.reduce((s, m) => s + m.entry.lng!, 0) / members.length,
+    lat: members.reduce((s, m) => s + m.entry.lat!, 0) / members.length,
+  }))
+}
+
 /** Mapbox 가 붙인 마커 클래스를 건드리지 않도록 외부 el 안에 chip div 를 두고 그것만 스타일링 */
 function styleMarkerEl(
   el: HTMLElement,
-  r: RankedEntry,
+  members: RankedEntry[],
   color: string,
   selected: boolean,
+  label: string,
 ) {
+  const r = members[0]
   let chip = el.firstElementChild as HTMLDivElement | null
   if (!chip) {
     chip = document.createElement("div")
     el.appendChild(chip)
   }
-  // 사진(아바타) + 짧은 이름 — textContent/src 만 갱신 (XSS 안전)
+  // 사진(아바타) + 짧은 이름 — textContent/src 만 갱신 (XSS 안전). 묶인 마커는 아바타를 겹쳐 표시
   chip.replaceChildren()
-  if (r.entry.avatar_url) {
-    const img = document.createElement("img")
-    img.src = r.entry.avatar_url
-    img.alt = ""
-    img.className =
-      "-ml-1 mr-1 h-[18px] w-[18px] shrink-0 rounded-full border border-white/70 object-cover"
-    chip.appendChild(img)
+  const withAvatar = members.filter((m) => m.entry.avatar_url).slice(0, 4)
+  if (withAvatar.length > 0) {
+    const stack = document.createElement("span")
+    stack.className = "-ml-1 mr-1 flex shrink-0"
+    withAvatar.forEach((m, i) => {
+      const img = document.createElement("img")
+      img.src = m.entry.avatar_url!
+      img.alt = ""
+      img.className =
+        "h-[18px] w-[18px] rounded-full border border-white/70 object-cover" +
+        (i > 0 ? " -ml-2" : "")
+      stack.appendChild(img)
+    })
+    chip.appendChild(stack)
   }
   const text = document.createElement("span")
-  text.textContent = markerLabel(r)
+  text.textContent = members.length > 1 ? `${label} · ${members.length}명` : label
   chip.appendChild(text)
+  const sos = members.some((m) => m.status === "sos")
   // 도착자는 신호가 끊겨도 정상 표시 유지
-  const noSignal =
-    (r.status === "stale" || r.status === "noSignal") && !r.finished
+  const noSignal = members.every(
+    (m) => (m.status === "stale" || m.status === "noSignal") && !m.finished,
+  )
   // 장시간 정지(30분+) — 신호는 정상, 노란 링으로 경고
-  const stationary =
-    r.status === "ok" &&
-    !r.finished &&
-    r.stationarySec != null &&
-    r.stationarySec >= STATIONARY_THRESHOLD_SEC
-  const podium = r.rank != null && r.rank <= 3
+  const stationary = members.every(
+    (m) =>
+      m.status === "ok" &&
+      !m.finished &&
+      m.stationarySec != null &&
+      m.stationarySec >= STATIONARY_THRESHOLD_SEC,
+  )
+  const podium = members.length === 1 && r.rank != null && r.rank <= 3
   chip.className =
     "inline-flex w-max items-center rounded-full border border-white/80 px-2 py-0.5 text-[11px] font-bold text-white shadow-md cursor-pointer select-none whitespace-nowrap" +
-    (r.status === "sos" ? " animate-pulse ring-2 ring-red-500" : "") +
+    (sos ? " animate-pulse ring-2 ring-red-500" : "") +
     // 신호 없음: 빨간 링 + 살짝 흐리게 (SOS 의 빨간 배경/펄스와 구분)
     (noSignal ? " opacity-75 ring-2 ring-red-500" : "") +
     (stationary && !selected ? " ring-2 ring-amber-400" : "") +
     // 1~3위: 색 구분 없이 살짝 크게 ("n위" 텍스트로만 표시)
     (podium ? " text-[12px]" : "") +
     (selected ? " ring-2 ring-white scale-110" : "")
-  chip.style.background = r.status === "sos" ? "#dc2626" : color
+  chip.style.background = sos ? "#dc2626" : color
 
-  const z = markerZIndex(r, selected)
+  const z = String(
+    Math.max(...members.map((m) => Number(markerZIndex(m, selected)))),
+  )
   el.dataset.z = z
   el.style.zIndex = z
 }
@@ -201,6 +260,8 @@ export default function LiveMap({
   segmentsColored = false,
   sosPoints,
   sosFocus,
+  markerText,
+  groupRadiusM,
 }: LiveMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
@@ -219,6 +280,8 @@ export default function LiveMap({
   onElevationsRef.current = onElevations
   const onCheckpointSelectRef = useRef(onCheckpointSelect)
   onCheckpointSelectRef.current = onCheckpointSelect
+  const markerTextRef = useRef(markerText)
+  markerTextRef.current = markerText
 
   // 지도 초기화 — 코스가 있으면 코스 기준, 없으면 참가자 위치에 맞춰 이후 fit
   useEffect(() => {
@@ -436,22 +499,27 @@ export default function LiveMap({
 
     const apply = () => {
       const seen = new Set<string>()
-      for (const r of entries) {
-        if (r.entry.lat == null || r.entry.lng == null) continue
-        seen.add(r.entry.entry_id)
+      const textOf = (r: RankedEntry) =>
+        markerTextRef.current?.(r) ?? markerLabel(r)
+      for (const g of groupEntries(entries, groupRadiusM)) {
+        const r = g.members[0]
+        seen.add(g.key)
         const color = categoryColor(r.entry.category, categories)
-        const existing = markersRef.current.get(r.entry.entry_id)
+        const selected = g.members.some((m) => m.entry.entry_id === selectedId)
+        const label = Array.from(new Set(g.members.map(textOf))).join(" · ")
+        const existing = markersRef.current.get(g.key)
         if (existing) {
-          existing.setLngLat([r.entry.lng, r.entry.lat])
+          existing.setLngLat([g.lng, g.lat])
           styleMarkerEl(
             existing.getElement() as HTMLDivElement,
-            r,
+            g.members,
             color,
-            selectedId === r.entry.entry_id,
+            selected,
+            label,
           )
         } else {
           const el = document.createElement("div")
-          styleMarkerEl(el, r, color, selectedId === r.entry.entry_id)
+          styleMarkerEl(el, g.members, color, selected, label)
           el.addEventListener("click", (ev) => {
             ev.stopPropagation()
             onSelectRef.current?.(r.entry.entry_id)
@@ -464,8 +532,8 @@ export default function LiveMap({
             el.style.zIndex = el.dataset.z ?? ""
           })
           markersRef.current.set(
-            r.entry.entry_id,
-            new mapboxgl.Marker(el).setLngLat([r.entry.lng, r.entry.lat]).addTo(map),
+            g.key,
+            new mapboxgl.Marker(el).setLngLat([g.lng, g.lat]).addTo(map),
           )
         }
       }
@@ -504,7 +572,7 @@ export default function LiveMap({
 
     if (map.loaded()) apply()
     else map.once("load", apply)
-  }, [entries, categories, selectedId, course])
+  }, [entries, categories, selectedId, course, groupRadiusM])
 
   // 2D/3D 전환
   useEffect(() => {
