@@ -86,8 +86,8 @@ export function SignupSheet({
         side={isMobile ? "bottom" : "right"}
         className={
           isMobile
-            ? "flex h-[92dvh] w-full flex-col gap-0 rounded-t-2xl p-0"
-            : "flex w-full flex-col gap-0 p-0 sm:max-w-2xl"
+            ? "flex h-[92dvh] w-full flex-col gap-0 break-keep rounded-t-2xl p-0"
+            : "flex w-full flex-col gap-0 break-keep p-0 sm:max-w-2xl"
         }
       >
         <SheetHeader className="space-y-1 border-b px-6 py-5 text-left">

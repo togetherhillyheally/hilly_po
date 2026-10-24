@@ -50,7 +50,7 @@ export function LiveGate() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-6 text-center">
+    <main className="mx-auto flex min-h-dvh max-w-md break-keep flex-col items-center justify-center px-6 text-center">
       <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#DC2F55]/10">
         <Radio className="h-7 w-7 text-[#DC2F55]" strokeWidth={1.5} />
       </span>

@@ -130,30 +130,30 @@ const RULES = [
 
 /** 게임 방법 — 처음 보는 사람도 순서대로 따라올 수 있게 */
 const HOW_TO_PLAY = [
-  <>
-    <B>12:00 집결</B> — 4명 한 팀, 그 안에서 2명씩 두 조를 확인하고 조마다
-    트래커를 받아요. 힐리힐리 앱으로 모험에 참가해요.
-  </>,
-  <>
-    <B>13:00 시작과 함께 지도 공개</B> — 체크포인트 위치와 배점을 보고 동선을
-    짠 뒤, 팀 목표 점수를 선언하고 출발해요.
-  </>,
-  <>
-    <B>짝꿍과 함께 도착하면 스탬프</B> — 체크포인트에 가면 앱이 위치로
-    도착을 확인해요. 같은 조 짝꿍이 50m 안에 있어야 인정돼요.
-  </>,
-  <>
-    <B>10~50점 모으기</B> — 멀고 높은 곳일수록 큰 점수예요. 4시간 안에 다
-    돌 수는 없으니 어디를 갈지 골라요.
-  </>,
-  <>
-    <B>17:00까지 산림욕장으로 복귀</B> — 늦으면 1분마다 −10점. 돌아와 선언한
-    목표와 비교해요.
-  </>,
-  <>
-    <B>모은 점수로 추첨</B> — 점수를 써서 차례대로 추첨권을 뽑아요.
-    당첨 또는 꽝!
-  </>,
+  {
+    title: "12:00 집결",
+    desc: "4명 한 팀, 그 안에서 2명씩 두 조를 확인하고 조마다 트래커를 받아요. 힐리힐리 앱으로 모험에 참가해요.",
+  },
+  {
+    title: "13:00 시작과 함께 지도 공개",
+    desc: "체크포인트 위치와 배점을 보고 동선을 짠 뒤, 팀 목표 점수를 선언하고 출발해요.",
+  },
+  {
+    title: "짝꿍과 함께 도착하면 스탬프",
+    desc: "체크포인트에 가면 앱이 위치로 도착을 확인해요. 같은 조 짝꿍이 50m 안에 있어야 인정돼요.",
+  },
+  {
+    title: "10~50점 모으기",
+    desc: "멀고 높은 곳일수록 큰 점수예요. 4시간 안에 다 돌 수는 없으니 어디를 갈지 골라요.",
+  },
+  {
+    title: "17:00까지 산림욕장으로 복귀",
+    desc: "늦으면 1분마다 −10점이에요. 돌아와서 선언한 목표와 비교해요.",
+  },
+  {
+    title: "모은 점수로 추첨",
+    desc: "점수를 써서 차례대로 추첨권을 뽑아요. 당첨 또는 꽝!",
+  },
 ]
 
 /** 당일 흐름 */
@@ -219,7 +219,7 @@ export default function NatseongotPage() {
   const hasCoords = CPS.length > 0
 
   return (
-    <main className="mx-auto max-w-6xl px-6">
+    <main className="mx-auto max-w-6xl break-keep px-6">
       {/* 헤더 */}
       <header className="flex h-16 items-center justify-between">
         <Link
@@ -354,13 +354,20 @@ export default function NatseongotPage() {
         </Reveal>
 
         <Reveal>
-          <ol className="mt-8 grid gap-x-6 gap-y-3 rounded-2xl border bg-card px-5 py-5 sm:grid-cols-2">
+          <ol className="mt-8 grid gap-x-8 gap-y-5 rounded-2xl border bg-card px-5 py-5 sm:grid-cols-2">
             {HOW_TO_PLAY.map((step, i) => (
-              <li key={i} className="flex gap-3 text-sm leading-relaxed">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#DC2F55]/15 text-xs font-bold text-[#DC2F55]">
+              <li key={i} className="flex gap-3">
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#DC2F55]/15 text-xs font-bold text-[#DC2F55]">
                   {i + 1}
                 </span>
-                <span className="text-muted-foreground">{step}</span>
+                <span>
+                  <span className="block text-sm font-semibold">
+                    {step.title}
+                  </span>
+                  <span className="mt-0.5 block text-sm leading-relaxed text-muted-foreground">
+                    {step.desc}
+                  </span>
+                </span>
               </li>
             ))}
           </ol>
