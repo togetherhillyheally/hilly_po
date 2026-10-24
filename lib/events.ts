@@ -10,7 +10,7 @@ export type EventInfo = {
   capacity: number
   /** 단체 신청 최대 인원 */
   maxParty: number
-  /** 이 인원수로 신청하면 10% 할인 (예: 2인·4인) */
+  /** 이 인원수로 신청하면 10% 할인 (예: 2인/4인) */
   discountSizes: number[]
   dateLabel: string
   timeLabel: string
@@ -37,7 +37,7 @@ export const NATSEONGOT: EventInfo = {
   courseTrailId: "8b710f9d-2a53-4720-9c5a-da34e9375e93",
 }
 
-/** 인원수별 가격 — 2·4인 신청 시 1인 요금 10% 할인 (서버와 동일 규칙) */
+/** 인원수별 가격 — 2인/4인 신청 시 1인 요금 10% 할인 (서버와 동일 규칙) */
 export function partyPricing(size: number): {
   per: number
   total: number

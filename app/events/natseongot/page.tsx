@@ -55,7 +55,7 @@ const FACTS = [
     icon: Wallet,
     label: "참가비",
     value: `${EV.fee.toLocaleString()}원`,
-    sub: "2·4인 10% 할인 · 보급·추첨·기록",
+    sub: "2인/4인 10% 할인 · 보급·추첨·기록",
   },
 ] as const
 
@@ -560,7 +560,7 @@ export default function NatseongotPage() {
                 참가비에 포함된 것
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                1인 {EV.fee.toLocaleString()}원 · 2인·4인 신청 시 10% 할인
+                1인 {EV.fee.toLocaleString()}원 · 2인/4인 신청 시 10% 할인
               </p>
               <ul className="mt-6 space-y-4">
                 {PROVIDED.map((p) => (
@@ -659,7 +659,7 @@ export default function NatseongotPage() {
                   {EV.fee.toLocaleString()}원
                 </dd>
                 <dd className="mt-0.5 text-xs text-muted-foreground">
-                  2인·4인 10% 할인
+                  2인/4인 10% 할인
                 </dd>
               </div>
               <div className="rounded-xl border bg-background px-4 py-3">
