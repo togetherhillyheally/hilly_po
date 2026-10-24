@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     title: "ROUTE @광교산",
     description:
       "숲길에서 펼쳐지는 팀 전략 게임. 2026.11.14 수원 광교산, 32명 한정 모집.",
-    images: ["/events/og-route-gwanggyosan.png"],
+    images: ["/events/og-route-gwanggyosan-v2.png"],
   },
 }
 
@@ -261,8 +261,7 @@ export default function NatseongotPage() {
             2026. 11. 14. 토요일 · 수원 광교산
           </p>
           <h1 className="mt-5 text-4xl font-bold leading-[1.08] tracking-tighter sm:text-5xl xl:text-6xl">
-            <span>ROUTE</span>
-            <span className="ml-1 text-[#DC2F55]">@광교산</span>
+            ROUTE <span className="text-[#DC2F55]">@광교산</span>
           </h1>
           <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             숲길에서 펼쳐지는 팀 전략 게임. 배점이 다른 체크포인트를 자유

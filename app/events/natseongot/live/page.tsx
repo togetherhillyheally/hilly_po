@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ROUTE @광교산 실시간 응원",
     description: "모험이 시작되면 팀들의 위치를 실시간으로 볼 수 있어요.",
-    images: ["/events/og-route-gwanggyosan.png"],
+    images: ["/events/og-route-gwanggyosan-v2.png"],
   },
 }
 
