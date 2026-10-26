@@ -13,6 +13,7 @@ import {
   Package,
   Radio,
   ShieldCheck,
+  Handshake,
   Ticket,
   Users,
   Wallet,
@@ -71,8 +72,8 @@ const RULES = [
       <>
         팀 안에서 <B>2인 1조</B>로 나뉘어 움직이고, 조마다 트래커를 하나씩
         들어요. 스탬프는 <B>같은 조 짝꿍이 50m 안에 함께 있어야</B> 인정돼요.
-        팀 점수는 두 조가 찍은 곳을 합쳐 계산하고 같은 곳은 한 번만 쳐주니,{" "}
-        <B>갈라져서 다른 곳을 찍는 쪽이 이득</B>이에요.
+        팀 점수는 두 조가 찍은 곳을 합쳐 계산하고 같은 곳은 한 번만
+        쳐줘요.
       </>
     ),
   },
@@ -96,6 +97,17 @@ const RULES = [
         체크포인트를 어떤 순서로 어떻게 돌아도 괜찮아요. 다만{" "}
         <B>4시간 안에 전부 도는 건 불가능</B>해요. 어디를 가고 어디를 버릴지가
         이 게임의 전부예요.
+      </>
+    ),
+  },
+  {
+    icon: Handshake,
+    title: "4명이 함께 찍으면 점수 ×2",
+    desc: (
+      <>
+        팀원 4명이 모두 한자리(50m 안)에 모여 찍은 스탬프는{" "}
+        <B>점수가 두 배</B>예요. 갈라져서 더 많은 곳을 찍을지, 모여서 크게
+        찍을지 — <B>팀의 선택</B>이에요.
       </>
     ),
   },
@@ -144,7 +156,7 @@ const HOW_TO_PLAY = [
   },
   {
     title: "10~50점 모으기",
-    desc: "멀고 높은 곳일수록 큰 점수예요. 4시간 안에 다 돌 수는 없으니 어디를 갈지 골라요.",
+    desc: "멀고 높은 곳일수록 큰 점수예요. 팀 4명이 함께 찍으면 그곳 점수는 2배예요.",
   },
   {
     title: "17:00까지 산림욕장으로 복귀",
@@ -371,13 +383,9 @@ export default function NatseongotPage() {
           </ol>
         </Reveal>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {RULES.map((r, i) => (
-            <Reveal
-              key={i}
-              delay={(i % 3) * 0.06}
-              className={i < 3 ? "lg:col-span-2" : "lg:col-span-3"}
-            >
+            <Reveal key={i} delay={(i % 3) * 0.06}>
               <div className="h-full rounded-2xl border bg-card px-5 py-5 transition-colors hover:border-foreground/20">
                 <p className="flex items-start gap-2 font-semibold leading-snug">
                   <r.icon
