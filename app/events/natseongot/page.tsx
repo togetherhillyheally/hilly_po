@@ -28,11 +28,11 @@ import { UserChip } from "./UserChip"
 export const metadata: Metadata = {
   title: "ROUTE @광교산 | 힐리힐리",
   description:
-    "2026.11.14 수원 광교산. 배점이 다른 체크포인트를 4시간 안에 자유 순서로 모으는 숲길 팀 전략 게임. 순위는 없고, 팀이 정한 목표만 있어요. 32명 한정.",
+    "2026.11.14 수원 광교산. 배점이 다른 체크포인트를 4시간 안에 원하는 순서로 모으는 팀 전략 게임. 순위는 없고, 팀이 정한 목표만 있어요. 32명 한정.",
   openGraph: {
     title: "ROUTE @광교산",
     description:
-      "숲길에서 펼쳐지는 팀 전략 게임. 2026.11.14 수원 광교산, 32명 한정 모집.",
+      "산과 들에서 펼쳐지는 팀 전략 게임. 2026.11.14 수원 광교산, 32명 한정 모집.",
     images: ["/events/og-route-gwanggyosan-v2.png"],
   },
 }
@@ -264,8 +264,10 @@ export default function NatseongotPage() {
             ROUTE <span className="text-[#DC2F55]">@광교산</span>
           </h1>
           <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            숲길에서 펼쳐지는 팀 전략 게임. 배점이 다른 체크포인트를 자유
-            순서로 모으고, 4시간 안에 광교산 산림욕장으로 돌아와요.
+            산과 들에서 펼쳐지는 팀 전략 게임.
+            <br />
+            배점이 다른 체크포인트를 원하는 순서로 모으고, 제한 시간 안에
+            출발점으로 돌아오세요.
           </p>
           <p className="mt-3 text-sm font-medium text-[#DC2F55]">
             순위는 없어요. 팀이 정한 목표만 있어요.
@@ -316,8 +318,6 @@ export default function NatseongotPage() {
             WHY
           </p>
           <h2 className="mt-4 text-2xl font-bold leading-snug tracking-tighter sm:text-4xl">
-            산을 잘 탄다는 것 —
-            <br />
             <span className="text-[#DC2F55]">
               나를 알고, 길을 알고, 안전하게.
             </span>
@@ -331,13 +331,11 @@ export default function NatseongotPage() {
             이에요.
           </p>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-            그래서 <b className="font-semibold text-foreground">순위표를 두지 않았어요.</b>{" "}
-            대신 출발 전 팀이 스스로 목표를 선언하고, 돌아와 그 선언과 비교해요.
-            무리한 목표로 못 지킨 팀보다{" "}
-            <b className="font-semibold text-foreground">
-              수수한 목표를 정확히 달성한 팀
-            </b>
-            이 더 노련한 팀이니까요.
+            <b className="font-semibold text-foreground">순위는 없습니다.</b>
+            <br />
+            출발 전 팀 목표를 정하고, 그 목표만 달성하면 됩니다.
+            <br />
+            노련하게 달려보세요.
           </p>
         </Reveal>
       </section>
