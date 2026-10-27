@@ -196,7 +196,7 @@ export function MySignup({
                 />
                 🍲 뒤풀이 식사 참석
                 <span className="text-xs text-muted-foreground">
-                  17:30 자선농원
+                  18:00 자선농원
                 </span>
               </label>
             </div>
@@ -279,7 +279,7 @@ export function MySignup({
           </dd>
         </div>
         <div className="flex justify-between gap-6">
-          <dt className="shrink-0 text-muted-foreground">뒤풀이 식사 (17:30)</dt>
+          <dt className="shrink-0 text-muted-foreground">뒤풀이 식사 (18:00)</dt>
           <dd className="text-right font-semibold">
             {dinnerLabel}
           </dd>

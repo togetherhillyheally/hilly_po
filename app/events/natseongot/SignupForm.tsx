@@ -532,7 +532,7 @@ export function SignupForm() {
         <section>
           <div className="rounded-xl border p-4">
             <p className="text-sm leading-relaxed">
-              <b className="font-semibold">🍲 뒤풀이 식사 (17:30)</b>
+              <b className="font-semibold">🍲 뒤풀이 식사 (18:00)</b>
               <span className="mt-0.5 block text-xs text-muted-foreground">
                 행사 후{" "}
                 <a
@@ -543,7 +543,7 @@ export function SignupForm() {
                 >
                   자선농원
                 </a>
-                에서 소감 나누며 저녁을 같이 먹어요.
+                으로 옮겨 저녁을 같이 먹어요.
                 <br />
                 참석할 분을 체크해주세요.
               </span>
