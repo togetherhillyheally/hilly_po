@@ -33,7 +33,7 @@ export const NATSEONGOT: EventInfo = {
   timeLabel: "12:00 집결, 13:00 ~ 17:00 (4시간)",
   placeLabel: "경기 수원 광교산",
   placeSub: "출발과 도착은 광교산 산림욕장",
-  path: "/events/natseongot",
+  path: "/events/route-gg-san",
   courseTrailId: "8b710f9d-2a53-4720-9c5a-da34e9375e93",
 }
 

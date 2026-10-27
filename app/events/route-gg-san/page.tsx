@@ -211,7 +211,7 @@ const PROVIDED = [
   {
     icon: Radio,
     text: "실시간 GPS 관제 — 가족과 지인이 보며 응원할 수 있는 링크 (모험이 시작되면 열려요)",
-    href: "/events/natseongot/live",
+    href: "/events/route-gg-san/live",
   },
   { icon: Gift, text: "모은 점수로 추첨 (당첨 또는 꽝)" },
   { icon: Flag, text: "사진과 영상 기록 제공" },

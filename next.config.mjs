@@ -14,6 +14,21 @@ const nextConfig = {
   },
   // 좌하단 Next.js dev 인디케이터(N 아이콘) 숨김
   devIndicators: false,
+  // 이벤트 주소 변경 — 이미 공유된 링크와 결제 복귀 주소(쿼리 포함)가 끊기지 않게
+  async redirects() {
+    return [
+      {
+        source: "/events/natseongot",
+        destination: "/events/route-gg-san",
+        permanent: true,
+      },
+      {
+        source: "/events/natseongot/:path*",
+        destination: "/events/route-gg-san/:path*",
+        permanent: true,
+      },
+    ]
+  },
 }
 
 export default nextConfig

@@ -38,7 +38,7 @@ export default function LandingPage() {
         </span>
         <div className="flex items-center gap-1">
           <Button asChild variant="ghost" size="sm" className="relative">
-            <Link href="/events/natseongot">
+            <Link href={NATSEONGOT.path}>
               이벤트
               <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[#DC2F55]" />
             </Link>
