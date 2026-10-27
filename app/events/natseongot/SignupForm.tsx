@@ -419,7 +419,7 @@ export function SignupForm() {
                 className="h-11 w-full border-dashed"
                 onClick={() => setParty((list) => [...list, { ...EMPTY_P }])}
               >
-                + 참가자 추가 ({party.length}/{EV.maxParty}명) — 2인/4인은 10%
+                + 참가자 추가 ({party.length}/{EV.maxParty}명) — 2인 이상은 10%
                 할인
               </Button>
             )}
