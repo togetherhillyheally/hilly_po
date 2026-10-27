@@ -532,7 +532,7 @@ export function SignupForm() {
         <section>
           <div className="rounded-xl border p-4">
             <p className="text-sm leading-relaxed">
-              <b className="font-semibold">🍲 뒤풀이 식사 (18:00)</b>
+              <b className="font-semibold">🍲 뒤풀이 식사 (18:30)</b>
               <span className="mt-0.5 block text-xs text-muted-foreground">
                 행사 후{" "}
                 <a

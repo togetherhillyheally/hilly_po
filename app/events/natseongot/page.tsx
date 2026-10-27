@@ -192,9 +192,14 @@ const TIMELINE = [
   },
   {
     time: "18:00",
-    title: "자선농원에서 뒤풀이",
-    desc: "다 같이 옮겨 저녁 식사 (신청 시 참석 여부 선택)",
+    title: "자선농원으로 이동",
+    desc: "다 같이 뒤풀이 장소로 옮겨요",
     href: "https://naver.me/F3Tj4xUX",
+  },
+  {
+    time: "18:30",
+    title: "자선농원에서 저녁 식사",
+    desc: "소감을 마저 나누며 함께 먹어요 (신청 시 참석 여부 선택)",
   },
 ] as const
 
@@ -411,7 +416,7 @@ export default function NatseongotPage() {
             당일 흐름
           </h3>
         </Reveal>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {TIMELINE.map((t, i) => (
             <Reveal key={t.time} delay={i * 0.06}>
               <div
