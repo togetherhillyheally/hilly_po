@@ -70,7 +70,7 @@ const AGREEMENTS = [
     key: "terms" as const,
     required: true,
     label:
-      "산행 중 발생할 수 있는 위험을 이해하고, 운영진의 안전 수칙(2인 1조 이동·귀환 시각)을 따를게요.",
+      "산행 중 발생할 수 있는 위험을 이해하고, 운영진의 안전 수칙(2인 1조 이동, 귀환 시각 지키기)을 따를게요.",
   },
   {
     key: "privacy" as const,
@@ -82,7 +82,7 @@ const AGREEMENTS = [
     key: "photo" as const,
     required: false,
     label:
-      "현장에서 촬영된 사진·영상이 기록 콘텐츠로 사용되는 데 동의해요. (선택)",
+      "현장에서 촬영된 사진과 영상이 기록 콘텐츠로 사용되는 데 동의해요. (선택)",
   },
 ]
 

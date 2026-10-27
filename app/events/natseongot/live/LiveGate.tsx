@@ -60,10 +60,10 @@ export function LiveGate() {
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         모험이 시작되면 이 화면에서 팀들의 위치를 실시간으로 볼 수 있어요.
         <br />
-        {EV.dateLabel} · 시작되면 자동으로 열려요.
+        {EV.dateLabel}, 시작되면 자동으로 열려요.
       </p>
       <p className="mt-6 text-xs text-muted-foreground">
-        이 링크를 가족·지인에게 미리 공유해두세요.
+        이 링크를 가족과 지인에게 미리 공유해두세요.
       </p>
       <Button asChild variant="outline" className="mt-8">
         <Link href={EV.path}>이벤트 안내 보기</Link>

@@ -245,7 +245,7 @@ export function CourseMap({ className }: { className?: string }) {
                 revealed
                   ? `<div style="font-size:12px;font-weight:700">${esc(cp.name)}</div>
                  <div style="font-size:12px;color:#666">${cp.points}점</div>`
-                  : `<div style="font-size:12px;font-weight:700">예시 스탬프 · ${cp.points}점</div>
+                  : `<div style="font-size:12px;font-weight:700">예시 스탬프 (${cp.points}점)</div>
                  <div style="font-size:11px;color:#666">실제 위치는 당일 공개돼요</div>`
               )
             )

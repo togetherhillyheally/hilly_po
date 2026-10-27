@@ -50,13 +50,13 @@ const FACTS = [
     icon: Users,
     label: "모집",
     value: `${EV.capacity}명 한정`,
-    sub: "4인 1팀 × 8팀 · 최대 4명 단체 신청",
+    sub: "4명씩 8팀, 최대 4명까지 함께 신청",
   },
   {
     icon: Wallet,
     label: "참가비",
     value: `${EV.fee.toLocaleString()}원`,
-    sub: "2인/4인 10% 할인 · 보급·추첨·기록",
+    sub: "2인/4인 10% 할인, 보급과 추첨 포함",
   },
 ] as const
 
@@ -172,7 +172,7 @@ const HOW_TO_PLAY = [
 const TIMELINE = [
   {
     time: "12:00",
-    title: "집결 · 광교산 산림욕장",
+    title: "광교산 산림욕장에 집결",
     desc: "팀 확인과 안내",
     link: {
       label: "주차: 수원시환경성질환아토피센터",
@@ -181,18 +181,18 @@ const TIMELINE = [
   },
   {
     time: "13:00",
-    title: "모험 시작 · 지도 공개",
+    title: "모험 시작, 지도 공개",
     desc: "그 자리에서 동선을 짜고 목표를 선언한 뒤 출발",
     highlight: true,
   },
   {
     time: "17:00",
-    title: "마감 · 산림욕장 복귀",
-    desc: "티타임 · 점수 집계 · 모은 점수로 추첨",
+    title: "마감, 산림욕장으로 복귀",
+    desc: "티타임을 하며 점수를 모으고, 모은 점수로 추첨해요",
   },
   {
     time: "17:30",
-    title: "뒤풀이 · 자선농원",
+    title: "자선농원에서 뒤풀이",
     desc: "소감 나누며 저녁 식사 (신청 시 참석 여부 선택)",
     href: "https://naver.me/F3Tj4xUX",
   },
@@ -201,15 +201,15 @@ const TIMELINE = [
 const PROVIDED = [
   {
     icon: Package,
-    text: "파밍박스 — 코스 곳곳에 에너지를 채울 먹을거리·마실거리·체험품을 넣어 둬요",
+    text: "파밍박스 — 코스 곳곳에 에너지를 채울 먹을거리와 마실거리, 체험품을 넣어 둬요",
   },
   {
     icon: Radio,
-    text: "실시간 GPS 관제 — 가족·지인 응원 링크 (모험 시작 후 열려요)",
+    text: "실시간 GPS 관제 — 가족과 지인이 보며 응원할 수 있는 링크 (모험이 시작되면 열려요)",
     href: "/events/natseongot/live",
   },
   { icon: Gift, text: "모은 점수로 추첨 (당첨 또는 꽝)" },
-  { icon: Flag, text: "사진·영상 기록 제공" },
+  { icon: Flag, text: "사진과 영상 기록 제공" },
 ] as const
 
 const SAFETY = [
@@ -270,7 +270,7 @@ export default function NatseongotPage() {
         <Reveal>
           <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#DC2F55]" />
-            2026. 11. 14. 토요일 · 수원 광교산
+            2026년 11월 14일 토요일, 수원 광교산
           </p>
           <h1 className="mt-5 text-4xl font-bold leading-[1.08] tracking-tighter sm:text-5xl xl:text-6xl">
             ROUTE <span className="text-[#DC2F55]">@광교산</span>
@@ -513,14 +513,14 @@ export default function NatseongotPage() {
                       <span className="font-semibold tabular-nums">{t}점</span>
                       <span className="text-xs text-muted-foreground">
                         {t === 50
-                          ? "정상·최원거리"
+                          ? "정상, 가장 먼 곳"
                           : t === 40
                             ? "주요 봉우리"
                             : t === 30
-                              ? "능선·갈림길"
+                              ? "능선과 갈림길"
                               : t === 20
                                 ? "산중 지점"
-                                : "초입·가까운 곳"}
+                                : "입구 근처"}
                       </span>
                     </li>
                   ))}
@@ -536,7 +536,7 @@ export default function NatseongotPage() {
                   <dd className="mt-0.5 font-semibold tabular-nums">
                     {COURSE.timeLimitHours}시간{" "}
                     <span className="text-xs font-normal text-muted-foreground">
-                      · 초과 1분당 −10점
+                      (넘기면 1분에 −10점)
                     </span>
                   </dd>
                 </div>
@@ -551,7 +551,7 @@ export default function NatseongotPage() {
                   <dd className="mt-0.5 font-semibold">
                     추첨에 써요{" "}
                     <span className="text-xs font-normal text-muted-foreground">
-                      · 점수를 내고 추첨권을 뽑아요 (당첨 또는 꽝)
+                      점수를 내고 추첨권을 뽑아요. 당첨 아니면 꽝!
                     </span>
                   </dd>
                 </div>
@@ -570,7 +570,7 @@ export default function NatseongotPage() {
                 참가비에 포함된 것
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                1인 {EV.fee.toLocaleString()}원 · 2인/4인 신청 시 10% 할인
+                1인 {EV.fee.toLocaleString()}원 (2인/4인 신청 시 10% 할인)
               </p>
               <ul className="mt-6 space-y-4">
                 {PROVIDED.map((p) => (

@@ -95,7 +95,7 @@ export function SignupSheet({
             {showMine || showEmpty ? "신청 내역" : "ROUTE @광교산 참가 신청"}
           </SheetTitle>
           <SheetDescription className="text-xs">
-            {EV.dateLabel} · {EV.placeLabel} · {EV.capacity}명 한정
+            {EV.dateLabel}, {EV.placeLabel}에서 {EV.capacity}명 한정
           </SheetDescription>
         </SheetHeader>
 
@@ -117,7 +117,7 @@ export function SignupSheet({
               <p className="mt-1.5 text-sm text-muted-foreground">
                 ROUTE @광교산에 신청하면
                 <br />
-                여기서 결제 내역·영수증·취소를 관리할 수 있어요.
+                여기서 결제 내역과 영수증을 보고, 취소도 할 수 있어요.
               </p>
               <Button
                 className="mt-6 h-11 bg-[#DC2F55] px-8 text-white hover:bg-[#DC2F55]/90"

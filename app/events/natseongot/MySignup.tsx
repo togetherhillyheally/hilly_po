@@ -304,7 +304,7 @@ export function MySignup({
         {paid && (data.participants?.length ?? 0) > 0 && (
           <Button variant="outline" className="h-11 w-full" onClick={startEdit}>
             <Pencil className="mr-2 h-4 w-4" />
-            참가자·뒤풀이 정보 수정
+            참가자와 뒤풀이 정보 수정
           </Button>
         )}
 
