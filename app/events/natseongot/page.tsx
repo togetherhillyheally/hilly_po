@@ -335,19 +335,23 @@ export default function NatseongotPage() {
             </span>
           </h2>
           <p className="mt-7 text-base leading-relaxed text-muted-foreground">
-            기록에 도전하는 날도, 숲에서 쉬어 가는 날도 있지만,{" "}
+            누군가 지나간 길은 쉽습니다. 가본 적 없는 나의 길은 낯설고, 조금
+            두렵습니다.
+            <br />
             <span className="whitespace-nowrap">ROUTE @광교산은</span>{" "}
             <b className="font-semibold text-foreground">
-              낯선 길을 찾아 나서는 날
+              그 낯선 길을 찾아 나서는 날
             </b>
-            이에요.
+            입니다.
           </p>
-          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
             <b className="font-semibold text-foreground">순위는 없습니다.</b>
             <br />
-            출발 전 팀 목표를 정하고, 그 목표만 달성하면 됩니다.
+            빨리 달리지 않아도 됩니다. 내 속도로, 길고 오래.
             <br />
-            노련하게 달려보세요.
+            흔들려도 뿌리를 잃지 않고 끝까지 나아가는 것 — 우리는 그걸{" "}
+            <b className="font-semibold text-foreground">노련함</b>이라고
+            부릅니다.
           </p>
         </Reveal>
       </section>
