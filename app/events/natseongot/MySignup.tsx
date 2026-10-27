@@ -35,6 +35,7 @@ export type MySignupData = {
   dinner?: boolean
   dinnerCount?: number
   receipt: string | null
+  createdAt?: string
   cancelableUntil: string
   cancelable: boolean
 }
