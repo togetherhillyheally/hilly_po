@@ -237,7 +237,7 @@ export default function NatseongotPage() {
   const hasCoords = CPS.length > 0
 
   return (
-    <main className="mx-auto max-w-6xl break-keep px-6">
+    <main className="event-readable mx-auto max-w-6xl break-keep px-6">
       {/* 헤더 */}
       <header className="flex h-16 items-center justify-between">
         <Link
@@ -320,7 +320,7 @@ export default function NatseongotPage() {
                   {f.label}
                 </p>
                 <p className="mt-2 font-semibold leading-snug">{f.value}</p>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-1 text-[15px] leading-relaxed text-muted-foreground">
                   {f.sub}
                 </p>
               </div>
@@ -350,7 +350,7 @@ export default function NatseongotPage() {
             </b>
             입니다.
           </p>
-          <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-6 text-[15px] leading-relaxed text-muted-foreground">
             <b className="font-semibold text-foreground">순위는 없습니다.</b>
             <br />
             빨리 달리지 않아도 됩니다. 내 속도로, 길고 오래.
@@ -384,7 +384,7 @@ export default function NatseongotPage() {
                   <span className="block text-sm font-semibold">
                     {step.title}
                   </span>
-                  <span className="mt-0.5 block text-sm leading-relaxed text-muted-foreground">
+                  <span className="mt-0.5 block text-[15px] leading-relaxed text-muted-foreground">
                     {step.desc}
                   </span>
                 </span>
@@ -404,7 +404,7 @@ export default function NatseongotPage() {
                   />
                   <span>{r.title}</span>
                 </p>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
                   {r.desc}
                 </p>
               </div>
@@ -444,7 +444,7 @@ export default function NatseongotPage() {
                     t.title
                   )}
                 </p>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-1 text-[15px] leading-relaxed text-muted-foreground">
                   {t.desc}
                 </p>
                 {"link" in t && (
@@ -454,7 +454,7 @@ export default function NatseongotPage() {
                     rel="noreferrer"
                     className="mt-2 inline-block text-xs text-muted-foreground underline decoration-muted-foreground/40 underline-offset-4 hover:text-[#DC2F55]"
                   >
-                    {t.link.label} ↗
+                    {t.link.label} ↗
                   </a>
                 )}
               </div>
@@ -621,7 +621,7 @@ export default function NatseongotPage() {
                 {SAFETY.map((s) => (
                   <li
                     key={s}
-                    className="relative pl-4 text-sm leading-relaxed text-muted-foreground"
+                    className="relative pl-4 text-[15px] leading-relaxed text-muted-foreground"
                   >
                     <span className="absolute left-0 top-[0.55rem] h-1.5 w-1.5 rounded-full bg-[#DC2F55]/70" />
                     {s}

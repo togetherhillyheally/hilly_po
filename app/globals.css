@@ -108,6 +108,11 @@ body {
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  /* 이벤트 소개 페이지 — 긴 설명문이 많아 보조 글자색을 더 밝게 */
+  .dark .event-readable {
+    --muted-foreground: 0 0% 85%;
+  }
 }
 
 @layer base {

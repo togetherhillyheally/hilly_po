@@ -55,7 +55,7 @@ export function SuccessClient() {
   }, [orderId, paymentKey, amount])
 
   return (
-    <main className="mx-auto max-w-6xl break-keep px-6">
+    <main className="event-readable mx-auto max-w-6xl break-keep px-6">
       <header className="flex h-16 items-center">
         <Link href="/" className="text-sm font-bold tracking-tight">
           HILLY HEALLY <span className="text-muted-foreground">GROUND</span>
