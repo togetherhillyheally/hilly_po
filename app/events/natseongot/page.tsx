@@ -516,17 +516,6 @@ export default function NatseongotPage() {
                         style={{ backgroundColor: TIER_COLOR[t] }}
                       />
                       <span className="font-semibold tabular-nums">{t}점</span>
-                      <span className="text-xs text-muted-foreground">
-                        {t === 50
-                          ? "최고 난도"
-                          : t === 40
-                            ? "매우 어려움"
-                            : t === 30
-                              ? "어려움"
-                              : t === 20
-                                ? "보통"
-                                : "쉬움"}
-                      </span>
                     </li>
                   ))}
                 </ul>
