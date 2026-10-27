@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { NATSEONGOT as EV, callEventFn } from "@/lib/events"
+import { NATSEONGOT as EV, callEventFn, formatPhone } from "@/lib/events"
 
 type EditableParticipant = {
   name: string
@@ -157,8 +157,8 @@ export function MySignup({
                   placeholder="이름"
                 />
                 <Input
-                  value={p.phone}
-                  onChange={(e) => setD(i, "phone", e.target.value)}
+                  value={formatPhone(p.phone)}
+                  onChange={(e) => setD(i, "phone", formatPhone(e.target.value))}
                   placeholder="연락처 010-0000-0000"
                   inputMode="tel"
                 />

@@ -48,6 +48,25 @@ export function partyPricing(size: number): {
   return { per, total: per * size, discounted }
 }
 
+/** 입력 중인 전화번호에 하이픈 — 01083138230 → 010-8313-8230, 02 지역번호도 처리.
+ *  서버는 숫자만 뽑아 저장하므로 표시용. */
+export function formatPhone(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 11)
+  if (d.startsWith("02")) {
+    if (d.length <= 2) return d
+    if (d.length <= 5) return `${d.slice(0, 2)}-${d.slice(2)}`
+    if (d.length <= 9) return `${d.slice(0, 2)}-${d.slice(2, 5)}-${d.slice(5)}`
+    return `${d.slice(0, 2)}-${d.slice(2, 6)}-${d.slice(6, 10)}`
+  }
+  if (d.length <= 3) return d
+  if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`
+  // 휴대폰(010 등)은 입력 중에도 3-4-4 — 자릿수가 늘 때 칸이 흔들리지 않게
+  if (d.startsWith("01") && d.length >= 8)
+    return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`
+  if (d.length <= 10) return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`
+  return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`
+}
+
 /** 토스 결제위젯 클라이언트 키(공개 키) — hilly_rn app.config 와 동일 정책.
  *  시크릿 키는 웹에 두지 않고 Edge Function 시크릿(TOSS_SECRET_KEY)에만 존재.
  *  prod 빌드=라이브 키 / 로컬 dev=테스트 키, env 로 덮어쓰기 가능. */

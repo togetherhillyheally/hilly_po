@@ -18,6 +18,7 @@ import {
   TOSS_CLIENT_KEY,
   callEventFn,
   partyPricing,
+  formatPhone,
 } from "@/lib/events"
 
 type Participant = {
@@ -454,8 +455,10 @@ export function SignupForm() {
                   </Field>
                   <Field label="연락처" required>
                     <Input
-                      value={p.phone}
-                      onChange={(e) => setP(i, "phone", e.target.value)}
+                      value={formatPhone(p.phone)}
+                      onChange={(e) =>
+                        setP(i, "phone", formatPhone(e.target.value))
+                      }
                       placeholder="010-0000-0000"
                       inputMode="tel"
                     />
@@ -533,8 +536,13 @@ export function SignupForm() {
             </Field>
             <Field label="연락처" required>
               <Input
-                value={f.emergencyPhone}
-                onChange={set("emergencyPhone")}
+                value={formatPhone(f.emergencyPhone)}
+                onChange={(e) =>
+                  setF((p) => ({
+                    ...p,
+                    emergencyPhone: formatPhone(e.target.value),
+                  }))
+                }
                 placeholder="010-0000-0000"
                 inputMode="tel"
               />
