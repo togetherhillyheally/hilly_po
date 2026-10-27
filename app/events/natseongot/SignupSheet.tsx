@@ -84,28 +84,24 @@ export function SignupSheet({
     if (next) {
       setForceForm(false)
       setSelectedId(null)
-      loadMine()
+      // 신청하기는 바로 신청서 — 내역 조회는 '신청 내역'으로 열 때만 (중복 결제는 서버가 막음)
+      if (intent === "history") loadMine()
     }
     setOpen(next)
   }
 
-  const loading = list === undefined
-  const paid = list?.find((x) => x.status === "paid") ?? null
+  const loading = intent === "history" && list === undefined
   const selected = list?.find((x) => x.orderId === selectedId) ?? null
-  // 신청하기: 결제 완료 신청이 있으면 그 내역, 없으면 바로 신청서 (취소 내역은 '신청 내역'에서)
-  // 신청 내역: 목록 → 눌러서 상세
-  const view: "form" | "detail" | "list" | "empty" = forceForm
-    ? "form"
-    : intent === "signup"
-      ? paid
-        ? "detail"
-        : "form"
+  // 신청하기: 항상 신청서 / 신청 내역: 목록 → 눌러서 상세
+  const view: "form" | "detail" | "list" | "empty" =
+    forceForm || intent === "signup"
+      ? "form"
       : selected
         ? "detail"
         : list && list.length > 0
           ? "list"
           : "empty"
-  const detail = intent === "signup" ? paid : selected
+  const detail = selected
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -190,16 +186,14 @@ export function SignupSheet({
             </ul>
           ) : view === "detail" && detail ? (
             <>
-              {intent === "history" && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedId(null)}
-                  className="mb-2 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  신청 내역
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setSelectedId(null)}
+                className="mb-2 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                신청 내역
+              </button>
               <MySignup
                 data={detail}
                 onChanged={loadMine}

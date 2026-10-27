@@ -509,12 +509,19 @@ export default function NatseongotPage() {
                   {TIERS.map((t) => (
                     <li
                       key={t}
-                      className="flex items-center gap-3 border-b px-6 py-2.5 text-sm last:border-0"
+                      className="flex items-center gap-3.5 border-b px-6 py-3 text-sm last:border-0"
                     >
+                      {/* 지도 스탬프 마커와 같은 모양 — 배점 색 원, 흰 테두리, 점선 링, 흰 숫자 */}
                       <span
-                        className="h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-background"
-                        style={{ backgroundColor: TIER_COLOR[t] }}
-                      />
+                        className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full border-2 border-white text-[11px] font-extrabold tabular-nums text-white shadow"
+                        style={{
+                          backgroundColor: TIER_COLOR[t],
+                          outline: `2px dashed ${TIER_COLOR[t]}`,
+                          outlineOffset: "1.5px",
+                        }}
+                      >
+                        {t}
+                      </span>
                       <span className="font-semibold tabular-nums">{t}점</span>
                     </li>
                   ))}
