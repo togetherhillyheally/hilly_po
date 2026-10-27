@@ -139,8 +139,9 @@ export function MySignup({
           참가자 정보 수정
         </h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          인원수 변경은 금액이 달라져 취소 후 재신청이 필요해요. 사람을
-          바꾸는 건 여기서 바로 돼요.
+          인원수 변경은 금액이 달라져 취소 후 재신청이 필요해요.
+          <br />
+          사람을 바꾸는 건 여기서 바로 돼요.
         </p>
         <div className="mt-4 space-y-4">
           {draft.map((p, i) => (
@@ -311,11 +312,14 @@ export function MySignup({
           (data.cancelable ? (
             confirming ? (
               <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-center">
-                <p className="text-sm">
-                  정말 취소할까요?{" "}
-                  <b>{data.amount.toLocaleString()}원 전액</b>이 환불되고 자리는
-                  다른 분에게 돌아가요. 단체 신청은 주문 전체가 한 번에
-                  취소돼요.
+                <p className="text-sm leading-relaxed">
+                  <b>정말 취소할까요?</b>
+                  <br />
+                  <b>{data.amount.toLocaleString()}원 전액</b>이 환불돼요.
+                  <br />
+                  자리는 다른 분에게 돌아가요.
+                  <br />
+                  단체 신청은 주문 전체가 한 번에 취소돼요.
                 </p>
                 <div className="mt-3 flex gap-2">
                   <Button
@@ -351,8 +355,9 @@ export function MySignup({
             )
           ) : (
             <p className="text-center text-xs leading-relaxed text-muted-foreground">
-              직접 취소 기간(행사 7일 전)이 지났어요. 취소가 필요하면
-              운영진에게 인스타그램 DM 으로 문의해주세요.
+              직접 취소 기간(행사 7일 전)이 지났어요.
+              <br />
+              취소가 필요하면 운영진에게 인스타그램 DM으로 문의해주세요.
             </p>
           ))}
 

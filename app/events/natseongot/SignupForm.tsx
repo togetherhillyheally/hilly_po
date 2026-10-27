@@ -543,7 +543,9 @@ export function SignupForm() {
                 >
                   자선농원
                 </a>
-                에서 소감 나누며 저녁을 같이 먹어요. 참석할 분을 체크해주세요.
+                에서 소감 나누며 저녁을 같이 먹어요.
+                <br />
+                참석할 분을 체크해주세요.
               </span>
             </p>
             <div className="mt-3 space-y-2">
@@ -646,8 +648,9 @@ export function SignupForm() {
             )}
           </Button>
           <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">
-            결제 후 행사 7일 전까지 전액 환불돼요. 이후에는 준비 비용이 발생해
-            환불이 어려울 수 있어요.
+            결제 후 행사 7일 전까지 전액 환불돼요.
+            <br />
+            이후에는 준비 비용이 발생해 환불이 어려울 수 있어요.
           </p>
         </section>
       </div>

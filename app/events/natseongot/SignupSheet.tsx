@@ -115,9 +115,9 @@ export function SignupSheet({
                 아직 신청 내역이 없어요
               </h3>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                ROUTE @광교산에 신청하면 여기서 결제 내역과
+                ROUTE @광교산에 신청하면
                 <br />
-                영수증, 취소를 관리할 수 있어요.
+                여기서 결제 내역·영수증·취소를 관리할 수 있어요.
               </p>
               <Button
                 className="mt-6 h-11 bg-[#DC2F55] px-8 text-white hover:bg-[#DC2F55]/90"
