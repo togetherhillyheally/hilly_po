@@ -201,7 +201,7 @@ const TIMELINE = [
 const PROVIDED = [
   {
     icon: Package,
-    text: "파밍박스 — 차로 닿는 코스 지점에 설치, 그 자리에서 바로 꺼내 써요",
+    text: "파밍박스 — 코스 곳곳에 에너지를 채울 먹을거리·마실거리·체험품을 넣어 둬요",
   },
   {
     icon: Radio,
