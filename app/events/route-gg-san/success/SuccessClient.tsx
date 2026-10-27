@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { NATSEONGOT as EV, callEventFn } from "@/lib/events"
+import { clearDraft } from "../draft"
 
 export function SuccessClient() {
   const sp = useSearchParams()
@@ -41,6 +42,7 @@ export function SuccessClient() {
       amount: Number(amount),
     })
       .then((d) => {
+        clearDraft() // 결제 완료 — 임시저장한 신청서는 더 필요 없음
         setName(d.name ?? "")
         setState("done")
       })

@@ -1,8 +1,15 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { AlertCircle, CheckCircle2, Loader2, Lock } from "lucide-react"
+import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronLeft,
+  Loader2,
+  Lock,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { clearDraft, loadDraft, saveDraft } from "./draft"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -168,6 +175,43 @@ export function SignupForm() {
     }
   }
 
+  // 임시저장 복원 — 전화번호 자동 입력(비동기)보다 먼저 반영된다
+  const [draftAt, setDraftAt] = useState<number | null>(null)
+  const draftReady = useRef(false)
+  useEffect(() => {
+    const d = loadDraft<Participant, Fields>()
+    if (d) {
+      setParty(
+        d.party.slice(0, EV.maxParty).map((p) => ({ ...EMPTY_P, ...p }))
+      )
+      setF({ ...EMPTY, ...d.fields })
+      setDraftAt(d.savedAt)
+    }
+    draftReady.current = true
+  }, [])
+
+  // 입력이 멈추면 저장 — 자동 입력된 전화번호만 있는 상태는 저장하지 않음
+  useEffect(() => {
+    if (!draftReady.current) return
+    const typed =
+      party.length > 1 ||
+      party.some((p) => p.name.trim() || p.birth.trim()) ||
+      Object.values(f).some((v) => v.trim())
+    if (!typed) return
+    const t = setTimeout(() => {
+      saveDraft(party, f)
+      setDraftAt(Date.now())
+    }, 500)
+    return () => clearTimeout(t)
+  }, [party, f])
+
+  const resetDraft = () => {
+    clearDraft()
+    setDraftAt(null)
+    setParty([{ ...EMPTY_P }])
+    setF(EMPTY)
+  }
+
   // 로그인 계정의 전화번호를 자동 입력 (비워져 있을 때만 — 수정 가능)
   useEffect(() => {
     let cancelled = false
@@ -255,9 +299,26 @@ export function SignupForm() {
     }
   }
 
+  // 결제 단계 → 신청서로 돌아가기. 입력값은 이 컴포넌트 상태라 그대로 남고,
+  // 다시 신청하면 새 주문번호가 발급돼요 (미결제 주문은 결제되지 않은 채 남음)
+  const backToForm = () => {
+    widgetsRef.current = null
+    setWidgetReady(false)
+    setOrder(null)
+    setStatus("idle")
+  }
+
   if (status === "widget") {
     return (
       <div className="py-2">
+        <button
+          type="button"
+          onClick={backToForm}
+          className="mb-3 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          신청서로 돌아가기
+        </button>
         <h3 className="text-lg font-semibold tracking-tight">
           결제 수단을 선택해주세요
         </h3>
@@ -337,6 +398,24 @@ export function SignupForm() {
 
   return (
     <form onSubmit={handleSubmit}>
+      {draftAt && (
+        <div className="mb-6 flex items-center justify-between gap-3 rounded-lg border bg-card px-4 py-2.5 text-xs text-muted-foreground">
+          <span>
+            이 기기에 임시 저장됨 ·{" "}
+            {new Date(draftAt).toLocaleTimeString("ko-KR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+          <button
+            type="button"
+            onClick={resetDraft}
+            className="shrink-0 underline underline-offset-2 hover:text-foreground"
+          >
+            지우기
+          </button>
+        </div>
+      )}
       <div className="space-y-8">
         {/* 1. 참가자 */}
         <section>
