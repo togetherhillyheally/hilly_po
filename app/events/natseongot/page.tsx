@@ -518,14 +518,14 @@ export default function NatseongotPage() {
                       <span className="font-semibold tabular-nums">{t}점</span>
                       <span className="text-xs text-muted-foreground">
                         {t === 50
-                          ? "정상, 가장 먼 곳"
+                          ? "최고 난도"
                           : t === 40
-                            ? "주요 봉우리"
+                            ? "매우 어려움"
                             : t === 30
-                              ? "능선과 갈림길"
+                              ? "어려움"
                               : t === 20
-                                ? "산중 지점"
-                                : "입구 근처"}
+                                ? "보통"
+                                : "쉬움"}
                       </span>
                     </li>
                   ))}
