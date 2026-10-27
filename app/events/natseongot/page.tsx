@@ -29,7 +29,7 @@ import { UserChip } from "./UserChip"
 export const metadata: Metadata = {
   title: "ROUTE @광교산 | 힐리힐리",
   description:
-    "2026.11.14 수원 광교산. 배점이 다른 체크포인트를 4시간 안에 원하는 순서로 모으는 팀 전략 게임. 순위는 없고, 팀이 정한 목표만 있어요. 32명 한정.",
+    "2026.11.14 수원 광교산. 배점이 다른 체크포인트를 4시간 안에 원하는 순서로 모으는 팀 전략 게임. 순위는 없고 팀이 정한 목표만 있어요. 32명 한정.",
   openGraph: {
     title: "ROUTE @광교산",
     description:
@@ -70,7 +70,7 @@ const RULES = [
     title: "4명 한 팀, 2명씩 한 조",
     desc: (
       <>
-        팀 안에서 <B>2인 1조</B>로 나뉘어 움직이고, 조마다 트래커를 하나씩
+        팀 안에서 <B>2인 1조</B>로 나뉘어 움직이고 조마다 트래커를 하나씩
         들어요. 스탬프는 <B>같은 조 짝꿍이 50m 안에 함께 있어야</B> 인정돼요.
         팀 점수는 두 조가 찍은 곳을 합쳐 계산하고 같은 곳은 한 번만
         쳐줘요.
@@ -84,7 +84,7 @@ const RULES = [
       <>
         체크포인트 위치는 <B>모험이 시작되는 순간</B>에야 공개돼요. 미리
         외워 올 수 없어요. 공개된 지도와 배점을 보고 그 자리에서 두 조의
-        동선을 짜고, 팀의 목표를 선언해요 — “우리는 오늘 몇 점.” 남을 이기는
+        동선을 짜고 팀의 목표를 선언해요 — “우리는 오늘 몇 점.” 남을 이기는
         게 아니라 <B>우리 팀을 정확히 읽는 게 승부</B>예요.
       </>
     ),
@@ -278,7 +278,7 @@ export default function NatseongotPage() {
           <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             산과 들에서 펼쳐지는 팀 전략 게임.
             <br />
-            배점이 다른 체크포인트를 원하는 순서로 모으고, 제한 시간 안에
+            배점이 다른 체크포인트를 원하는 순서로 모으고 제한 시간 안에
             출발점으로 돌아오세요.
           </p>
           <p className="mt-3 text-sm font-medium text-[#DC2F55]">
@@ -363,7 +363,7 @@ export default function NatseongotPage() {
             점수를 모으는 팀 전략 게임
           </h2>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            경쟁은 덜고, 어디로 갈지 고르는 재미만 남겼어요.
+            경쟁은 덜고 어디로 갈지 고르는 재미만 남겼어요.
           </p>
         </Reveal>
 
