@@ -14,6 +14,30 @@ const WINDOW_BACK_M = 300
 const WINDOW_FWD_M = 3000
 const BACKTRACK_ACCEPT_COUNT = 2
 export const STALE_MS = 180_000 // 3분 무신호 = '신호 없음'
+
+/** GPS 대기 — 기기 신호는 최근에 들어오는데 쓸 만한 위치(fix)가 없음 (실내·하늘 가림 등) */
+export function isGpsWaiting(entry: LiveEntry, now = Date.now()): boolean {
+  const seen = entry.device_last_seen_at
+    ? new Date(entry.device_last_seen_at).getTime()
+    : 0
+  if (!seen || now - seen > STALE_MS) return false
+  const fixMs = entry.recorded_at ? new Date(entry.recorded_at).getTime() : 0
+  return entry.lat == null || entry.lng == null || now - fixMs > STALE_MS
+}
+
+/** 고도표용 코스 인덱스 — 여러 구간이면 이어 붙여 전체 코스로 (진행률 계산엔 쓰지 않음) */
+export function buildProfileIndex(
+  coordinates: Coordinates | null | undefined,
+): CourseIndex | null {
+  if (!coordinates || coordinates.length === 0) return null
+  const isMulti =
+    Array.isArray(coordinates[0]) &&
+    Array.isArray((coordinates[0] as unknown[])[0])
+  const flat = isMulti
+    ? (coordinates as unknown as Coord[][]).flat()
+    : (coordinates as unknown as Coord[])
+  return buildCourseIndex(flat as unknown as Coordinates)
+}
 export const STATIONARY_THRESHOLD_SEC = 1800 // 30분 이상 같은 자리 = '장시간 정지'
 export const STATIONARY_MOVE_M = 30 // 이 거리 이상 벗어나야 '이동'으로 간주
 export const LOW_BATTERY_MV = 3600 // MT710 3.6V 미만 = 배터리 부족

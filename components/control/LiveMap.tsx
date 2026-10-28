@@ -7,10 +7,12 @@ import {
   CHECKPOINT_MARKER_ICONS,
   DEFAULT_MARKER_ICON,
 } from "@/lib/checkpoint-marker-icons"
+import { toast } from "sonner"
 import { haversineMeters } from "@/lib/geo"
 import { applyKoreanLabels } from "@/lib/mapbox-locale"
 import { TRAIL_SEGMENT_PALETTE } from "@/lib/trail-palette"
 import {
+  isGpsWaiting,
   type RankedEntry,
   STATIONARY_THRESHOLD_SEC,
 } from "@/lib/course-progress"
@@ -703,6 +705,18 @@ export default function LiveMap({
         center: [r.entry.lng, r.entry.lat],
         zoom: Math.max(map.getZoom(), 14),
       })
+    } else if (r && focusSignal > 0) {
+      // 위치가 없으면 지도가 움직이지 않아 고장처럼 보임 — 이유를 알려준다
+      toast(
+        isGpsWaiting(r.entry)
+          ? `${r.entry.display_name}: 아직 GPS 위치가 없어요`
+          : `${r.entry.display_name}: 기기 신호가 없어요`,
+        {
+          description: isGpsWaiting(r.entry)
+            ? "기기 신호는 들어오고 있어요. 하늘이 트인 곳에 있으면 곧 위치가 잡혀요."
+            : "기기가 꺼져 있거나 통신이 안 되는 곳에 있어요.",
+        },
+      )
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId, focusSignal])

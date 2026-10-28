@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
+  isGpsWaiting,
   type RankedEntry,
   formatGap,
   formatStationary,
@@ -81,6 +82,16 @@ function StatusBadge({ r }: { r: RankedEntry }) {
       >
         <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
       </span>
+    )
+  if (isGpsWaiting(r.entry))
+    return (
+      <Badge
+        variant="outline"
+        title="기기 신호는 들어오는데 아직 GPS 위치가 안 잡혔어요 (실내·하늘 가림)"
+        className="whitespace-nowrap border-amber-500/60 bg-amber-500/10 text-amber-600"
+      >
+        GPS 대기
+      </Badge>
     )
   if (r.status === "noSignal" || r.status === "stale")
     return (

@@ -98,10 +98,21 @@ export function useLiveEvent(options: {
   const poll = useCallback(async () => {
     if (document.visibilityState === "hidden") return
     try {
-      const entries =
+      let entries =
         mode === "admin" && eventId
           ? await trackerControlRepo.adminLiveState(eventId)
           : await trackerControlRepo.publicLiveState(token)
+      if (mode !== "admin") {
+        // 관전 응답엔 기기 수신 시각이 없어 따로 받는다 — 실패해도 위치 표시는 그대로
+        const seen = await trackerControlRepo
+          .publicSignals(token)
+          .catch(() => null)
+        if (seen)
+          entries = entries.map((e) => ({
+            ...e,
+            device_last_seen_at: seen.get(e.entry_id) ?? null,
+          }))
+      }
       setRanked(
         rankEntries(
           entries,

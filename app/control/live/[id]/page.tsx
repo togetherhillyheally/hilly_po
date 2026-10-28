@@ -17,6 +17,7 @@ import AdventureScoreboard, {
   teamLabel,
 } from "@/components/control/AdventureScoreboard"
 import ElevationDrawer from "@/components/control/ElevationDrawer"
+import { buildProfileIndex } from "@/lib/course-progress"
 import ElevationProfile from "@/components/control/ElevationProfile"
 import LiveMap from "@/components/control/LiveMap"
 import LiveSidebar from "@/components/control/LiveSidebar"
@@ -130,6 +131,11 @@ export default function LiveAdventureControlPage() {
           ) as string[]),
     [ranked, board],
   )
+  // 고도표 — 대회가 아니어도(모니터링·빠른 관제) 코스가 있으면 보여준다
+  const profileIndex = useMemo(
+    () => courseIndex ?? buildProfileIndex(course?.coordinates),
+    [courseIndex, course],
+  )
   const visible = useMemo(
     () => filterDisplayEntries(ranked, displayMode, favs, categories),
     [ranked, displayMode, favs, categories],
@@ -239,9 +245,9 @@ export default function LiveAdventureControlPage() {
             }
           />
           {/* 고도표 — 지도 아래에서 펼쳐 보기 */}
-          {courseIndex && (
+          {profileIndex && (
             <ElevationDrawer
-              index={courseIndex}
+              index={profileIndex}
               entries={visible}
               categories={categories}
               checkpoints={course?.checkpoints}

@@ -16,6 +16,7 @@ import {
   filterDisplayEntries,
 } from "@/components/control/DisplayFilter"
 import ElevationDrawer from "@/components/control/ElevationDrawer"
+import { buildProfileIndex } from "@/lib/course-progress"
 import ElevationProfile from "@/components/control/ElevationProfile"
 import EntryManager from "@/components/control/EntryManager"
 import EventFormDialog from "@/components/control/EventFormDialog"
@@ -178,6 +179,11 @@ function ControlRoom({
   )
 
   // 지도/프로필/꼬리에만 적용되는 표시 필터 (사이드바 목록은 전체 유지)
+  // 고도표 — 대회가 아니어도(모니터링·빠른 관제) 코스가 있으면 보여준다
+  const profileIndex = useMemo(
+    () => courseIndex ?? buildProfileIndex(info?.trail?.coordinates),
+    [courseIndex, info],
+  )
   const visible = useMemo(
     () => filterDisplayEntries(ranked, displayMode, favs, categories),
     [ranked, displayMode, favs, categories],
@@ -387,9 +393,9 @@ function ControlRoom({
                 }
               />
               {/* 고도표 — 지도 아래에서 펼쳐 보기 */}
-              {courseIndex && (
+              {profileIndex && (
                 <ElevationDrawer
-                  index={courseIndex}
+                  index={profileIndex}
                   entries={visible}
                   categories={categories}
                   checkpoints={info?.trail?.checkpoints}
