@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { ArrowLeft, Link2, Pencil } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -62,6 +62,21 @@ export default function ControlRoomPage() {
     if (isAdmin) reloadEvent()
   }, [isAdmin, reloadEvent])
 
+  // 게스트는 관리용 화면 대신 같은 이벤트의 공개 관전 화면으로 보낸다
+  const router = useRouter()
+  const [guestMissing, setGuestMissing] = useState(false)
+  useEffect(() => {
+    if (isAdmin !== false) return
+    trackerControlRepo
+      .listPublicEvents()
+      .then((list) => {
+        const ev = list.find((e) => e.id === params.id)
+        if (ev) router.replace(`/watch/${ev.public_token}`)
+        else setGuestMissing(true)
+      })
+      .catch(() => setGuestMissing(true))
+  }, [isAdmin, params.id, router])
+
   if (isAdmin === null) {
     return (
       <main className="mx-auto max-w-7xl px-4 py-16 text-center text-sm text-muted-foreground">
@@ -70,12 +85,22 @@ export default function ControlRoomPage() {
     )
   }
   if (!isAdmin) {
-    return (
+    return guestMissing ? (
       <main className="mx-auto max-w-7xl px-4 py-16 text-center">
-        <h1 className="text-lg font-bold">접근 권한이 없어요</h1>
+        <h1 className="text-lg font-bold">지금 볼 수 있는 이벤트가 아니에요</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          관제 화면은 관리자만 사용할 수 있어요.
+          진행 중이거나 끝난 이벤트만 공개돼요.
         </p>
+        <Button asChild variant="outline" className="mt-4">
+          <Link href="/control">
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
+            관제 목록
+          </Link>
+        </Button>
+      </main>
+    ) : (
+      <main className="mx-auto max-w-7xl px-4 py-16 text-center text-sm text-muted-foreground">
+        불러오는 중…
       </main>
     )
   }

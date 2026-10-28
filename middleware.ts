@@ -33,10 +33,12 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  if (
-    !user &&
-    (pathname.startsWith("/maps") || pathname.startsWith("/control"))
-  ) {
+  // /control 은 공개 보기(게스트 가능) — 설정 화면(빠른 관제·전체 기기)만 로그인 필요
+  const loginOnly =
+    pathname.startsWith("/maps") ||
+    pathname.startsWith("/control/quick") ||
+    pathname.startsWith("/control/devices")
+  if (!user && loginOnly) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     url.searchParams.set("next", pathname)

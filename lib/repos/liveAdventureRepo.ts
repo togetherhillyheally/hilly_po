@@ -1,7 +1,7 @@
 /**
- * 앱 "모험중" 라이브 관제 — hiking_sessions + hiking_session_live_participants 조회.
- * 두 테이블 모두 RLS 가 authenticated 전체 SELECT 허용이라 별도 RPC 불필요.
- * (관제 화면 자체는 슈퍼관리자 게이트 뒤에 있음)
+ * 앱 "모험중" 라이브 관제 — 공개 보기용 RPC(public_live_adventures / public_adventure_live).
+ * 관제 화면은 로그인 없이도 보이므로 테이블 직접 조회 대신 SECURITY DEFINER RPC 를 쓴다.
+ * (시작된 세션만, 위치 숨김 참가자는 서버에서 제외)
  */
 import { getSupabase } from "@/lib/supabase/client"
 import type { LiveEntry } from "./trackerControlTypes"
@@ -31,46 +31,21 @@ interface LiveRow {
   lat: number | null
   lng: number | null
   stamp_count: number | null
-  hidden: boolean
+  hidden?: boolean
   last_seen: string | null
 }
 
 export const liveAdventureRepo = {
   /** 모험중 세션 목록 — 시작됐고 아직 완료/취소되지 않은 세션 */
   async listLiveAdventures(): Promise<LiveAdventure[]> {
-    const { data, error } = await getSupabase()
-      .from("hiking_sessions")
-      .select(
-        "id, title, mountain_name, is_solo, trail_id, started_at, status, live:hiking_session_live_participants(user_id, last_seen)",
-      )
-      .not("started_at", "is", null)
-      .in("status", ["open", "closed"])
-      .order("started_at", { ascending: false })
-      .limit(50)
+    const { data, error } = await getSupabase().rpc("public_live_adventures")
     if (error) throw error
-
-    const now = Date.now()
-    return (data ?? []).map((row) => {
-      const r = row as Record<string, unknown>
-      const live = (r.live ?? []) as { user_id: string; last_seen: string | null }[]
-      const seens = live
-        .map((l) => (l.last_seen ? new Date(l.last_seen).getTime() : 0))
-        .filter((t) => t > 0)
-      return {
-        id: String(r.id),
-        title: String(r.title ?? ""),
-        mountain_name: String(r.mountain_name ?? ""),
-        is_solo: Boolean(r.is_solo),
-        trail_id: r.trail_id == null ? null : String(r.trail_id),
-        started_at: typeof r.started_at === "string" ? r.started_at : null,
-        status: String(r.status ?? ""),
-        live_count: seens.filter((t) => now - t < LIVE_WINDOW_MS).length,
-        total_count: live.length,
-        last_seen: seens.length
-          ? new Date(Math.max(...seens)).toISOString()
-          : null,
-      }
-    })
+    return ((data ?? []) as LiveAdventure[]).map((r) => ({
+      ...r,
+      trail_id: r.trail_id ?? null,
+      started_at: r.started_at ?? null,
+      last_seen: r.last_seen ?? null,
+    }))
   },
 
   async getSession(sessionId: string): Promise<{
@@ -82,25 +57,20 @@ export const liveAdventureRepo = {
     started_at: string | null
     status: string
   } | null> {
-    const { data, error } = await getSupabase()
-      .from("hiking_sessions")
-      .select("id, title, mountain_name, is_solo, trail_id, started_at, status")
-      .eq("id", sessionId)
-      .maybeSingle()
+    const { data, error } = await getSupabase().rpc("public_adventure_live", {
+      p_session_id: sessionId,
+    })
     if (error) throw error
-    return (data as never) ?? null
+    return ((data as { session?: never } | null)?.session as never) ?? null
   },
 
   /** 세션 라이브 참가자 위치 → 관제 공용 LiveEntry 로 매핑 (위치 숨김 참가자 제외) */
   async listSessionLive(sessionId: string): Promise<LiveEntry[]> {
-    const { data, error } = await getSupabase()
-      .from("hiking_session_live_participants")
-      .select(
-        "user_id, nickname, avatar_url, lat, lng, stamp_count, hidden, last_seen",
-      )
-      .eq("session_id", sessionId)
+    const { data, error } = await getSupabase().rpc("public_adventure_live", {
+      p_session_id: sessionId,
+    })
     if (error) throw error
-    return ((data ?? []) as LiveRow[])
+    return (((data as { participants?: LiveRow[] } | null)?.participants ?? []) as LiveRow[])
       .filter((r) => !r.hidden)
       .map((r) => ({
         entry_id: r.user_id,

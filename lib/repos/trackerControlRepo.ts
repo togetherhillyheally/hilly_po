@@ -52,6 +52,13 @@ export const trackerControlRepo = {
     return (data ?? []) as TrackerEvent[]
   },
 
+  /** 공개 목록 — 로그인 없이, 진행중·종료 이벤트만 */
+  async listPublicEvents(): Promise<TrackerEvent[]> {
+    const { data, error } = await getSupabase().rpc("public_control_events")
+    if (error) throw error
+    return (data ?? []) as TrackerEvent[]
+  },
+
   async upsertEvent(input: UpsertEventInput): Promise<TrackerEvent> {
     const { data, error } = await getSupabase().rpc(
       "admin_upsert_tracker_event",

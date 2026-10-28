@@ -42,7 +42,8 @@ export function MapsHeader() {
               </Link>
             </Button>
           )}
-          {(isEditor || isControl) && (
+          {/* 관제는 게스트도 보므로 "내 지도"는 관리자에게만 */}
+          {(isEditor || (isControl && isAdmin)) && (
             <Button
               asChild
               variant="ghost"

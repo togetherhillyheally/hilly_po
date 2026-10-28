@@ -59,7 +59,7 @@ export default function LiveAdventureControlPage() {
     loading,
   } = useLiveAdventure(params.id)
   // 배점형 코스 모험이면 팀·조 점수판 (앱과 동일한 계산)
-  const board = useSessionScoreboard(params.id, isAdmin === true)
+  const board = useSessionScoreboard(params.id, true)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [focusSignal, setFocusSignal] = useState(0)
   const [displayMode, setDisplayMode] = useState<DisplayMode>("all")
@@ -134,20 +134,11 @@ export default function LiveAdventureControlPage() {
     [ranked, displayMode, favs, categories],
   )
 
-  if (isAdmin === null || loading) {
+  // 공개 보기 — 로그인하지 않은 게스트도 본다 (관리자 전용 정보만 isAdmin 으로 가림)
+  if (loading) {
     return (
       <main className="mx-auto max-w-7xl px-4 py-16 text-center text-sm text-muted-foreground">
         불러오는 중…
-      </main>
-    )
-  }
-  if (!isAdmin) {
-    return (
-      <main className="mx-auto max-w-7xl px-4 py-16 text-center">
-        <h1 className="text-lg font-bold">접근 권한이 없어요</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          관제 화면은 관리자만 사용할 수 있어요.
-        </p>
       </main>
     )
   }
@@ -249,7 +240,7 @@ export default function LiveAdventureControlPage() {
           <LiveSidebar
             ranked={ranked}
             eventType={eventType}
-            isAdmin
+            isAdmin={isAdmin === true}
             categories={categories}
             selectedId={selectedId}
             onSelect={handleSelect}
@@ -281,7 +272,7 @@ export default function LiveAdventureControlPage() {
               <LiveTableWide
                 ranked={ranked}
                 eventType={eventType}
-                isAdmin
+                isAdmin={isAdmin === true}
                 categories={categories}
                 selectedId={selectedId}
                 onSelect={handleSelect}

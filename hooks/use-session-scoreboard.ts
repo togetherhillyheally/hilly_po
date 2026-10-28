@@ -26,7 +26,7 @@ export interface ScoreboardTeam {
   tickets: number
 }
 
-/** admin_session_scoreboard — 앱 session_squad_scores + 사람별 점수·배점·프로필 */
+/** public_session_scoreboard — 앱 session_squad_scores + 사람별 점수·배점·프로필 */
 export interface SessionScoreboard {
   score_mode: boolean
   tiers: number[]
@@ -50,7 +50,7 @@ export interface SessionScoreboard {
   profiles: Record<string, { nickname: string | null; avatar_url: string | null }>
 }
 
-/** 앱 모험의 팀·조 점수판 폴링 (슈퍼관리자) — 배점형 코스가 아니면 null */
+/** 앱 모험의 팀·조 점수판 폴링 (공개 — 로그인 없이도) — 배점형 코스가 아니면 null */
 export function useSessionScoreboard(sessionId: string, enabled: boolean) {
   const [board, setBoard] = useState<SessionScoreboard | null>(null)
 
@@ -60,7 +60,7 @@ export function useSessionScoreboard(sessionId: string, enabled: boolean) {
     const load = async () => {
       if (document.visibilityState === "hidden") return
       const { data, error } = await getSupabase().rpc(
-        "admin_session_scoreboard",
+        "public_session_scoreboard",
         { p_session_id: sessionId },
       )
       if (!alive || error) return

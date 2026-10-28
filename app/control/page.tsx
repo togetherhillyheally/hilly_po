@@ -121,7 +121,10 @@ export default function ControlListPage() {
     let evs: TrackerEvent[] = []
     let advs: LiveAdventure[] = []
     try {
-      evs = await trackerControlRepo.listEvents()
+      // 관리자는 작성중·보관까지 전부, 게스트는 진행중·종료만 (공개 RPC)
+      evs = isAdmin
+        ? await trackerControlRepo.listEvents()
+        : await trackerControlRepo.listPublicEvents()
       setEvents(evs)
     } catch {
       toast.error("이벤트 목록을 불러오지 못했어요.")
@@ -142,11 +145,16 @@ export default function ControlListPage() {
     } catch {
       // 썸네일은 부가 정보 — 실패해도 목록은 표시
     }
-  }, [])
+  }, [isAdmin])
 
   useEffect(() => {
-    if (isAdmin) reload()
+    if (isAdmin !== null) reload()
   }, [isAdmin, reload])
+
+  /** 관리자는 관리용 관제 화면, 게스트는 공개 관전 화면 */
+  function eventHref(ev: TrackerEvent) {
+    return isAdmin ? `/control/${ev.id}` : `/watch/${ev.public_token}`
+  }
 
   function copyWatchLink(ev: TrackerEvent) {
     const url = `${window.location.origin}/watch/${ev.public_token}`
@@ -175,16 +183,6 @@ export default function ControlListPage() {
       </main>
     )
   }
-  if (!isAdmin) {
-    return (
-      <main className="mx-auto max-w-6xl px-4 py-16 text-center">
-        <h1 className="text-lg font-bold">접근 권한이 없어요</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          관제 화면은 관리자만 사용할 수 있어요.
-        </p>
-      </main>
-    )
-  }
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
@@ -192,9 +190,12 @@ export default function ControlListPage() {
         <div>
           <h1 className="text-2xl font-bold">관제</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            트래커 이벤트를 만들고 실시간 위치를 관제해요.
+            {isAdmin
+              ? "트래커 이벤트를 만들고 실시간 위치를 관제해요."
+              : "진행 중인 행사와 모험을 실시간으로 볼 수 있어요."}
           </p>
         </div>
+        {isAdmin && (
         <div className="flex flex-wrap items-center gap-2">
           <Button asChild variant="outline" title="지도 고르고 기기 켜서 바로 관제">
             <Link href="/control/quick">
@@ -223,6 +224,7 @@ export default function ControlListPage() {
             <Plus className="mr-1.5 h-4 w-4" />새 이벤트
           </Button>
         </div>
+        )}
       </div>
 
       {/* ── 트래커 이벤트 — 레이스 / 상시 관제 분리 (UTMB 허브식 카드) ── */}
@@ -246,7 +248,9 @@ export default function ControlListPage() {
               </p>
             ) : list.length === 0 ? (
               <p className="rounded-2xl border px-4 py-10 text-center text-sm text-muted-foreground">
-                아직 이벤트가 없어요. 새 이벤트를 만들어 보세요.
+                {isAdmin
+                  ? "아직 이벤트가 없어요. 새 이벤트를 만들어 보세요."
+                  : "지금 진행 중인 행사가 없어요."}
               </p>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -258,7 +262,7 @@ export default function ControlListPage() {
                   key={ev.id}
                   className="group overflow-hidden rounded-2xl border bg-card transition-all duration-200 hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-lg"
                 >
-                  <Link href={`/control/${ev.id}`} className="block">
+                  <Link href={eventHref(ev)} className="block">
                     <CardThumb
                       thumb={trailThumbnailUrl(card?.thumbnail_path)}
                     >
@@ -275,7 +279,7 @@ export default function ControlListPage() {
                   </Link>
                   <div className="p-4">
                     <Link
-                      href={`/control/${ev.id}`}
+                      href={eventHref(ev)}
                       className="block truncate text-base font-bold hover:underline"
                     >
                       {ev.title}
@@ -308,9 +312,9 @@ export default function ControlListPage() {
                         size="sm"
                         className="flex-1 bg-[#DC2F55] text-white hover:bg-[#DC2F55]/90"
                       >
-                        <Link href={`/control/${ev.id}`}>
+                        <Link href={eventHref(ev)}>
                           <Radio className="mr-1.5 h-4 w-4" />
-                          관제 열기
+                          {isAdmin ? "관제 열기" : "보기"}
                         </Link>
                       </Button>
                       <Button
@@ -322,15 +326,17 @@ export default function ControlListPage() {
                       >
                         <Link2 className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-red-500"
-                        title="삭제"
-                        onClick={() => setDeleteTarget(ev)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {isAdmin && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-red-500"
+                          title="삭제"
+                          onClick={() => setDeleteTarget(ev)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
