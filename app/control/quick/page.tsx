@@ -63,6 +63,7 @@ export default function QuickControlPage() {
   const [devices, setDevices] = useState<TrackerDevice[]>([])
   const [entries, setEntries] = useState<EventEntry[]>([])
   const [trailId, setTrailId] = useState(NO_TRAIL)
+  const [title, setTitle] = useState("")
   const [query, setQuery] = useState("")
   const [busy, setBusy] = useState<string | null>(null)
   const [previewKey, setPreviewKey] = useState(0)
@@ -102,6 +103,7 @@ export default function QuickControlPage() {
 
   useEffect(() => {
     setTrailId(event?.trail_id ?? NO_TRAIL)
+    setTitle(event?.title ?? "")
     if (!event) {
       setEntries([])
       return
@@ -117,7 +119,7 @@ export default function QuickControlPage() {
     if (event) return event
     const created = await trackerControlRepo.upsertEvent({
       id: null,
-      title: NEW_TITLE,
+      title: title.trim() || NEW_TITLE,
       event_type: "monitor",
       trail_id: nextTrail === NO_TRAIL ? null : nextTrail,
       starts_at: new Date().toISOString(),
@@ -146,7 +148,7 @@ export default function QuickControlPage() {
       } else {
         await trackerControlRepo.upsertEvent({
           id: event.id,
-          title: event.title,
+          title: title.trim() || event.title,
           event_type: "monitor",
           trail_id: next === NO_TRAIL ? null : next,
           starts_at: event.starts_at,
@@ -159,6 +161,31 @@ export default function QuickControlPage() {
       toast.success("지도를 바꿨어요.")
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "지도를 바꾸지 못했어요.")
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  /** 관제 이름 저장 — 이미 만든 관제면 바로 바꾸고, 아직이면 만들 때 쓴다 */
+  async function saveTitle() {
+    const next = title.trim()
+    if (!event || !next || next === event.title) return
+    setBusy("title")
+    try {
+      await trackerControlRepo.upsertEvent({
+        id: event.id,
+        title: next,
+        event_type: "monitor",
+        trail_id: event.trail_id,
+        starts_at: event.starts_at,
+        ends_at: event.ends_at,
+        status: null,
+      })
+      await loadEvents()
+      setPreviewKey((k) => k + 1)
+      toast.success("관제 이름을 바꿨어요.")
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "이름을 바꾸지 못했어요.")
     } finally {
       setBusy(null)
     }
@@ -216,6 +243,7 @@ export default function QuickControlPage() {
   function startNew() {
     setEventId(null)
     setTrailId(NO_TRAIL)
+    setTitle("")
     setEntries([])
   }
 
@@ -319,6 +347,24 @@ export default function QuickControlPage() {
               </div>
             </div>
           )}
+
+          <div className="space-y-2">
+            <p className="text-sm font-semibold">관제 이름</p>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={saveTitle}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") (e.target as HTMLInputElement).blur()
+              }}
+              placeholder={`예: 2026 UTNP 9Peak 답사 (비우면 "${NEW_TITLE}")`}
+              maxLength={60}
+              disabled={busy === "title"}
+            />
+            <p className="text-xs text-muted-foreground">
+              게스트 화면 맨 위에 보이는 이름이에요.
+            </p>
+          </div>
 
           <div className="space-y-2">
             <p className="text-sm font-semibold">1. 지도</p>
