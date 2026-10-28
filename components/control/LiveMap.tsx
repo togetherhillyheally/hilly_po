@@ -7,6 +7,7 @@ import {
   CHECKPOINT_MARKER_ICONS,
   DEFAULT_MARKER_ICON,
 } from "@/lib/checkpoint-marker-icons"
+import { haversineMeters } from "@/lib/geo"
 import { applyKoreanLabels } from "@/lib/mapbox-locale"
 import { TRAIL_SEGMENT_PALETTE } from "@/lib/trail-palette"
 import {
@@ -29,6 +30,57 @@ const MAPBOX_STYLES: Record<MapStyleKey, string> = {
 
 const TRAIL_COLOR = "#DC2F55"
 const DEFAULT_CENTER: [number, number] = [127.8, 36.3] // 코스 없을 때 한국 중심
+const ARROW_IMAGE = "course-arrow"
+
+/** 코스 진행 방향 화살표 — 선 위에 놓이는 흰 꺾쇠(>). 오른쪽이 진행 방향 */
+function courseArrowImage(): ImageData {
+  const size = 48 // pixelRatio 2 → 24px
+  const c = document.createElement("canvas")
+  c.width = c.height = size
+  const g = c.getContext("2d")!
+  g.lineCap = "round"
+  g.lineJoin = "round"
+  const draw = (color: string, w: number) => {
+    g.strokeStyle = color
+    g.lineWidth = w
+    g.beginPath()
+    g.moveTo(18, 12)
+    g.lineTo(30, 24)
+    g.lineTo(18, 36)
+    g.stroke()
+  }
+  draw(TRAIL_COLOR, 12) // 테두리 — 지도 위에서도 또렷하게
+  draw("#ffffff", 5)
+  return g.getImageData(0, 0, size, size)
+}
+
+/** 시작·도착 표시 — 같은 자리(순환 코스)면 하나로 */
+function endpointEl(label: string, color: string): HTMLDivElement {
+  const el = document.createElement("div")
+  el.textContent = label
+  el.style.cssText = `
+    min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px;
+    background: ${color}; color: #fff; border: 2px solid #fff;
+    box-shadow: 0 1px 5px rgba(0,0,0,.35);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; letter-spacing: .02em; white-space: nowrap;
+  `
+  return el
+}
+
+/** 코스 좌표의 첫 점·끝 점 (멀티라인이면 첫 구간 시작, 마지막 구간 끝) */
+function courseEnds(
+  coords: EventCourse["coordinates"],
+): { start: [number, number]; end: [number, number] } | null {
+  if (!coords || coords.length === 0) return null
+  const isMulti = Array.isArray((coords[0] as unknown[])[0])
+  const segs = (isMulti ? coords : [coords]) as [number, number, number?][][]
+  const first = segs.find((s) => s.length > 0)?.[0]
+  const lastSeg = [...segs].reverse().find((s) => s.length > 0)
+  const last = lastSeg?.[lastSeg.length - 1]
+  if (!first || !last) return null
+  return { start: [first[0], first[1]], end: [last[0], last[1]] }
+}
 const CATEGORY_COLORS = [
   "#3b82f6",
   "#f59e0b",
@@ -332,6 +384,7 @@ export default function LiveMap({
           coords.length > 0 && Array.isArray((coords[0] as unknown[])[0])
         const colored = segmentsColoredRef.current
 
+        if (map.getLayer("course-arrows")) map.removeLayer("course-arrows")
         if (map.getLayer("course-line")) map.removeLayer("course-line")
 
         if (colored && isMulti) {
@@ -397,6 +450,25 @@ export default function LiveMap({
             },
           })
         }
+
+        // 진행 방향 화살표 — 선을 따라 일정 간격 (스타일을 바꾸면 이미지가 사라지므로 매번 확인)
+        if (!map.hasImage(ARROW_IMAGE)) {
+          map.addImage(ARROW_IMAGE, courseArrowImage(), { pixelRatio: 2 })
+        }
+        map.addLayer({
+          id: "course-arrows",
+          type: "symbol",
+          source: "course",
+          layout: {
+            "symbol-placement": "line",
+            "symbol-spacing": 90,
+            "icon-image": ARROW_IMAGE,
+            "icon-size": ["interpolate", ["linear"], ["zoom"], 10, 0.6, 14, 0.9],
+            "icon-rotation-alignment": "map",
+            "icon-allow-overlap": true,
+            "icon-ignore-placement": true,
+          },
+        })
       }
 
       // 이동 궤적(꼬리) — setData 로 갱신
@@ -440,6 +512,27 @@ export default function LiveMap({
 
     map.on("load", () => {
       applyOverlays(true)
+
+      // 시작·도착 — 50m 안이면 순환 코스로 보고 하나만
+      const ends = courseEnds(course?.coordinates ?? null)
+      if (ends) {
+        const loop =
+          haversineMeters(ends.start[1], ends.start[0], ends.end[1], ends.end[0]) < 50
+        cpMarkersRef.current.push(
+          new mapboxgl.Marker(
+            endpointEl(loop ? "출발·도착" : "출발", "#16a34a"),
+          )
+            .setLngLat(ends.start)
+            .addTo(map),
+        )
+        if (!loop) {
+          cpMarkersRef.current.push(
+            new mapboxgl.Marker(endpointEl("도착", "#111827"))
+              .setLngLat(ends.end)
+              .addTo(map),
+          )
+        }
+      }
 
       // 체크포인트 마커 — DOM 마커라 스타일 변경 시 유지되므로 최초 1회만
       for (const cp of course?.checkpoints ?? []) {
