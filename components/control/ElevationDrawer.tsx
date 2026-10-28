@@ -70,7 +70,7 @@ export default function ElevationDrawer({
           checkpoints={checkpoints}
           selectedId={selectedId}
           onSelect={onSelect}
-          className="h-[150px] md:h-[180px]"
+          className="h-[110px] md:h-[180px]"
         />
       </div>
     </div>

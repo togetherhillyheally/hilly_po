@@ -17,25 +17,25 @@ export default function RaceFinishBanner({
   return (
     <div
       className={
-        "flex items-center gap-5 rounded-xl bg-gradient-to-r from-[#5c1224] to-[#DC2F55] px-6 py-3 text-white shadow-xl " +
+        "flex items-center gap-3 whitespace-nowrap rounded-xl bg-gradient-to-r from-[#5c1224] to-[#DC2F55] px-4 py-2 text-white shadow-xl md:gap-5 md:px-6 md:py-3 " +
         (className ?? "")
       }
     >
-      <span className="text-lg font-extrabold tracking-tight">
+      <span className="text-sm font-extrabold tracking-tight md:text-lg">
         레이스 종료
       </span>
-      <span className="h-8 w-px bg-white/30" />
+      <span className="h-6 w-px bg-white/30 md:h-8" />
       <span className="flex items-baseline gap-1.5">
         <span className="text-xs font-medium text-white/80">스타터</span>
-        <span className="text-xl font-extrabold tabular-nums">{starters}</span>
+        <span className="text-base font-extrabold tabular-nums md:text-xl">{starters}</span>
       </span>
       <span className="flex items-baseline gap-1.5">
         <span className="text-xs font-medium text-white/80">DNF</span>
-        <span className="text-xl font-extrabold tabular-nums">{dnf}</span>
+        <span className="text-base font-extrabold tabular-nums md:text-xl">{dnf}</span>
       </span>
       <span className="flex items-baseline gap-1.5">
         <span className="text-xs font-medium text-white/80">완주자</span>
-        <span className="text-xl font-extrabold tabular-nums">
+        <span className="text-base font-extrabold tabular-nums md:text-xl">
           {finishers}
         </span>
       </span>
