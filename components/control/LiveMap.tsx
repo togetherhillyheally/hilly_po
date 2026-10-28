@@ -463,7 +463,7 @@ export default function LiveMap({
             "symbol-placement": "line",
             "symbol-spacing": 90,
             "icon-image": ARROW_IMAGE,
-            "icon-size": ["interpolate", ["linear"], ["zoom"], 10, 0.6, 14, 0.9],
+            "icon-size": ["interpolate", ["linear"], ["zoom"], 10, 0.8, 14, 1.1],
             "icon-rotation-alignment": "map",
             "icon-allow-overlap": true,
             "icon-ignore-placement": true,
