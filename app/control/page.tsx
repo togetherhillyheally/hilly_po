@@ -13,6 +13,7 @@ import {
   Timer,
   Trash2,
   Users,
+  Zap,
 } from "lucide-react"
 import {
   AlertDialog,
@@ -195,6 +196,12 @@ export default function ControlListPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button asChild variant="outline" title="지도 고르고 기기 켜서 바로 관제">
+            <Link href="/control/quick">
+              <Zap className="mr-1.5 h-4 w-4" />
+              빠른 관제
+            </Link>
+          </Button>
           <Button asChild variant="outline" title="전체 기기 관제 (하드웨어 점검)">
             <Link href="/control/devices">
               <RadioTower className="mr-1.5 h-4 w-4" />
