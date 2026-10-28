@@ -43,6 +43,10 @@ export default function LandingPage() {
               <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[#DC2F55]" />
             </Link>
           </Button>
+          {/* 관제 — 로그인 없이 공개 보기 */}
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/control">관제</Link>
+          </Button>
           <Button
             asChild
             variant="ghost"
