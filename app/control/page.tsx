@@ -188,14 +188,14 @@ export default function ControlListPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">관제</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             트래커 이벤트를 만들고 실시간 위치를 관제해요.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button asChild variant="outline" title="지도 고르고 기기 켜서 바로 관제">
             <Link href="/control/quick">
               <Zap className="mr-1.5 h-4 w-4" />
