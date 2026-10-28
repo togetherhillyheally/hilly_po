@@ -120,6 +120,8 @@ export interface EventCourse {
   center: [number, number] | null
   coordinates: Trail["coordinates"]
   checkpoints: EventCourseCheckpoint[]
+  /** "stamp" = ROUTE(배점 게임), "adventure" = 일반 코스 지도 — 관제 점수는 ROUTE 만 */
+  map_type?: string | null
 }
 
 export interface PublicEventInfo {
@@ -198,6 +200,7 @@ export function parsePublicEventInfo(raw: unknown): PublicEventInfo {
     const cps = Array.isArray(trailRaw.checkpoints) ? trailRaw.checkpoints : []
     trail = {
       name: String(trailRaw.name ?? ""),
+      map_type: typeof trailRaw.map_type === "string" ? trailRaw.map_type : null,
       distance_km: toNumberOrNull(trailRaw.distance_km),
       bounds: parseBounds(trailRaw.bounds),
       center: parseCenter(trailRaw.center),

@@ -241,7 +241,7 @@ export default function LiveAdventureControlPage() {
             onChange={setIs3d}
             className={
               "absolute left-3 z-30 md:bottom-3 " +
-              (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-3")
+              (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-3")
             }
           />
           {/* 고도표 — 지도 아래에서 펼쳐 보기 */}
@@ -255,7 +255,7 @@ export default function LiveAdventureControlPage() {
               onSelect={handleSelect}
               className={
                 "absolute left-20 right-3 z-20 md:bottom-3 md:right-[372px] " +
-                (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-3")
+                (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-3")
               }
             />
           )}

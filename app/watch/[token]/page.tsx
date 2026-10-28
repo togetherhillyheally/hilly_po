@@ -145,15 +145,15 @@ export default function WatchPage() {
         />
 
         {/* 좌상단 이벤트 정보 오버레이 — 모바일은 중앙 컨트롤과 겹치지 않게 폭 제한 */}
-        <header className="absolute left-4 top-4 z-10 max-w-[48vw] rounded-xl border bg-background/85 px-4 py-3 shadow-lg backdrop-blur md:max-w-none">
-          <p className="text-[10px] font-bold tracking-tight text-muted-foreground">
+        <header className="absolute left-3 top-3 z-10 max-w-[60vw] rounded-xl border bg-background/85 px-3 py-2 shadow-lg backdrop-blur md:left-4 md:top-4 md:max-w-none md:px-4 md:py-3">
+          <p className="hidden text-[10px] font-bold tracking-tight text-muted-foreground md:block">
             HILLY HEALLY LIVE
           </p>
-          <h1 className="truncate text-base font-bold leading-tight">
+          <h1 className="truncate text-sm font-bold leading-tight md:text-base">
             {info.title}
           </h1>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-            <span>{isRace ? "대회" : "실시간 위치"}</span>
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground md:text-xs">
+            <span className="hidden md:inline">{isRace ? "대회" : "실시간 위치"}</span>
             {info.trail?.name && <span>{info.trail.name}</span>}
             {courseIndex && (
               <span className="tabular-nums">
@@ -181,7 +181,7 @@ export default function WatchPage() {
           onChange={setIs3d}
           className={
             "absolute left-4 z-30 md:bottom-4 " +
-            (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-4")
+            (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-4")
           }
         />
 
@@ -196,7 +196,7 @@ export default function WatchPage() {
             onSelect={handleSelect}
             className={
               "absolute left-20 right-4 z-20 md:bottom-4 md:right-[376px] " +
-              (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-4")
+              (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-4")
             }
           />
         )}

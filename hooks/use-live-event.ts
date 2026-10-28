@@ -143,7 +143,9 @@ export function useLiveEvent(options: {
   // 상시 관제(모니터)는 긴 궤적(6시간)이 안전 확인에 유용 — 레이스는 30분
   const tailsMinutes = info?.event_type === "monitor" ? 360 : 30
   // 스탬프 게임 점수 집계 대상: trail 이 연결된 모니터 이벤트
-  const hasStampGame = info?.event_type === "monitor" && info?.trail != null
+  // 점수·도장은 ROUTE(map_type=stamp) 지도에서만 — 일반 코스 지도 관제엔 표시하지 않는다
+  const hasStampGame =
+    info?.event_type === "monitor" && info?.trail?.map_type === "stamp"
 
   const pollScores = useCallback(async () => {
     if (!hasStampGame || document.visibilityState === "hidden") return

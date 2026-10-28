@@ -36,7 +36,7 @@ export default function ElevationDrawer({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="mx-auto flex items-center gap-1.5 rounded-full border bg-background/90 px-3.5 py-1.5 text-xs font-semibold text-foreground shadow-lg backdrop-blur hover:bg-background"
+          className="mr-auto flex items-center gap-1.5 rounded-full md:mx-auto border bg-background/90 px-3.5 py-1.5 text-xs font-semibold text-foreground shadow-lg backdrop-blur hover:bg-background"
         >
           <Mountain className="h-3.5 w-3.5" />
           고도표

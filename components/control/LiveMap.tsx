@@ -464,10 +464,7 @@ export default function LiveMap({
           })
         }
 
-        // 진행 방향 화살표 — 선을 따라 일정 간격 (스타일을 바꾸면 이미지가 사라지므로 매번 확인)
-        if (!map.hasImage(ARROW_IMAGE)) {
-          map.addImage(ARROW_IMAGE, courseArrowImage(), { pixelRatio: 2 })
-        }
+        // 진행 방향 화살표 — 선을 따라 일정 간격 (이미지는 styleimagemissing 에서 넣음)
         map.addLayer({
           id: "course-arrows",
           type: "symbol",
@@ -522,6 +519,13 @@ export default function LiveMap({
       }
     }
     applyOverlaysRef.current = applyOverlays
+
+    // 화살표 이미지는 지도가 요청할 때 넣는다 (스타일 전환·제거 도중 addImage 경합 방지)
+    map.on("styleimagemissing", (e: { id: string }) => {
+      if (e.id === ARROW_IMAGE && !map.hasImage(ARROW_IMAGE)) {
+        map.addImage(ARROW_IMAGE, courseArrowImage(), { pixelRatio: 2 })
+      }
+    })
 
     map.on("load", () => {
       applyOverlays(true)

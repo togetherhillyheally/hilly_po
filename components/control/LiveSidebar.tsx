@@ -469,8 +469,8 @@ export default function LiveSidebar({
       className={
         inline
           ? "relative flex w-full flex-col overflow-hidden rounded-2xl border bg-background"
-          : // 모바일: 하단 시트(전폭·절반 높이) / 데스크톱: 우측 패널
-            "absolute inset-x-0 bottom-0 z-20 flex h-1/2 flex-col rounded-t-2xl border-t bg-background/90 backdrop-blur " +
+          : // 모바일: 하단 시트(전폭·40% 높이 — 지도를 더 넓게) / 데스크톱: 우측 패널
+            "absolute inset-x-0 bottom-0 z-20 flex h-[40%] flex-col rounded-t-2xl border-t bg-background/90 backdrop-blur " +
             "md:inset-y-0 md:left-auto md:right-0 md:h-auto md:w-[360px] md:max-w-[88vw] md:rounded-none md:border-l md:border-t-0"
       }
     >

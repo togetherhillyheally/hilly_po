@@ -211,7 +211,7 @@ export default function DevicesControlPage() {
           onChange={setIs3d}
           className={
             "absolute left-3 z-30 md:bottom-3 " +
-            (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-3")
+            (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-3")
           }
         />
         <LiveSidebar
