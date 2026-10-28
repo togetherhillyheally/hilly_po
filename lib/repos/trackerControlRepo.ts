@@ -203,17 +203,31 @@ export const trackerControlRepo = {
     return (data ?? []) as LiveEntry[]
   },
 
-  /** 엔트리별 기기 마지막 수신 시각 — "GPS 대기"(신호는 오는데 위치 없음) 구분용 */
-  async publicSignals(token: string): Promise<Map<string, string | null>> {
+  /** 엔트리별 기기 상태 — 마지막 수신 시각("GPS 대기" 구분)·배터리 */
+  async publicSignals(token: string): Promise<
+    Map<
+      string,
+      {
+        last_seen_at: string | null
+        battery_pct?: number | null
+        battery_mv?: number | null
+      }
+    >
+  > {
     const { data, error } = await getSupabase().rpc(
       "tracker_event_public_signals",
       { p_token: token },
     )
     if (error) throw error
     return new Map(
-      ((data ?? []) as { entry_id: string; last_seen_at: string | null }[]).map(
-        (r) => [r.entry_id, r.last_seen_at],
-      ),
+      (
+        (data ?? []) as {
+          entry_id: string
+          last_seen_at: string | null
+          battery_pct?: number | null
+          battery_mv?: number | null
+        }[]
+      ).map((r) => [r.entry_id, r]),
     )
   },
 

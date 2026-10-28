@@ -108,10 +108,15 @@ export function useLiveEvent(options: {
           .publicSignals(token)
           .catch(() => null)
         if (seen)
-          entries = entries.map((e) => ({
-            ...e,
-            device_last_seen_at: seen.get(e.entry_id) ?? null,
-          }))
+          entries = entries.map((e) => {
+            const s = seen.get(e.entry_id)
+            return {
+              ...e,
+              device_last_seen_at: s?.last_seen_at ?? null,
+              battery_pct: s?.battery_pct ?? null,
+              battery_mv: s?.battery_mv ?? null,
+            }
+          })
       }
       setRanked(
         rankEntries(

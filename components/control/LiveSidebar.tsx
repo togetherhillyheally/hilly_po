@@ -196,9 +196,8 @@ function EntryRow({
   const dimmed =
     (r.status === "stale" || r.status === "noSignal") && !r.finished
   const podium = isRace && r.rank != null && r.rank <= 3
-  const battery = isAdmin
-    ? batteryPercent(r.entry.battery_mv, r.entry.battery_pct)
-    : null
+  // 배터리는 관전 화면에도 보인다 (tracker_event_public_signals)
+  const battery = batteryPercent(r.entry.battery_mv, r.entry.battery_pct)
   const eta = isRace ? formatEta(r.etaAt) : null
   // 레이스: 여기까지의 누적 상승 / 모니터: 현재 해발고도(지형 조회)
   const ascent = isRace && !dimmed ? r.ascentM : null

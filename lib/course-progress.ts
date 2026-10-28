@@ -15,6 +15,13 @@ const WINDOW_FWD_M = 3000
 const BACKTRACK_ACCEPT_COUNT = 2
 export const STALE_MS = 180_000 // 3분 무신호 = '신호 없음'
 
+/** 배터리 잔량 % — 기기가 %로 보고하면 그대로, 아니면 리튬셀 대략치(3500mV=0% ~ 4200mV=100%) */
+export function batteryPercentOf(entry: LiveEntry): number | null {
+  if (entry.battery_pct != null) return entry.battery_pct
+  if (entry.battery_mv == null) return null
+  return Math.min(100, Math.max(0, Math.round(((entry.battery_mv - 3500) / 700) * 100)))
+}
+
 /** GPS 대기 — 기기 신호는 최근에 들어오는데 쓸 만한 위치(fix)가 없음 (실내·하늘 가림 등) */
 export function isGpsWaiting(entry: LiveEntry, now = Date.now()): boolean {
   const seen = entry.device_last_seen_at

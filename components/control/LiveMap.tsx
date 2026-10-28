@@ -12,6 +12,7 @@ import { haversineMeters } from "@/lib/geo"
 import { applyKoreanLabels } from "@/lib/mapbox-locale"
 import { TRAIL_SEGMENT_PALETTE } from "@/lib/trail-palette"
 import {
+  batteryPercentOf,
   isGpsWaiting,
   type RankedEntry,
   STATIONARY_THRESHOLD_SEC,
@@ -271,6 +272,16 @@ function styleMarkerEl(
   const text = document.createElement("span")
   text.textContent = members.length > 1 ? `${label} · ${members.length}명` : label
   chip.appendChild(text)
+  // 배터리 — 한 사람 마커만 (묶인 마커는 목록에서 확인). 20% 이하면 빨갛게
+  const pct = members.length === 1 ? batteryPercentOf(r.entry) : null
+  if (pct != null) {
+    const bat = document.createElement("span")
+    bat.textContent = `🔋${pct}%`
+    bat.className =
+      "ml-1.5 rounded-full px-1.5 text-[10px] font-semibold tabular-nums " +
+      (pct <= 20 ? "bg-red-600 text-white" : "bg-black/25 text-white")
+    chip.appendChild(bat)
+  }
   const sos = members.some((m) => m.status === "sos")
   // 도착자는 신호가 끊겨도 정상 표시 유지
   const noSignal = members.every(
