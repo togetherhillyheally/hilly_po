@@ -15,6 +15,7 @@ import {
   ViewModeSwitch,
   filterDisplayEntries,
 } from "@/components/control/DisplayFilter"
+import ElevationDrawer from "@/components/control/ElevationDrawer"
 import ElevationProfile from "@/components/control/ElevationProfile"
 import EntryManager from "@/components/control/EntryManager"
 import EventFormDialog from "@/components/control/EventFormDialog"
@@ -385,6 +386,21 @@ function ControlRoom({
                   (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-3")
                 }
               />
+              {/* 고도표 — 지도 아래에서 펼쳐 보기 */}
+              {courseIndex && (
+                <ElevationDrawer
+                  index={courseIndex}
+                  entries={visible}
+                  categories={categories}
+                  checkpoints={info?.trail?.checkpoints}
+                  selectedId={selectedId}
+                  onSelect={handleSelect}
+                  className={
+                    "absolute left-20 right-3 z-20 md:bottom-3 md:right-[372px] " +
+                    (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-3")
+                  }
+                />
+              )}
               <LiveSidebar
                 ranked={ranked}
                 eventType={event.event_type}

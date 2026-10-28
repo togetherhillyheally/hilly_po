@@ -16,6 +16,7 @@ import {
 import AdventureScoreboard, {
   teamLabel,
 } from "@/components/control/AdventureScoreboard"
+import ElevationDrawer from "@/components/control/ElevationDrawer"
 import ElevationProfile from "@/components/control/ElevationProfile"
 import LiveMap from "@/components/control/LiveMap"
 import LiveSidebar from "@/components/control/LiveSidebar"
@@ -237,6 +238,21 @@ export default function LiveAdventureControlPage() {
               (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-3")
             }
           />
+          {/* 고도표 — 지도 아래에서 펼쳐 보기 */}
+          {courseIndex && (
+            <ElevationDrawer
+              index={courseIndex}
+              entries={visible}
+              categories={categories}
+              checkpoints={course?.checkpoints}
+              selectedId={selectedId}
+              onSelect={handleSelect}
+              className={
+                "absolute left-20 right-3 z-20 md:bottom-3 md:right-[372px] " +
+                (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-3")
+              }
+            />
+          )}
           <LiveSidebar
             ranked={ranked}
             eventType={eventType}
