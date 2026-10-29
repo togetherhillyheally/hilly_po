@@ -56,6 +56,7 @@ export default function WatchPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("map")
   const [is3d, setIs3d] = useState(true)
   const [panelOpen, setPanelOpen] = useState(true)
+  const [elevOpen, setElevOpen] = useState(false)
   const [terrainElevations, setTerrainElevations] =
     useState<Map<string, number> | null>(null)
   const { favs, toggleFav } = useFavorites(params.token)
@@ -188,6 +189,8 @@ export default function WatchPage() {
           onChange={setIs3d}
           className={
             "absolute left-4 z-30 md:bottom-4 " +
+            // 모바일: 고도표가 펼쳐져 있으면 자리 양보 (데스크톱은 겹치지 않음)
+            (elevOpen ? "hidden md:block " : "") +
             (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-4")
           }
         />
@@ -201,8 +204,11 @@ export default function WatchPage() {
             checkpoints={info.trail?.checkpoints}
             selectedId={selectedId}
             onSelect={handleSelect}
+            onOpenChange={setElevOpen}
             className={
-              "absolute left-20 right-4 z-20 md:bottom-4 md:right-[376px] " +
+              // 모바일: 펼치면 전폭으로 하단 시트에 붙어 시트의 연장처럼 보이게
+              "absolute z-20 md:left-20 md:right-[376px] md:bottom-4 " +
+              (elevOpen ? "left-3 right-3 " : "left-20 right-4 ") +
               (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-4")
             }
           />

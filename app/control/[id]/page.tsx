@@ -148,6 +148,7 @@ function ControlRoom({
   const [viewMode, setViewMode] = useState<ViewMode>("map")
   const [is3d, setIs3d] = useState(true)
   const [panelOpen, setPanelOpen] = useState(true)
+  const [elevOpen, setElevOpen] = useState(false)
   const [terrainElevations, setTerrainElevations] =
     useState<Map<string, number> | null>(null)
   const { favs, toggleFav } = useFavorites(event.id)
@@ -389,6 +390,7 @@ function ControlRoom({
                 onChange={setIs3d}
                 className={
                   "absolute left-3 z-30 md:bottom-3 " +
+                  (elevOpen ? "hidden md:block " : "") +
                   (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-3")
                 }
               />
@@ -401,8 +403,10 @@ function ControlRoom({
                   checkpoints={info?.trail?.checkpoints}
                   selectedId={selectedId}
                   onSelect={handleSelect}
+                  onOpenChange={setElevOpen}
                   className={
-                    "absolute left-20 right-3 z-20 md:bottom-3 md:right-[372px] " +
+                    "absolute z-20 md:left-20 md:right-[372px] md:bottom-3 " +
+                    (elevOpen ? "left-3 right-3 " : "left-20 right-3 ") +
                     (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-3")
                   }
                 />

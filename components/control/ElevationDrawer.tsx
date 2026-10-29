@@ -19,6 +19,7 @@ export default function ElevationDrawer({
   selectedId,
   onSelect,
   className,
+  onOpenChange,
 }: {
   index: CourseIndex
   entries: RankedEntry[]
@@ -27,8 +28,14 @@ export default function ElevationDrawer({
   selectedId?: string | null
   onSelect?: (entryId: string) => void
   className?: string
+  /** 열림/접힘 알림 — 모바일에서 페이지가 패널 폭·주변 컨트롤을 조정할 때 사용 */
+  onOpenChange?: (open: boolean) => void
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, _setOpen] = useState(false)
+  const setOpen = (v: boolean) => {
+    _setOpen(v)
+    onOpenChange?.(v)
+  }
 
   if (!open) {
     return (
