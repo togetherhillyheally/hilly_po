@@ -3,11 +3,10 @@
 import { useRef } from "react"
 import { Ticket } from "lucide-react"
 import { SiteHeader } from "@/components/layout/SiteHeader"
-import { Button } from "@/components/ui/button"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { SignupSheet } from "./SignupSheet"
 
-/** 이벤트 페이지 헤더 — 공통 SiteHeader + "신청하기" 버튼, 프로필 메뉴에 "신청 내역" */
+/** 이벤트 페이지 헤더 — 공통 SiteHeader 그대로, 프로필 메뉴에만 "신청 내역" 추가 (신청하기는 본문에) */
 export function EventHeader() {
   const historyTriggerRef = useRef<HTMLButtonElement>(null)
   return (
@@ -17,16 +16,6 @@ export function EventHeader() {
         <button ref={historyTriggerRef} className="hidden" aria-hidden />
       </SignupSheet>
       <SiteHeader
-        actions={
-          <SignupSheet>
-            <Button
-              size="sm"
-              className="bg-[#DC2F55] text-white hover:bg-[#DC2F55]/90"
-            >
-              신청하기
-            </Button>
-          </SignupSheet>
-        }
         menuItems={
           <DropdownMenuItem
             className="cursor-pointer"
