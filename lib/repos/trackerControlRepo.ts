@@ -175,6 +175,25 @@ export const trackerControlRepo = {
     return (data ?? []) as { id: string; name: string; distance_km: number | null }[]
   },
 
+  /** 관제에서 골라 볼 추가 코스 (대표 코스 외) */
+  async getExtraTrails(eventId: string): Promise<string[]> {
+    const { data, error } = await getSupabase().rpc(
+      "admin_get_tracker_event_extra_trails",
+      { p_event_id: eventId },
+    )
+    if (error) throw error
+    return (data ?? []) as string[]
+  },
+
+  async setExtraTrails(eventId: string, trailIds: string[]): Promise<string[]> {
+    const { data, error } = await getSupabase().rpc(
+      "admin_set_tracker_event_extra_trails",
+      { p_event_id: eventId, p_trail_ids: trailIds },
+    )
+    if (error) throw error
+    return (data ?? []) as string[]
+  },
+
   // ── 실시간 상태 ──
   /** 전역 기기 관제 — 모든 트래커의 최신 위치·수신·배터리·SOS·배정 이벤트 */
   async allDevicesLiveState(): Promise<DeviceLiveRow[]> {

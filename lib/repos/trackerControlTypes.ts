@@ -114,6 +114,8 @@ export interface EventCourseCheckpoint {
 }
 
 export interface EventCourse {
+  /** trails.id — 지도 선택 키 (구버전 RPC 응답엔 없을 수 있음) */
+  id?: string
   name: string
   distance_km: number | null
   bounds: Trail["bounds"]
@@ -132,6 +134,8 @@ export interface PublicEventInfo {
   starts_at: string | null
   ends_at: string | null
   trail: EventCourse | null
+  /** 대표 코스 외에 관제에서 골라 볼 수 있는 추가 코스 (지도 선택) */
+  extra_trails: EventCourse[]
 }
 
 /** 이벤트 확정 결과 한 줄 (tracker_event_results_list 응답) */
@@ -192,13 +196,13 @@ export interface TrackerDevice {
   user_nickname: string | null
 }
 
-export function parsePublicEventInfo(raw: unknown): PublicEventInfo {
-  const o = (raw ?? {}) as Record<string, unknown>
-  const trailRaw = o.trail as Record<string, unknown> | null | undefined
+function parseEventCourse(raw: unknown): EventCourse | null {
+  const trailRaw = raw as Record<string, unknown> | null | undefined
   let trail: EventCourse | null = null
   if (trailRaw && typeof trailRaw === "object") {
     const cps = Array.isArray(trailRaw.checkpoints) ? trailRaw.checkpoints : []
     trail = {
+      id: typeof trailRaw.id === "string" ? trailRaw.id : undefined,
       name: String(trailRaw.name ?? ""),
       map_type: typeof trailRaw.map_type === "string" ? trailRaw.map_type : null,
       distance_km: toNumberOrNull(trailRaw.distance_km),
@@ -223,6 +227,15 @@ export function parsePublicEventInfo(raw: unknown): PublicEventInfo {
         .filter((c): c is EventCourseCheckpoint => c !== null),
     }
   }
+  return trail
+}
+
+export function parsePublicEventInfo(raw: unknown): PublicEventInfo {
+  const o = (raw ?? {}) as Record<string, unknown>
+  const trail = parseEventCourse(o.trail)
+  const extra_trails = (Array.isArray(o.extra_trails) ? o.extra_trails : [])
+    .map(parseEventCourse)
+    .filter((c): c is EventCourse => c !== null)
   return {
     id: String(o.id ?? ""),
     title: String(o.title ?? ""),
@@ -235,5 +248,6 @@ export function parsePublicEventInfo(raw: unknown): PublicEventInfo {
     starts_at: typeof o.starts_at === "string" ? o.starts_at : null,
     ends_at: typeof o.ends_at === "string" ? o.ends_at : null,
     trail,
+    extra_trails,
   }
 }

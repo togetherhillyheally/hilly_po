@@ -341,6 +341,11 @@ export default function LiveMap({
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map())
   const cpMarkersRef = useRef<mapboxgl.Marker[]>([])
   const applyOverlaysRef = useRef<((fitInitial: boolean) => void) | null>(null)
+  const placeCourseMarkersRef = useRef<(() => void) | null>(null)
+  const mapLoadedRef = useRef(false)
+  // 코스는 ref 로 읽는다 — 코스를 바꿔도 지도를 다시 만들지 않고(Mapbox 재과금 방지) 선·마커만 교체
+  const courseRef = useRef(course)
+  courseRef.current = course
   const didFitToEntriesRef = useRef(false)
   const initialStyleMount = useRef(true)
   const segmentsColoredRef = useRef(segmentsColored)
@@ -365,8 +370,8 @@ export default function LiveMap({
     const map = new mapboxgl.Map({
       container: containerRef.current,
       style: MAPBOX_STYLES[mapStyle],
-      center: course?.center ?? DEFAULT_CENTER,
-      zoom: course ? 11 : 6,
+      center: courseRef.current?.center ?? DEFAULT_CENTER,
+      zoom: courseRef.current ? 11 : 6,
       attributionControl: false,
     })
     mapRef.current = map
@@ -389,8 +394,13 @@ export default function LiveMap({
     // 스타일 로드 후 반복 사용 가능한 오버레이 재적용 (마커 재생성 없음)
     const applyOverlays = (fitInitial: boolean) => {
       applyKoreanLabels(map)
+      const course = courseRef.current
 
-      // 코스 라인
+      // 코스 라인 (코스가 없어지면 이전 선 제거)
+      if (!course?.coordinates) {
+        if (map.getLayer("course-arrows")) map.removeLayer("course-arrows")
+        if (map.getLayer("course-line")) map.removeLayer("course-line")
+      }
       if (course?.coordinates) {
         const coords = course.coordinates
         const isMulti =
@@ -527,8 +537,11 @@ export default function LiveMap({
       }
     })
 
-    map.on("load", () => {
-      applyOverlays(true)
+    // 출발·도착 + 체크포인트 DOM 마커 — 코스가 바뀌면 지우고 다시 놓는다
+    const placeCourseMarkers = () => {
+      for (const m of cpMarkersRef.current) m.remove()
+      cpMarkersRef.current = []
+      const course = courseRef.current
 
       // 시작·도착 — 50m 안이면 순환 코스로 보고 하나만
       const ends = courseEnds(course?.coordinates ?? null)
@@ -578,16 +591,47 @@ export default function LiveMap({
           new mapboxgl.Marker(el).setLngLat([cp.lng, cp.lat]).addTo(map),
         )
       }
+    }
+    placeCourseMarkersRef.current = placeCourseMarkers
+
+    map.on("load", () => {
+      mapLoadedRef.current = true
+      applyOverlays(true)
+      placeCourseMarkers()
     })
 
     return () => {
       map.remove()
       mapRef.current = null
+      mapLoadedRef.current = false
       markersRef.current.clear()
       cpMarkersRef.current = []
       didFitToEntriesRef.current = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // 코스 교체 (지도 선택) — 지도는 그대로, 선·화살표·마커만 바꾸고 새 코스에 맞춰 이동
+  const initialCourseMount = useRef(true)
+  useEffect(() => {
+    if (initialCourseMount.current) {
+      initialCourseMount.current = false
+      return
+    }
+    const map = mapRef.current
+    // 아직 load 전이면 load 핸들러가 최신 코스(ref)로 그린다
+    if (!map || !mapLoadedRef.current) return
+    applyOverlaysRef.current?.(false)
+    placeCourseMarkersRef.current?.()
+    if (course?.bounds) {
+      map.fitBounds(
+        [
+          [course.bounds.minLon, course.bounds.minLat],
+          [course.bounds.maxLon, course.bounds.maxLat],
+        ],
+        { padding: 60, duration: 600 },
+      )
+    }
   }, [course])
 
   // 스타일 변경 — setStyle 후 오버레이 재적용 (마커는 DOM 이라 유지)

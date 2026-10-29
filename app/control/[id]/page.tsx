@@ -16,7 +16,8 @@ import {
   filterDisplayEntries,
 } from "@/components/control/DisplayFilter"
 import ElevationDrawer from "@/components/control/ElevationDrawer"
-import { buildProfileIndex } from "@/lib/course-progress"
+import CourseSelect, { useCourseChoice } from "@/components/control/CourseSelect"
+import ExtraCoursesCard from "@/components/control/ExtraCoursesCard"
 import ElevationProfile from "@/components/control/ElevationProfile"
 import EntryManager from "@/components/control/EntryManager"
 import EventFormDialog from "@/components/control/EventFormDialog"
@@ -137,7 +138,7 @@ function ControlRoom({
   event: TrackerEvent
   onEventChanged: () => void
 }) {
-  const { info, courseIndex, ranked, tails, lastPolledAt } = useLiveEvent({
+  const { info, courseIndex, ranked, tails, lastPolledAt, reloadInfo } = useLiveEvent({
     token: event.public_token,
     mode: "admin",
   })
@@ -181,10 +182,9 @@ function ControlRoom({
 
   // 지도/프로필/꼬리에만 적용되는 표시 필터 (사이드바 목록은 전체 유지)
   // 고도표 — 대회가 아니어도(모니터링·빠른 관제) 코스가 있으면 보여준다
-  const profileIndex = useMemo(
-    () => courseIndex ?? buildProfileIndex(info?.trail?.coordinates),
-    [courseIndex, info],
-  )
+  // 지도 선택 — 설정의 추가 지도가 있으면 골라 본다
+  const { courses, activeIdx, setActiveIdx, activeCourse, isMain, profileIndex } =
+    useCourseChoice(info, courseIndex)
   const visible = useMemo(
     () => filterDisplayEntries(ranked, displayMode, favs, categories),
     [ranked, displayMode, favs, categories],
@@ -283,13 +283,21 @@ function ControlRoom({
             <h1 className="text-xl font-bold">{event.title}</h1>
             <p className="text-xs text-muted-foreground">
               {event.event_type === "race" ? "대회" : "모니터링"}
-              {event.trail_name && ` · ${event.trail_name}`}
+              {courses.length <= 1 && event.trail_name && ` · ${event.trail_name}`}
               {lastPolledAt &&
                 ` · 마지막 갱신 ${Math.max(0, Math.round((Date.now() - lastPolledAt) / 1000))}초 전`}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {courses.length > 1 && (
+            <CourseSelect
+              courses={courses}
+              value={activeIdx}
+              onChange={setActiveIdx}
+              className="text-xs"
+            />
+          )}
           {sosCount > 0 && (
             <Badge variant="destructive" className="animate-pulse">
               SOS {sosCount}건
@@ -329,7 +337,7 @@ function ControlRoom({
             <div className={showMap ? "absolute inset-0" : "hidden"}>
               <LiveMap
                 bare
-                course={info?.trail ?? null}
+                course={activeCourse}
                 entries={visible}
                 tails={visibleTails}
                 categories={categories}
@@ -398,9 +406,9 @@ function ControlRoom({
               {profileIndex && (
                 <ElevationDrawer
                   index={profileIndex}
-                  entries={visible}
+                  entries={isMain ? visible : []}
                   categories={categories}
-                  checkpoints={info?.trail?.checkpoints}
+                  checkpoints={activeCourse?.checkpoints}
                   selectedId={selectedId}
                   onSelect={handleSelect}
                   onOpenChange={setElevOpen}
@@ -438,10 +446,10 @@ function ControlRoom({
               >
                 <div className="overflow-hidden rounded-2xl bg-background">
                   <ElevationProfile
-                    index={courseIndex}
-                    entries={visible}
+                    index={profileIndex ?? courseIndex}
+                    entries={isMain ? visible : []}
                     categories={categories}
-                    checkpoints={info?.trail?.checkpoints}
+                    checkpoints={activeCourse?.checkpoints}
                     selectedId={selectedId}
                     onSelect={handleSelect}
                     expanded
@@ -504,6 +512,12 @@ function ControlRoom({
               </Button>
             </div>
           </div>
+
+          <ExtraCoursesCard
+            eventId={event.id}
+            mainTrailId={event.trail_id}
+            onSaved={reloadInfo}
+          />
 
           <div className="space-y-2">
             <h2 className="text-sm font-semibold">이벤트 정보</h2>

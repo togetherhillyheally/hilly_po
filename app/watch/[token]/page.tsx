@@ -10,7 +10,7 @@ import {
   filterDisplayEntries,
 } from "@/components/control/DisplayFilter"
 import ElevationDrawer from "@/components/control/ElevationDrawer"
-import { buildProfileIndex } from "@/lib/course-progress"
+import CourseSelect, { useCourseChoice } from "@/components/control/CourseSelect"
 import ElevationProfile from "@/components/control/ElevationProfile"
 import LiveMap from "@/components/control/LiveMap"
 import LiveSidebar from "@/components/control/LiveSidebar"
@@ -97,10 +97,9 @@ export default function WatchPage() {
 
   // 지도/프로필/꼬리에만 적용되는 표시 필터 (순위 목록은 전체 유지)
   // 고도표 — 대회가 아니어도(모니터링·빠른 관제) 코스가 있으면 보여준다
-  const profileIndex = useMemo(
-    () => courseIndex ?? buildProfileIndex(info?.trail?.coordinates),
-    [courseIndex, info],
-  )
+  // 지도 선택 — 추가 코스가 있으면 골라 본다 (고도표·거리도 선택한 코스 기준)
+  const { courses, activeIdx, setActiveIdx, activeCourse, isMain, profileIndex } =
+    useCourseChoice(info, courseIndex)
   const visible = useMemo(
     () => filterDisplayEntries(ranked, displayMode, favs, categories),
     [ranked, displayMode, favs, categories],
@@ -147,14 +146,14 @@ export default function WatchPage() {
       </h1>
       <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground md:text-xs">
         <span className="hidden md:inline">{isRace ? "대회" : "실시간 위치"}</span>
-        {info.trail?.name && <span>{info.trail.name}</span>}
-        {courseIndex && (
+        <CourseSelect courses={courses} value={activeIdx} onChange={setActiveIdx} />
+        {profileIndex && (
           <span className="tabular-nums">
-            {(courseIndex.totalM / 1000).toFixed(1)}km
+            {(profileIndex.totalM / 1000).toFixed(1)}km
           </span>
         )}
-        {courseIndex?.totalAscentM != null && (
-          <span className="tabular-nums">D+{courseIndex.totalAscentM}m</span>
+        {profileIndex?.totalAscentM != null && (
+          <span className="tabular-nums">D+{profileIndex.totalAscentM}m</span>
         )}
         <span>{ranked.length}명</span>
         {info.status === "live" && info.starts_at && (
@@ -175,14 +174,19 @@ export default function WatchPage() {
           {info.title}
         </h1>
         <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground">
-          {info.trail?.name && <span className="truncate">{info.trail.name}</span>}
-          {courseIndex && (
+          <CourseSelect
+            courses={courses}
+            value={activeIdx}
+            onChange={setActiveIdx}
+            className="max-w-full truncate"
+          />
+          {profileIndex && (
             <span className="tabular-nums">
-              {(courseIndex.totalM / 1000).toFixed(1)}km
+              {(profileIndex.totalM / 1000).toFixed(1)}km
             </span>
           )}
-          {courseIndex?.totalAscentM != null && (
-            <span className="tabular-nums">D+{courseIndex.totalAscentM}m</span>
+          {profileIndex?.totalAscentM != null && (
+            <span className="tabular-nums">D+{profileIndex.totalAscentM}m</span>
           )}
         </p>
       </div>
@@ -228,7 +232,7 @@ export default function WatchPage() {
       <div className={showMap ? "absolute inset-0 overflow-hidden" : "hidden"}>
         <LiveMap
           bare
-          course={info.trail}
+          course={activeCourse}
           entries={visible}
           tails={visibleTails}
           categories={categories}
@@ -272,9 +276,10 @@ export default function WatchPage() {
         {profileIndex && (
           <ElevationDrawer
             index={profileIndex}
-            entries={visible}
+            // 다른 코스를 보는 중엔 참가자 점 숨김 — 진행 거리는 대표 코스 기준이라 위치가 맞지 않음
+            entries={isMain ? visible : []}
             categories={categories}
-            checkpoints={info.trail?.checkpoints}
+            checkpoints={activeCourse?.checkpoints}
             selectedId={selectedId}
             onSelect={handleSelect}
             onOpenChange={setElevOpen}
@@ -320,7 +325,7 @@ export default function WatchPage() {
             </p>
             <h1 className="text-lg font-bold leading-tight">{info.title}</h1>
             <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-              {info.trail?.name && <span>{info.trail.name}</span>}
+              <CourseSelect courses={courses} value={activeIdx} onChange={setActiveIdx} />
               <span>{ranked.length}명</span>
               {info.status === "live" && info.starts_at && (
                 <span>
@@ -332,10 +337,10 @@ export default function WatchPage() {
 
           <div className="overflow-hidden rounded-2xl bg-background">
             <ElevationProfile
-              index={courseIndex}
-              entries={visible}
+              index={profileIndex ?? courseIndex}
+              entries={isMain ? visible : []}
               categories={categories}
-              checkpoints={info.trail?.checkpoints}
+              checkpoints={activeCourse?.checkpoints}
               selectedId={selectedId}
               onSelect={handleSelect}
               expanded

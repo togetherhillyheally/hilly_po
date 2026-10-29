@@ -30,6 +30,8 @@ export interface UseLiveEventResult {
   /** 이벤트를 찾을 수 없음(잘못된 토큰/보관됨) */
   notFound: boolean
   loading: boolean
+  /** 이벤트 정보(코스 등)만 다시 받기 — 설정 변경 직후 */
+  reloadInfo: () => void
 }
 
 /**
@@ -54,6 +56,7 @@ export function useLiveEvent(options: {
   const [lastPolledAt, setLastPolledAt] = useState<number | null>(null)
   const [notFound, setNotFound] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [infoVer, setInfoVer] = useState(0)
 
   const progressMapRef = useRef<Map<string, ProgressState>>(new Map())
   const movementMapRef = useRef<Map<string, MovementAnchor>>(new Map())
@@ -74,8 +77,11 @@ export function useLiveEvent(options: {
   // 이벤트 정보 + 코스 (최초 1회)
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setNotFound(false)
+    // 재조회(infoVer>0)는 화면을 비우지 않고 조용히 교체
+    if (infoVer === 0) {
+      setLoading(true)
+      setNotFound(false)
+    }
     trackerControlRepo
       .publicEventInfo(token)
       .then((i) => {
@@ -84,14 +90,14 @@ export function useLiveEvent(options: {
         setLoading(false)
       })
       .catch(() => {
-        if (cancelled) return
+        if (cancelled || infoVer > 0) return
         setNotFound(true)
         setLoading(false)
       })
     return () => {
       cancelled = true
     }
-  }, [token])
+  }, [token, infoVer])
 
   const eventId = info?.id ?? null
 
@@ -238,5 +244,6 @@ export function useLiveEvent(options: {
     lastPolledAt,
     notFound,
     loading,
+    reloadInfo: useCallback(() => setInfoVer((v) => v + 1), []),
   }
 }
