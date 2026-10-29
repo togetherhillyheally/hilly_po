@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { ArrowLeft, Link2, Pencil, Mountain } from "lucide-react"
+import { ArrowLeft, Link2, Pencil } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -394,22 +394,7 @@ function ControlRoom({
                   (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-3")
                 }
               />
-              {/* 모바일 + 고도 뷰가 있는 대회: 고도표 버튼은 전체 화면 고도 뷰로 전환 */}
-              {hasProfileView && (
-                <button
-                  type="button"
-                  onClick={() => setViewMode("profile")}
-                  className={
-                    "absolute left-20 z-20 flex items-center gap-1.5 rounded-full border bg-background/90 px-3.5 py-1.5 text-xs font-semibold text-foreground shadow-lg backdrop-blur md:hidden " +
-                    (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-3")
-                  }
-                >
-                  <Mountain className="h-3.5 w-3.5" />
-                  고도표
-                </button>
-              )}
-
-              {/* 고도표 — 지도 아래에서 펼쳐 보기 (대회 모바일은 위 버튼이 대신) */}
+              {/* 고도표 — 지도 아래에서 펼쳐 보기 (대회 모바일은 상단 지도/고도 전환이 대신) */}
               {profileIndex && (
                 <ElevationDrawer
                   index={profileIndex}

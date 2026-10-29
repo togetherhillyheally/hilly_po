@@ -16,7 +16,6 @@ import LiveMap from "@/components/control/LiveMap"
 import LiveSidebar from "@/components/control/LiveSidebar"
 import LiveTableWide from "@/components/control/LiveTableWide"
 import RaceFinishBanner from "@/components/control/RaceFinishBanner"
-import { Mountain } from "lucide-react"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useLiveEvent } from "@/hooks/use-live-event"
 
@@ -120,11 +119,39 @@ export default function WatchPage() {
   const hasProfileView = isRace && courseIndex != null
   const showMap = viewMode === "map" || !hasProfileView
 
+  // 이벤트 정보 — 데스크톱은 지도 좌상단, 모바일은 하단 시트 맨 위 (시트를 접으면 지도 위로)
+  const eventInfo = (
+    <>
+      <h1 className="truncate text-sm font-bold leading-tight md:text-base">
+        {info.title}
+      </h1>
+      <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground md:text-xs">
+        <span className="hidden md:inline">{isRace ? "대회" : "실시간 위치"}</span>
+        {info.trail?.name && <span>{info.trail.name}</span>}
+        {courseIndex && (
+          <span className="tabular-nums">
+            {(courseIndex.totalM / 1000).toFixed(1)}km
+          </span>
+        )}
+        {courseIndex?.totalAscentM != null && (
+          <span className="tabular-nums">D+{courseIndex.totalAscentM}m</span>
+        )}
+        <span>{ranked.length}명</span>
+        {info.status === "live" && info.starts_at && (
+          <span>
+            <ElapsedClock startsAt={info.starts_at} />
+          </span>
+        )}
+        {info.status === "finished" && <span>종료된 이벤트</span>}
+      </p>
+    </>
+  )
+
   return (
     <main className="theme-light relative min-h-[100dvh] w-full bg-background text-foreground">
-      {/* 상단 중앙 — 뷰 전환만 */}
+      {/* 뷰 전환 — 모바일은 좌상단(우상단 줌 버튼과 겹치지 않게), 데스크톱은 상단 중앙 */}
       {hasProfileView && (
-        <div className="fixed right-3 top-3 z-30 md:left-1/2 md:right-auto md:top-4 md:-translate-x-1/2">
+        <div className="fixed left-3 top-3 z-30 md:left-1/2 md:top-4 md:-translate-x-1/2">
           <ViewModeSwitch mode={viewMode} onChange={setViewMode} />
         </div>
       )}
@@ -153,35 +180,18 @@ export default function WatchPage() {
           className="absolute inset-0"
         />
 
-        {/* 좌상단 이벤트 정보 오버레이 — 모바일은 중앙 컨트롤과 겹치지 않게 폭 제한 */}
-        <header className="absolute left-3 top-3 z-10 max-w-[55vw] rounded-xl border bg-background/85 px-3 py-2 shadow-lg backdrop-blur md:left-4 md:top-4 md:max-w-none md:px-4 md:py-3">
+        {/* 좌상단 이벤트 정보 오버레이 — 모바일은 시트 안에 있으므로 시트를 접었을 때만 */}
+        <header
+          className={
+            "absolute left-3 z-10 max-w-[calc(100%-4.5rem)] rounded-xl border bg-background/85 px-3 py-2 shadow-lg backdrop-blur md:left-4 md:top-4 md:block md:max-w-none md:px-4 md:py-3 " +
+            (hasProfileView ? "top-16 " : "top-3 ") +
+            (panelOpen ? "hidden" : "")
+          }
+        >
           <p className="hidden text-[10px] font-bold tracking-tight text-muted-foreground md:block">
             HILLY HEALLY LIVE
           </p>
-          <h1 className="truncate text-sm font-bold leading-tight md:text-base">
-            {info.title}
-          </h1>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground md:text-xs">
-            <span className="hidden md:inline">{isRace ? "대회" : "실시간 위치"}</span>
-            {info.trail?.name && <span>{info.trail.name}</span>}
-            {courseIndex && (
-              <span className="tabular-nums">
-                {(courseIndex.totalM / 1000).toFixed(1)}km
-              </span>
-            )}
-            {courseIndex?.totalAscentM != null && (
-              <span className="tabular-nums">
-                D+{courseIndex.totalAscentM}m
-              </span>
-            )}
-            <span>{ranked.length}명</span>
-            {info.status === "live" && info.starts_at && (
-              <span>
-                <ElapsedClock startsAt={info.starts_at} />
-              </span>
-            )}
-            {info.status === "finished" && <span>종료된 이벤트</span>}
-          </p>
+          {eventInfo}
         </header>
 
         {/* 2D/3D — 좌측 아래 (모바일 하단 시트가 열려 있으면 시트 위로) */}
@@ -196,23 +206,8 @@ export default function WatchPage() {
           }
         />
 
-        {/* 모바일 + 고도 뷰가 있는 대회: 고도표 버튼은 전체 화면 고도 뷰로 전환 */}
-        {hasProfileView && (
-          <button
-            type="button"
-            onClick={() => setViewMode("profile")}
-            className={
-              "absolute left-20 z-20 flex items-center gap-1.5 rounded-full border bg-background/90 px-3.5 py-1.5 text-xs font-semibold text-foreground shadow-lg backdrop-blur md:hidden " +
-              (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-4")
-            }
-          >
-            <Mountain className="h-3.5 w-3.5" />
-            고도표
-          </button>
-        )}
-
         {/* 고도표 — 지도 아래에서 펼쳐 보기 (데스크톱은 사이드바 왼쪽, 모바일은 하단 시트 위)
-            대회(고도 뷰 있음)의 모바일에선 위 버튼이 대신하므로 숨김 */}
+            대회(고도 뷰 있음)의 모바일에선 상단 지도/고도 전환이 대신하므로 숨김 */}
         {profileIndex && (
           <ElevationDrawer
             index={profileIndex}
@@ -246,6 +241,7 @@ export default function WatchPage() {
           displayMode={displayMode}
           onDisplayModeChange={setDisplayMode}
           onOpenChange={setPanelOpen}
+          mobileHeader={eventInfo}
         />
       </div>
 

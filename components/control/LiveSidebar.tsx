@@ -50,6 +50,8 @@ export type LiveSidebarProps = {
   noun?: string
   /** 출발 전 — 신호 없음을 빨간 경고 대신 중립 "출발 대기"로 */
   preStart?: boolean
+  /** 모바일 하단 시트 맨 위에 넣을 이벤트 정보 — 지도 위 오버레이 대신 (데스크톱은 숨김) */
+  mobileHeader?: React.ReactNode
 }
 
 /** 1~3위 카드 — 색 구분 없이 살짝 도드라진 배경만 */
@@ -388,6 +390,7 @@ export default function LiveSidebar({
   onOpenChange,
   noun = "참가자",
   preStart = false,
+  mobileHeader,
 }: LiveSidebarProps) {
   const [open, _setOpen] = useState(true)
   const setOpen = (v: boolean) => {
@@ -512,6 +515,10 @@ export default function LiveSidebar({
             <ChevronsDown className="h-4 w-4" />
           </Button>
         </>
+      )}
+
+      {mobileHeader && !inline && (
+        <div className="border-b px-4 pb-2 pt-4 md:hidden">{mobileHeader}</div>
       )}
 
       <div className="flex items-center border-b px-3 py-2.5">
