@@ -20,7 +20,14 @@ import { useFavorites } from "@/hooks/use-favorites"
 import { useLiveEvent } from "@/hooks/use-live-event"
 
 /** 경과 시계 — 1초마다 갱신. 출발 전엔 "출발까지" 카운트다운으로 */
-function ElapsedClock({ startsAt }: { startsAt: string }) {
+function ElapsedClock({
+  startsAt,
+  stacked = false,
+}: {
+  startsAt: string
+  /** 라벨을 작게 위에, 시각은 크게 — 모바일 시트 헤더용 */
+  stacked?: boolean
+}) {
   const [, setTick] = useState(0)
   useEffect(() => {
     const t = setInterval(() => setTick((v) => v + 1), 1000)
@@ -30,6 +37,19 @@ function ElapsedClock({ startsAt }: { startsAt: string }) {
   const pre = diff < 0
   const sec = Math.abs(diff)
   const pad = (n: number) => String(n).padStart(2, "0")
+  const hms = `${pad(Math.floor(sec / 3600))}:${pad(Math.floor((sec % 3600) / 60))}:${pad(sec % 60)}`
+  if (stacked) {
+    return (
+      <span className="flex flex-col items-end leading-none">
+        <span className="text-[10px] font-semibold text-muted-foreground">
+          {pre ? "출발까지" : "경과"}
+        </span>
+        <span className="mt-1 text-lg font-bold tabular-nums text-foreground">
+          {hms}
+        </span>
+      </span>
+    )
+  }
   return (
     <span className={pre ? "font-semibold text-foreground/80" : undefined}>
       {pre ? "출발까지 " : "경과 "}
@@ -147,6 +167,47 @@ export default function WatchPage() {
     </>
   )
 
+  // 모바일 시트 헤더 — 인원·경과 시간을 오른쪽에 크게
+  const sheetInfo = (
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <h1 className="truncate text-sm font-bold leading-tight">
+          {info.title}
+        </h1>
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground">
+          {info.trail?.name && <span className="truncate">{info.trail.name}</span>}
+          {courseIndex && (
+            <span className="tabular-nums">
+              {(courseIndex.totalM / 1000).toFixed(1)}km
+            </span>
+          )}
+          {courseIndex?.totalAscentM != null && (
+            <span className="tabular-nums">D+{courseIndex.totalAscentM}m</span>
+          )}
+        </p>
+      </div>
+      <div className="flex shrink-0 items-end gap-3">
+        <span className="flex flex-col items-end leading-none">
+          <span className="text-[10px] font-semibold text-muted-foreground">
+            인원
+          </span>
+          <span className="mt-1 text-lg font-bold tabular-nums">
+            {ranked.length}
+            <span className="ml-0.5 text-xs font-semibold">명</span>
+          </span>
+        </span>
+        {info.status === "live" && info.starts_at && (
+          <ElapsedClock startsAt={info.starts_at} stacked />
+        )}
+        {info.status === "finished" && (
+          <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">
+            종료
+          </span>
+        )}
+      </div>
+    </div>
+  )
+
   return (
     <main className="theme-light relative min-h-[100dvh] w-full bg-background text-foreground">
       {/* 뷰 전환 — 모바일은 좌상단(우상단 줌 버튼과 겹치지 않게), 데스크톱은 상단 중앙 */}
@@ -241,7 +302,7 @@ export default function WatchPage() {
           displayMode={displayMode}
           onDisplayModeChange={setDisplayMode}
           onOpenChange={setPanelOpen}
-          mobileHeader={eventInfo}
+          mobileHeader={sheetInfo}
         />
       </div>
 
