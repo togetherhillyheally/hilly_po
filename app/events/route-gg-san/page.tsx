@@ -24,7 +24,7 @@ import { CourseMapLazy } from "@/components/events/CourseMapLazy"
 import { NATSEONGOT as EV } from "@/lib/events"
 import { COURSE, CPS, TIERS, TIER_COLOR } from "@/lib/events/gwanggyo-cps"
 import { SignupSheet } from "./SignupSheet"
-import { UserChip } from "./UserChip"
+import { EventHeader } from "./EventHeader"
 
 export const metadata: Metadata = {
   title: "ROUTE @광교산 | 힐리힐리",
@@ -238,38 +238,8 @@ export default function NatseongotPage() {
 
   return (
     <main className="event-readable mx-auto max-w-6xl break-keep px-6">
-      {/* 헤더 */}
-      <header className="flex h-16 items-center justify-between">
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-sm font-bold tracking-tight"
-        >
-          <Image
-            src="/images/logo.png"
-            alt="Hilly Heally 로고"
-            width={28}
-            height={28}
-            priority
-          />
-          <span>
-            HILLY HEALLY{" "}
-            <span className="hidden text-muted-foreground sm:inline">
-              GROUND
-            </span>
-          </span>
-        </Link>
-        <div className="flex items-center gap-1.5">
-          <SignupSheet>
-            <Button
-              size="sm"
-              className="bg-[#DC2F55] text-white hover:bg-[#DC2F55]/90"
-            >
-              신청하기
-            </Button>
-          </SignupSheet>
-          <UserChip />
-        </div>
-      </header>
+      {/* 헤더 — 사이트 공통 헤더 + 신청하기 */}
+      <EventHeader />
 
       {/* 히어로 */}
       <section className="py-14 sm:py-20">

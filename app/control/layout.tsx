@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import type { ReactNode } from "react"
-import { MapsHeader } from "@/components/layout/MapsHeader"
+import { SiteHeader } from "@/components/layout/SiteHeader"
 
 // 슈퍼관리자 전용 영역 — 검색 색인 제외
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function ControlLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-[100dvh]">
-      <MapsHeader />
+      <SiteHeader layout="app" />
       {children}
     </div>
   )

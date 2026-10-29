@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { type ReactNode, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { LogOut } from "lucide-react"
+import Link from "next/link"
+import { LayoutGrid, LogOut } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -28,8 +29,9 @@ function formatPhone(phone: string | undefined | null): string | null {
   return digits
 }
 
-/** 헤더 우측 프로필 아바타 — 클릭 시 내 정보 + 로그아웃 메뉴 */
-export function ProfileMenu() {
+/** 헤더 우측 프로필 칩(작은 아바타 + 닉네임) — 클릭 시 내 정보 · 내 지도 · {menuItems} · 로그아웃.
+ *  SiteHeader 전용 — 모든 화면이 같은 모양·위치 */
+export function ProfileMenu({ menuItems }: { menuItems?: ReactNode }) {
   const router = useRouter()
   const { user } = useCurrentUser()
   const [profile, setProfile] = useState<{
@@ -65,11 +67,11 @@ export function ProfileMenu() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
-          className="h-9 w-9 rounded-full"
+          size="sm"
           title={nickname}
+          className="max-w-[180px] gap-2 pl-1.5 text-foreground/90"
         >
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-7 w-7">
             {profile?.avatar_url && (
               <AvatarImage src={profile.avatar_url} alt={nickname} />
             )}
@@ -77,6 +79,8 @@ export function ProfileMenu() {
               {nickname.slice(0, 1)}
             </AvatarFallback>
           </Avatar>
+          {/* 모바일은 메뉴 자리를 위해 아바타만 */}
+          <span className="hidden truncate text-sm sm:inline">{nickname}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
@@ -88,6 +92,14 @@ export function ProfileMenu() {
             </p>
           )}
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <Link href="/maps">
+            <LayoutGrid className="mr-2 h-4 w-4" />
+            내 지도
+          </Link>
+        </DropdownMenuItem>
+        {menuItems}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer"

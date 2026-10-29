@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { NATSEONGOT as EV, callEventFn } from "@/lib/events"
+import { SiteHeader } from "@/components/layout/SiteHeader"
 import { clearDraft } from "../draft"
 
 export function SuccessClient() {
@@ -58,11 +59,7 @@ export function SuccessClient() {
 
   return (
     <main className="event-readable mx-auto max-w-6xl break-keep px-6">
-      <header className="flex h-16 items-center">
-        <Link href="/" className="text-sm font-bold tracking-tight">
-          HILLY HEALLY <span className="text-muted-foreground">GROUND</span>
-        </Link>
-      </header>
+      <SiteHeader />
 
       <div className="flex min-h-[70dvh] items-center justify-center py-12">
         <div className="w-full max-w-lg">
