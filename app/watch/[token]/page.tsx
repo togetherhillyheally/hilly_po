@@ -130,9 +130,11 @@ export default function WatchPage() {
   }
 
   const isRace = info.event_type === "race"
+  // 준비중(draft)도 공개 — 진행중과 같이 카운트다운·경과 시계를 보여준다
+  const isOpen = info.status === "live" || info.status === "draft"
   // 출발 전 — 신호 없음을 빨간 경고 대신 "출발 대기"로 보여준다 (기기는 출발 직전에 켠다)
   const preStart =
-    info.status === "live" &&
+    isOpen &&
     info.starts_at != null &&
     new Date(info.starts_at).getTime() > Date.now()
   const hasProfileView = isRace && courseIndex != null
@@ -157,7 +159,7 @@ export default function WatchPage() {
           <span className="tabular-nums">D+{profileIndex.totalAscentM}m</span>
         )}
         <span>{ranked.length}명</span>
-        {info.status === "live" && info.starts_at && (
+        {isOpen && info.starts_at && (
           <span>
             <ElapsedClock startsAt={info.starts_at} />
           </span>
@@ -198,7 +200,7 @@ export default function WatchPage() {
             <span className="ml-0.5 text-xs font-semibold">명</span>
           </span>
         </span>
-        {info.status === "live" && info.starts_at && (
+        {isOpen && info.starts_at && (
           <ElapsedClock startsAt={info.starts_at} stacked />
         )}
         {info.status === "finished" && (
@@ -332,7 +334,7 @@ export default function WatchPage() {
             <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
               {activeCourse?.name && <span>{activeCourse.name}</span>}
               <span>{ranked.length}명</span>
-              {info.status === "live" && info.starts_at && (
+              {isOpen && info.starts_at && (
                 <span>
                   <ElapsedClock startsAt={info.starts_at} />
                 </span>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGrid, Radio } from "lucide-react";
 import { ProfileMenu } from "@/components/layout/ProfileMenu";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { useSuperAdmin } from "@/hooks/use-super-admin";
 
@@ -15,6 +16,14 @@ export function MapsHeader() {
   const isEditor = /^\/maps\/[^/]+\/edit/.test(pathname);
   const isControl = pathname.startsWith("/control");
   const { isAdmin } = useSuperAdmin();
+  // 관제는 홈과 같은 공개 헤더 (메뉴 통일) — 전체 폭 화면이라 좌우 여백만 맞춘다
+  if (isControl) {
+    return (
+      <div className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
+        <SiteHeader className="h-14 px-4" />
+      </div>
+    );
+  }
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
       {/* 지도만들기/LIVE 모두 동일하게 좌측 정렬(전체 폭) — 화면 전환 시 타이틀 위치 고정 */}

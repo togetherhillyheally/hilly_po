@@ -481,7 +481,7 @@ function ControlRoom({
           <div className="space-y-2">
             <h2 className="text-sm font-semibold">이벤트 상태</h2>
             <p className="text-xs text-muted-foreground">
-              진행중/종료 상태에서만 관전 링크가 열려요. 보관하면 링크가
+              준비중·진행중·종료 상태에선 관전 링크가 열려요. 보관하면 링크가
               닫혀요.
             </p>
             <div className="flex gap-2">

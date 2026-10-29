@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { SiteHeader } from "@/components/layout/SiteHeader"
 import { HeroMapLazy } from "@/components/landing/HeroMapLazy"
 import { NATSEONGOT } from "@/lib/events"
 import { Reveal } from "@/components/landing/Reveal"
@@ -31,32 +32,8 @@ const STEPS = [
 export default function LandingPage() {
   return (
     <main className="mx-auto max-w-6xl px-6">
-      {/* 헤더 */}
-      <header className="flex h-16 items-center justify-between">
-        <span className="text-sm font-bold tracking-tight">
-          HILLY HEALLY <span className="text-muted-foreground">GROUND</span>
-        </span>
-        <div className="flex items-center gap-1">
-          <Button asChild variant="ghost" size="sm" className="relative">
-            <Link href={NATSEONGOT.path}>
-              이벤트
-              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[#DC2F55]" />
-            </Link>
-          </Button>
-          {/* 관제 — 로그인 없이 공개 보기 */}
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/control">관제</Link>
-          </Button>
-          <Button
-            asChild
-            variant="ghost"
-            size="sm"
-            className="hover:bg-[#DC2F55] hover:text-white"
-          >
-            <Link href="/login">로그인</Link>
-          </Button>
-        </div>
-      </header>
+      {/* 헤더 — 관제(/control)와 같은 공통 헤더 */}
+      <SiteHeader />
 
       {/* 모집 중 이벤트 — ROUTE @광교산 (가장 먼저, 가장 크게) */}
       <section className="pb-4 pt-6">
