@@ -11,7 +11,8 @@ import { NATSEONGOT } from "@/lib/events"
 
 /**
  * 사이트 공통 헤더 — 홈·이벤트·관제·내 지도·결제 결과가 모두 이 컴포넌트 하나를 쓴다.
- *  [로고 HILLY HEALLY GROUND]        이벤트 · 관제 · {actions} · (로그인 | 프로필 칩)
+ *  [로고 HILLY HEALLY GROUND]        {actions} | 이벤트 · 관제 · (로그인 | 프로필 칩)
+ *  공통 메뉴는 오른쪽 끝에 고정 — 페이지 전용 버튼은 그 왼쪽에 붙여 메뉴 위치가 페이지마다 바뀌지 않게
  *
  * 모든 화면 같은 구조: 바깥은 전체 폭·상단 고정·하단 경계선, 안쪽은 본문과 같은 max-w-6xl 가운데 정렬.
  * 페이지 본문 컨테이너 "밖"에 둔다.
@@ -56,38 +57,43 @@ export function SiteHeader({
           </span>
         </Link>
 
-        <nav className="flex min-w-0 items-center gap-1">
-          <Button
-            asChild
-            variant="ghost"
-            size="sm"
-            className={"relative " + navClass(NATSEONGOT.path)}
-          >
-            <Link href={NATSEONGOT.path}>
-              이벤트
-              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[#DC2F55]" />
-            </Link>
-          </Button>
-          {/* 관제 — 로그인 없이 공개 보기 */}
-          <Button asChild variant="ghost" size="sm" className={navClass("/control")}>
-            <Link href="/control">관제</Link>
-          </Button>
-          {actions}
-          {/* 로그인 상태 확인 전엔 비워 둔다 (로그인 버튼 깜빡임 방지) */}
-          {!loading &&
-            (user ? (
-              <ProfileMenu menuItems={menuItems} />
+        <div className="flex min-w-0 items-center gap-2">
+          {actions && <div className="flex items-center gap-1.5">{actions}</div>}
+          <nav className="flex items-center gap-1">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className={"relative " + navClass(NATSEONGOT.path)}
+            >
+              <Link href={NATSEONGOT.path}>
+                이벤트
+                <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[#DC2F55]" />
+              </Link>
+            </Button>
+            {/* 관제 — 로그인 없이 공개 보기 */}
+            <Button asChild variant="ghost" size="sm" className={navClass("/control")}>
+              <Link href="/control">관제</Link>
+            </Button>
+            {/* 로그인 상태 확인 전엔 아바타 크기 자리만 잡아 둔다 (메뉴가 밀리거나 로그인 버튼이 깜빡이지 않게) */}
+            {loading ? (
+              <span className="h-9 w-9" aria-hidden />
             ) : (
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className="hover:bg-[#DC2F55] hover:text-white"
-              >
-                <Link href={`/login?next=${encodeURIComponent(next)}`}>로그인</Link>
-              </Button>
-            ))}
-        </nav>
+              user ? (
+                <ProfileMenu menuItems={menuItems} />
+              ) : (
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="hover:bg-[#DC2F55] hover:text-white"
+                >
+                  <Link href={`/login?next=${encodeURIComponent(next)}`}>로그인</Link>
+                </Button>
+              )
+            )}
+          </nav>
+        </div>
       </div>
     </header>
   )

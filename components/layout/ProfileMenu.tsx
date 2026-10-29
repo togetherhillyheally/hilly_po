@@ -79,8 +79,10 @@ export function ProfileMenu({ menuItems }: { menuItems?: ReactNode }) {
               {nickname.slice(0, 1)}
             </AvatarFallback>
           </Avatar>
-          {/* 모바일은 메뉴 자리를 위해 아바타만 */}
-          <span className="hidden truncate text-sm sm:inline">{nickname}</span>
+          {/* 모바일은 메뉴 자리를 위해 아바타만. 닉네임은 불러온 뒤에만 ("내 계정"→닉네임 폭 변화 방지) */}
+          {profile && (
+            <span className="hidden truncate text-sm sm:inline">{nickname}</span>
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
