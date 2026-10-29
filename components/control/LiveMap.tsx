@@ -562,6 +562,13 @@ export default function LiveMap({
           .map((d) => `<path d="${d}"/>`)
           .join("")}</svg>`
         el.title = cp.title
+        // 이름 라벨 — 아이콘 아래에 작게 (absolute 라 마커 기준점은 아이콘 중심 그대로)
+        const label = document.createElement("span")
+        label.className =
+          "pointer-events-none absolute left-1/2 top-full mt-0.5 -translate-x-1/2 whitespace-nowrap rounded bg-white/85 px-1 text-[10px] font-semibold leading-[14px] text-neutral-800 shadow-sm"
+        label.textContent = cp.title
+        el.style.position = "relative"
+        el.appendChild(label)
         el.addEventListener("click", (ev) => {
           ev.stopPropagation()
           onCheckpointSelectRef.current?.(cp)
