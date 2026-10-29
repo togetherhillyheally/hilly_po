@@ -273,6 +273,11 @@ export default function NatseongotPage() {
             <Button asChild size="lg" variant="outline" className="h-12 px-8 text-base">
               <a href="#game">게임 보기</a>
             </Button>
+            <SignupSheet intent="history">
+              <Button size="lg" variant="ghost" className="h-12 px-5 text-base">
+                신청 내역
+              </Button>
+            </SignupSheet>
           </div>
         </Reveal>
       </section>

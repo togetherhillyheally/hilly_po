@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, ChevronRight, Loader2, Ticket } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -34,10 +34,13 @@ function formatOrderDate(x: MySignupData): string {
 export function SignupSheet({
   children,
   intent = "signup",
+  autoOpen = false,
 }: {
   children: ReactNode
   /** signup: 신청 버튼(내역 없으면 폼) / history: 신청 내역(없으면 빈 상태 안내) */
   intent?: "signup" | "history"
+  /** 페이지 들어오자마자 열기 — 문자·디스코드의 신청 내역 바로가기(?mine=1) */
+  autoOpen?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [authed, setAuthed] = useState<boolean | null>(null)
@@ -78,7 +81,9 @@ export function SignupSheet({
 
   const handleOpenChange = (next: boolean) => {
     if (next && authed === false) {
-      router.push(`/login?next=${encodeURIComponent(EV.path)}`)
+      // 신청 내역은 로그인 뒤 내역 창이 바로 열리도록 돌아온다
+      const back = intent === "history" ? `${EV.path}?mine=1` : EV.path
+      router.push(`/login?next=${encodeURIComponent(back)}`)
       return
     }
     if (next) {
@@ -89,6 +94,15 @@ export function SignupSheet({
     }
     setOpen(next)
   }
+
+  // 바로가기로 들어오면 로그인 확인이 끝난 뒤 한 번만 연다
+  const autoOpenedRef = useRef(false)
+  useEffect(() => {
+    if (!autoOpen || authed === null || autoOpenedRef.current) return
+    autoOpenedRef.current = true
+    handleOpenChange(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpen, authed])
 
   const loading = intent === "history" && list === undefined
   const selected = list?.find((x) => x.orderId === selectedId) ?? null
