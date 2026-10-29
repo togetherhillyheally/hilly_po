@@ -181,15 +181,17 @@ export default function LiveTableWide({
   return (
     <div>
       {/* 필터 + 검색 */}
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+      {/* 한 줄 유지 — 검색창은 필터 오른쪽 끝, 좁은 화면에선 남는 폭만큼 줄어듦 */}
+      <div className="mb-3 flex items-center justify-between gap-2">
         <DisplayFilterControl
           mode={displayMode}
           onChange={onDisplayModeChange}
           isRace={isRace}
           favCount={favs.size}
           categories={categories}
+          className="shrink-0"
         />
-        <div className="relative w-64 max-w-full">
+        <div className="relative w-64 min-w-0 flex-1 md:flex-none">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
@@ -203,7 +205,7 @@ export default function LiveTableWide({
       <div className="overflow-x-auto">
         <table className="w-full border-separate border-spacing-y-1 text-sm">
           <thead>
-            <tr className="text-left text-xs text-muted-foreground">
+            <tr className="whitespace-nowrap text-left text-xs text-muted-foreground">
               {isRace && <th className="w-24 px-4 py-1 font-medium">등위</th>}
               <th className="px-3 py-1 font-medium">러너</th>
               {categories.length > 0 && (

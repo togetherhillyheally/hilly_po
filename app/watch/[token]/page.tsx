@@ -324,7 +324,7 @@ export default function WatchPage() {
               <span>{ranked.length}명</span>
               {info.status === "live" && info.starts_at && (
                 <span>
-                  경과 <ElapsedClock startsAt={info.starts_at} />
+                  <ElapsedClock startsAt={info.starts_at} />
                 </span>
               )}
             </p>
