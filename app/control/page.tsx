@@ -10,6 +10,7 @@ import {
   Radio,
   RadioTower,
   Route,
+  ShieldCheck,
   Timer,
   Trash2,
   Users,
@@ -195,8 +196,13 @@ export default function ControlListPage() {
               : "진행 중인 행사와 모험을 실시간으로 볼 수 있어요."}
           </p>
         </div>
+        {/* 관리자 전용 도구 — 점선 상자 + "관리자" 표시로 일반 관람객용 화면과 구분 */}
         {isAdmin && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-foreground/20 p-1.5 pl-3">
+          <span className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            관리자
+          </span>
           <Button asChild variant="outline" title="지도 고르고 기기 켜서 바로 관제">
             <Link href="/control/quick">
               <Zap className="mr-1.5 h-4 w-4" />
@@ -348,7 +354,8 @@ export default function ControlListPage() {
         )
       })}
 
-      {/* ── 모험 라이브 (앱 hiking_sessions) ── */}
+      {/* ── 모험 라이브 (앱 hiking_sessions) — 진행 중인 모험이 없으면 섹션째 숨김 ── */}
+      {adventures && adventures.length > 0 && (
       <section>
         <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
           <span className="relative flex h-2 w-2">
@@ -358,15 +365,7 @@ export default function ControlListPage() {
           모험 라이브
           <span className="font-normal">앱에서 진행 중인 모험</span>
         </h2>
-        {adventures === null ? (
-          <p className="rounded-2xl border px-4 py-10 text-center text-sm text-muted-foreground">
-            불러오는 중…
-          </p>
-        ) : adventures.length === 0 ? (
-          <p className="rounded-2xl border px-4 py-10 text-center text-sm text-muted-foreground">
-            지금 진행 중인 모험이 없어요.
-          </p>
-        ) : (
+        {(
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {adventures.map((a) => {
               const card = a.trail_id ? trailCards.get(a.trail_id) : null
@@ -427,6 +426,7 @@ export default function ControlListPage() {
           </div>
         )}
       </section>
+      )}
 
       <EventFormDialog
         open={formOpen}
