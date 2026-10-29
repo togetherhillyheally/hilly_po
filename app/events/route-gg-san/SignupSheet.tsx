@@ -190,6 +190,7 @@ export function SignupSheet({
                         참가자 {x.partySize ?? 1}명, {x.amount.toLocaleString()}원
                       </span>
                       <span className="mt-0.5 block text-xs text-muted-foreground">
+                        {x.signupNo ? `${x.signupNo} · ` : ""}
                         {formatOrderDate(x)}
                       </span>
                     </span>

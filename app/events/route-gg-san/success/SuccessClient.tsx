@@ -20,6 +20,8 @@ export function SuccessClient() {
   const ran = useRef(false)
   const [state, setState] = useState<"loading" | "done" | "error">("loading")
   const [name, setName] = useState("")
+  // 보여주는 신청번호 (ROUTE-GG-001) — 결제 확정 응답에서 받음
+  const [signupNo, setSignupNo] = useState("")
   const [message, setMessage] = useState("")
 
   const orderId = sp.get("orderId") ?? ""
@@ -36,7 +38,7 @@ export function SuccessClient() {
       return
     }
 
-    callEventFn<{ success: boolean; name?: string }>({
+    callEventFn<{ success: boolean; name?: string; signupNo?: string | null }>({
       action: "confirm",
       orderId,
       paymentKey,
@@ -45,6 +47,7 @@ export function SuccessClient() {
       .then((d) => {
         clearDraft() // 결제 완료 — 임시저장한 신청서는 더 필요 없음
         setName(d.name ?? "")
+        setSignupNo(d.signupNo ?? "")
         setState("done")
       })
       .catch((err: unknown) => {
@@ -118,8 +121,14 @@ export function SuccessClient() {
                 </div>
                 <div className="flex items-center justify-between border-t pt-3">
                   <dt className="text-xs text-muted-foreground">신청번호</dt>
-                  <dd className="font-mono text-xs text-muted-foreground">
-                    {orderId}
+                  <dd
+                    className={
+                      signupNo
+                        ? "font-mono text-sm font-semibold"
+                        : "font-mono text-xs text-muted-foreground"
+                    }
+                  >
+                    {signupNo || orderId}
                   </dd>
                 </div>
               </dl>
@@ -146,7 +155,7 @@ export function SuccessClient() {
               </p>
               {orderId && (
                 <p className="mt-2 font-mono text-xs text-muted-foreground">
-                  신청번호 {orderId}
+                  문의할 때 알려주세요 · {orderId}
                 </p>
               )}
               <Button asChild variant="outline" className="mt-7 w-full">

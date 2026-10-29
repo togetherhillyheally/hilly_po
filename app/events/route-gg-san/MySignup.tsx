@@ -24,6 +24,8 @@ type EditableParticipant = {
 
 export type MySignupData = {
   orderId: string
+  /** 보여주는 신청번호 (ROUTE-GG-001) — 결제 확정 때 부여, 그 전 주문은 null */
+  signupNo?: string | null
   name: string
   names?: string[]
   participants?: EditableParticipant[]
@@ -285,9 +287,15 @@ export function MySignup({
           </dd>
         </div>
         <div className="flex justify-between border-t pt-3">
-          <dt className="text-muted-foreground">주문번호</dt>
-          <dd className="font-mono text-xs text-muted-foreground">
-            {data.orderId}
+          <dt className="text-muted-foreground">신청번호</dt>
+          <dd
+            className={
+              data.signupNo
+                ? "font-mono text-sm font-semibold"
+                : "font-mono text-xs text-muted-foreground"
+            }
+          >
+            {data.signupNo || data.orderId}
           </dd>
         </div>
       </dl>

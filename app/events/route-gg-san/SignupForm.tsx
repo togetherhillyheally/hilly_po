@@ -107,7 +107,6 @@ export function SignupForm() {
     "idle" | "submitting" | "paying" | "widget" | "transfer" | "error"
   >("idle")
   const [message, setMessage] = useState("")
-  const [orderId, setOrderId] = useState("")
   const [order, setOrder] = useState<{
     orderId: string
     amount: number
@@ -283,7 +282,6 @@ export function SignupForm() {
         ...f,
         agreePhoto: agree.photo,
       })
-      setOrderId(created.orderId)
 
       // 결제위젯 단계로 — gck(위젯) 키는 payment() 가 아니라 widgets() 만 지원
       setOrder(created)
@@ -382,12 +380,6 @@ export function SignupForm() {
           <div className="flex justify-between">
             <dt className="text-muted-foreground">입금자명</dt>
             <dd className="font-semibold">{party[0]?.name}</dd>
-          </div>
-          <div className="flex justify-between border-t pt-3">
-            <dt className="text-muted-foreground">신청번호</dt>
-            <dd className="font-mono text-xs text-muted-foreground">
-              {orderId}
-            </dd>
           </div>
         </dl>
         <p className="mt-5 text-xs text-muted-foreground">
