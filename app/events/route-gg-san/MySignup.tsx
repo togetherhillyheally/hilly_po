@@ -148,7 +148,7 @@ export function MySignup({
           {draft.map((p, i) => (
             <div key={i} className="rounded-xl border p-4">
               <p className="mb-3 text-sm font-semibold">
-                {i === 0 ? "대표 신청자" : `참가자 ${i + 1}`}
+                {i === 0 ? "대장" : `참가자 ${i + 1}`}
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Input

@@ -96,7 +96,7 @@ const AGREEMENTS = [
 
 export function SignupForm() {
   const [f, setF] = useState<Fields>(EMPTY)
-  // 단체 신청 — 첫 번째가 대표(본인), 최대 EV.maxParty 명
+  // 단체 신청 — 첫 번째가 대장(본인), 최대 EV.maxParty 명
   const [party, setParty] = useState<Participant[]>([{ ...EMPTY_P }])
   const [agree, setAgree] = useState({
     terms: false,
@@ -431,7 +431,7 @@ export function SignupForm() {
               <div key={i} className="rounded-xl border p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <span className="text-sm font-semibold">
-                    {i === 0 ? "대표 신청자 (본인)" : `참가자 ${i + 1}`}
+                    {i === 0 ? "대장 (본인)" : `참가자 ${i + 1}`}
                   </span>
                   {i > 0 && (
                     <button
@@ -505,7 +505,7 @@ export function SignupForm() {
                 할인
               </Button>
             )}
-            <Field label="이메일 (대표자)" required>
+            <Field label="이메일 (대장)" required>
               <Input
                 type="email"
                 value={f.email}
@@ -648,7 +648,7 @@ export function SignupForm() {
                   />
                   <span className="font-medium">
                     {p.name.trim() ||
-                      (i === 0 ? "대표 신청자" : `참가자 ${i + 1}`)}
+                      (i === 0 ? "대장" : `참가자 ${i + 1}`)}
                   </span>
                   <span className="ml-auto text-xs text-muted-foreground">
                     {p.dinner ? "참석" : "불참"}
