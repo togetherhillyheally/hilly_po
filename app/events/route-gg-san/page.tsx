@@ -237,9 +237,10 @@ export default function NatseongotPage() {
   const hasCoords = CPS.length > 0
 
   return (
-    <main className="event-readable mx-auto max-w-6xl break-keep px-6">
-      {/* 헤더 — 사이트 공통 헤더 + 신청하기 */}
+    <>
+      {/* 사이트 공통 헤더 — 본문 컨테이너 밖 */}
       <EventHeader />
+    <main className="event-readable mx-auto max-w-6xl break-keep px-6">
 
       {/* 히어로 */}
       <section className="py-14 sm:py-20">
@@ -722,5 +723,6 @@ export default function NatseongotPage() {
         </div>
       </footer>
     </main>
+    </>
   )
 }

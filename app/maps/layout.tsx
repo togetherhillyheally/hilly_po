@@ -12,7 +12,7 @@ export default function MapsLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div className="min-h-screen">
-      <SiteHeader layout="app" />
+      <SiteHeader />
       {children}
     </div>
   );

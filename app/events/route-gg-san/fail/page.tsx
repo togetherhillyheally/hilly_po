@@ -14,8 +14,10 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <main className="event-readable mx-auto max-w-6xl break-keep px-6">
+    <>
+      {/* 사이트 공통 헤더 — 본문 컨테이너 밖 */}
       <SiteHeader />
+    <main className="event-readable mx-auto max-w-6xl break-keep px-6">
 
       <div className="flex min-h-[70dvh] items-center justify-center py-12">
         <div className="w-full max-w-lg rounded-2xl border bg-card p-10 text-center">
@@ -49,5 +51,6 @@ export default function Page() {
         </div>
       </div>
     </main>
+    </>
   )
 }

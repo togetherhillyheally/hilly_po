@@ -31,9 +31,10 @@ const STEPS = [
 
 export default function LandingPage() {
   return (
-    <main className="mx-auto max-w-6xl px-6">
-      {/* 헤더 — 관제(/control)와 같은 공통 헤더 */}
+    <>
+      {/* 사이트 공통 헤더 — 본문 컨테이너 밖 */}
       <SiteHeader />
+    <main className="mx-auto max-w-6xl px-6">
 
       {/* 모집 중 이벤트 — ROUTE @광교산 (가장 먼저, 가장 크게) */}
       <section className="pb-4 pt-6">
@@ -191,5 +192,6 @@ export default function LandingPage() {
         © HillyHeally · hillyheally.com
       </footer>
     </main>
+    </>
   )
 }

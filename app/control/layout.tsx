@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function ControlLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-[100dvh]">
-      <SiteHeader layout="app" />
+      <SiteHeader />
       {children}
     </div>
   )
