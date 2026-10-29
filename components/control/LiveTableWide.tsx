@@ -29,6 +29,8 @@ export type LiveTableWideProps = {
   onToggleFav: (entryId: string) => void
   displayMode: DisplayMode
   onDisplayModeChange: (mode: DisplayMode) => void
+  /** 출발 전 — 신호 없음을 빨간 경고 대신 중립 "출발 대기"로 */
+  preStart?: boolean
 }
 
 function formatEtaTime(etaAt: number | null): string {
@@ -38,7 +40,7 @@ function formatEtaTime(etaAt: number | null): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-function StatusCell({ r, selected }: { r: RankedEntry; selected: boolean }) {
+function StatusCell({ r, selected, preStart }: { r: RankedEntry; selected: boolean; preStart?: boolean }) {
   if (r.status === "sos") return <Badge variant="destructive">SOS</Badge>
   if (r.finished)
     return (
@@ -65,7 +67,18 @@ function StatusCell({ r, selected }: { r: RankedEntry; selected: boolean }) {
       </Badge>
     )
   if (r.status === "noSignal" || r.status === "stale")
-    return (
+    return preStart ? (
+      <Badge
+        variant="outline"
+        title="출발 전이라 기기가 아직 꺼져 있어요"
+        className={
+          "whitespace-nowrap " +
+          (selected ? "border-white/60 text-white" : "text-muted-foreground")
+        }
+      >
+        출발 대기
+      </Badge>
+    ) : (
       <Badge
         variant="outline"
         className={
@@ -133,6 +146,7 @@ export default function LiveTableWide({
   onToggleFav,
   displayMode,
   onDisplayModeChange,
+  preStart = false,
 }: LiveTableWideProps) {
   const [query, setQuery] = useState("")
   const isRace = eventType === "race"
@@ -382,7 +396,7 @@ export default function LiveTableWide({
                     </td>
                   )}
                   <td className="px-3 py-2.5 align-middle">
-                    <StatusCell r={r} selected={selected} />
+                    <StatusCell r={r} selected={selected} preStart={preStart} />
                   </td>
                   <td className="rounded-r-lg px-3 py-2.5 align-middle">
                     <span

@@ -48,6 +48,8 @@ export type LiveSidebarProps = {
   onOpenChange?: (open: boolean) => void
   /** 목록 항목 명칭 — 기본 "참가자", 전역 기기 관제는 "기기" */
   noun?: string
+  /** 출발 전 — 신호 없음을 빨간 경고 대신 중립 "출발 대기"로 */
+  preStart?: boolean
 }
 
 /** 1~3위 카드 — 색 구분 없이 살짝 도드라진 배경만 */
@@ -66,7 +68,7 @@ function batteryPercent(
   return `${est}%`
 }
 
-function StatusBadge({ r }: { r: RankedEntry }) {
+function StatusBadge({ r, preStart }: { r: RankedEntry; preStart?: boolean }) {
   if (r.status === "sos")
     return (
       <Badge variant="destructive" className="whitespace-nowrap">
@@ -94,7 +96,15 @@ function StatusBadge({ r }: { r: RankedEntry }) {
       </Badge>
     )
   if (r.status === "noSignal" || r.status === "stale")
-    return (
+    return preStart ? (
+      <Badge
+        variant="outline"
+        title="출발 전이라 기기가 아직 꺼져 있어요"
+        className="whitespace-nowrap text-muted-foreground"
+      >
+        출발 대기
+      </Badge>
+    ) : (
       <Badge
         variant="outline"
         className="whitespace-nowrap border-red-500/60 bg-red-500/10 text-red-500"
@@ -182,6 +192,7 @@ function EntryRow({
   fav,
   onToggleFav,
   terrainEle,
+  preStart,
 }: {
   r: RankedEntry
   isRace: boolean
@@ -192,9 +203,12 @@ function EntryRow({
   fav: boolean
   onToggleFav: (entryId: string) => void
   terrainEle?: number | null
+  preStart?: boolean
 }) {
   const dimmed =
-    (r.status === "stale" || r.status === "noSignal") && !r.finished
+    (r.status === "stale" || r.status === "noSignal") &&
+    !r.finished &&
+    !preStart
   const podium = isRace && r.rank != null && r.rank <= 3
   // 배터리는 관전 화면에도 보인다 (tracker_event_public_signals)
   const battery = batteryPercent(r.entry.battery_mv, r.entry.battery_pct)
@@ -347,7 +361,7 @@ function EntryRow({
           </span>
         )}
         <span className="ml-auto">
-          <StatusBadge r={r} />
+          <StatusBadge r={r} preStart={preStart} />
         </span>
       </div>
     </button>
@@ -373,6 +387,7 @@ export default function LiveSidebar({
   onDisplayModeChange,
   onOpenChange,
   noun = "참가자",
+  preStart = false,
 }: LiveSidebarProps) {
   const [open, _setOpen] = useState(true)
   const setOpen = (v: boolean) => {
@@ -553,6 +568,7 @@ export default function LiveSidebar({
                 fav={favs.has(r.entry.entry_id)}
                 onToggleFav={onToggleFav}
                 terrainEle={terrainElevations?.get(r.entry.entry_id)}
+                preStart={preStart}
               />
             ))}
           </div>
@@ -570,6 +586,7 @@ export default function LiveSidebar({
             fav={favs.has(r.entry.entry_id)}
             onToggleFav={onToggleFav}
             terrainEle={terrainElevations?.get(r.entry.entry_id)}
+            preStart={preStart}
           />
         ))}
       </div>

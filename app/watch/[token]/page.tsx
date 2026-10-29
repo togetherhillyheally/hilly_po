@@ -19,22 +19,24 @@ import RaceFinishBanner from "@/components/control/RaceFinishBanner"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useLiveEvent } from "@/hooks/use-live-event"
 
-/** 경과 시간 시계 — 1초마다 갱신 */
+/** 경과 시계 — 1초마다 갱신. 출발 전엔 "출발까지" 카운트다운으로 */
 function ElapsedClock({ startsAt }: { startsAt: string }) {
   const [, setTick] = useState(0)
   useEffect(() => {
     const t = setInterval(() => setTick((v) => v + 1), 1000)
     return () => clearInterval(t)
   }, [])
-  const sec = Math.max(
-    0,
-    Math.floor((Date.now() - new Date(startsAt).getTime()) / 1000),
-  )
+  const diff = Math.floor((Date.now() - new Date(startsAt).getTime()) / 1000)
+  const pre = diff < 0
+  const sec = Math.abs(diff)
   const pad = (n: number) => String(n).padStart(2, "0")
   return (
-    <span className="tabular-nums">
-      {pad(Math.floor(sec / 3600))}:{pad(Math.floor((sec % 3600) / 60))}:
-      {pad(sec % 60)}
+    <span className={pre ? "font-semibold text-foreground/80" : undefined}>
+      {pre ? "출발까지 " : "경과 "}
+      <span className="tabular-nums">
+        {pad(Math.floor(sec / 3600))}:{pad(Math.floor((sec % 3600) / 60))}:
+        {pad(sec % 60)}
+      </span>
     </span>
   )
 }
@@ -108,6 +110,11 @@ export default function WatchPage() {
   }
 
   const isRace = info.event_type === "race"
+  // 출발 전 — 신호 없음을 빨간 경고 대신 "출발 대기"로 보여준다 (기기는 출발 직전에 켠다)
+  const preStart =
+    info.status === "live" &&
+    info.starts_at != null &&
+    new Date(info.starts_at).getTime() > Date.now()
   const hasProfileView = isRace && courseIndex != null
   const showMap = viewMode === "map" || !hasProfileView
 
@@ -115,7 +122,7 @@ export default function WatchPage() {
     <main className="theme-light relative min-h-[100dvh] w-full bg-background text-foreground">
       {/* 상단 중앙 — 뷰 전환만 */}
       {hasProfileView && (
-        <div className="fixed left-1/2 top-4 z-30 -translate-x-1/2">
+        <div className="fixed right-3 top-3 z-30 md:left-1/2 md:right-auto md:top-4 md:-translate-x-1/2">
           <ViewModeSwitch mode={viewMode} onChange={setViewMode} />
         </div>
       )}
@@ -145,7 +152,7 @@ export default function WatchPage() {
         />
 
         {/* 좌상단 이벤트 정보 오버레이 — 모바일은 중앙 컨트롤과 겹치지 않게 폭 제한 */}
-        <header className="absolute left-3 top-3 z-10 max-w-[60vw] rounded-xl border bg-background/85 px-3 py-2 shadow-lg backdrop-blur md:left-4 md:top-4 md:max-w-none md:px-4 md:py-3">
+        <header className="absolute left-3 top-3 z-10 max-w-[55vw] rounded-xl border bg-background/85 px-3 py-2 shadow-lg backdrop-blur md:left-4 md:top-4 md:max-w-none md:px-4 md:py-3">
           <p className="hidden text-[10px] font-bold tracking-tight text-muted-foreground md:block">
             HILLY HEALLY LIVE
           </p>
@@ -168,7 +175,7 @@ export default function WatchPage() {
             <span>{ranked.length}명</span>
             {info.status === "live" && info.starts_at && (
               <span>
-                경과 <ElapsedClock startsAt={info.starts_at} />
+                <ElapsedClock startsAt={info.starts_at} />
               </span>
             )}
             {info.status === "finished" && <span>종료된 이벤트</span>}
@@ -205,6 +212,7 @@ export default function WatchPage() {
           ranked={ranked}
           eventType={info.event_type}
           isAdmin={false}
+          preStart={preStart}
           categories={categories}
           selectedId={selectedId}
           onSelect={handleSelect}
@@ -259,6 +267,7 @@ export default function WatchPage() {
               ranked={ranked}
               eventType={info.event_type}
               isAdmin={false}
+              preStart={preStart}
               categories={categories}
               selectedId={selectedId}
               onSelect={handleSelect}
