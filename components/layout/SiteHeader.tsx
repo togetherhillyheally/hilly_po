@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation"
 import { ProfileMenu } from "@/components/layout/ProfileMenu"
 import { Button } from "@/components/ui/button"
 import { useCurrentUser } from "@/hooks/use-current-user"
-import { NATSEONGOT } from "@/lib/events"
 
 /**
  * 사이트 공통 헤더 — 홈·이벤트·관제·내 지도·결제 결과가 모두 이 컴포넌트 하나를 쓴다.
@@ -64,9 +63,9 @@ export function SiteHeader({
               asChild
               variant="ghost"
               size="sm"
-              className={"relative " + navClass(NATSEONGOT.path)}
+              className={"relative " + navClass("/events")}
             >
-              <Link href={NATSEONGOT.path}>
+              <Link href="/events">
                 이벤트
                 <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[#DC2F55]" />
               </Link>

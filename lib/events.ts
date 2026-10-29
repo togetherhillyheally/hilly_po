@@ -19,6 +19,10 @@ export type EventInfo = {
   path: string
   /** 코스 포인트를 담은 스탬프지도 trail id — 지도 만들기 에디터에서 위치 수정 가능 */
   courseTrailId?: string
+  /** 이벤트 목록 카드 이미지 */
+  cover?: string
+  /** 목록 표시 상태 — recruiting: 모집 중, closed: 모집 마감, ended: 종료 */
+  listStatus?: "recruiting" | "closed" | "ended"
 }
 
 export const NATSEONGOT: EventInfo = {
@@ -35,7 +39,12 @@ export const NATSEONGOT: EventInfo = {
   placeSub: "출발과 도착은 광교산 산림욕장",
   path: "/events/route-gg-san",
   courseTrailId: "8b710f9d-2a53-4720-9c5a-da34e9375e93",
+  cover: "/events/course.jpg",
+  listStatus: "recruiting",
 }
+
+/** 이벤트 목록(/events) — 최신 행사가 앞. 새 행사는 여기에 추가 */
+export const EVENTS: EventInfo[] = [NATSEONGOT]
 
 /** 인원수별 가격 — 2인 이상 신청 시 1인 요금 10% 할인 (서버와 동일 규칙) */
 export function partyPricing(size: number): {

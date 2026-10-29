@@ -723,6 +723,18 @@ export default function NatseongotPage() {
         </div>
       </footer>
     </main>
+
+      {/* 떠 있는 신청 버튼 — 스크롤 어디서든 우측 아래 (아이폰 홈 바 안전 영역 고려) */}
+      <div className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-5 z-40">
+        <SignupSheet>
+          <Button
+            size="lg"
+            className="h-12 rounded-full bg-[#DC2F55] px-7 text-base font-bold text-white shadow-[0_8px_24px_rgba(220,47,85,0.45)] hover:bg-[#DC2F55]/90"
+          >
+            신청하기
+          </Button>
+        </SignupSheet>
+      </div>
     </>
   )
 }
