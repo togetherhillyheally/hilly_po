@@ -186,7 +186,12 @@ function projectOnRange(
     const dx = bx - ax
     const dy = by - ay
     const len2 = dx * dx + dy * dy
-    const t = len2 === 0 ? 0 : Math.min(1, Math.max(0, -(ax * dx + ay * dy) / len2))
+    // 세그먼트 일부만 범위에 걸치면 범위 안쪽으로만 투영 (범위 밖 진행거리로 잡히지 않게)
+    const segM = cum[i + 1] - cum[i]
+    const tLo = segM > 0 ? Math.max(0, (fromM - cum[i]) / segM) : 0
+    const tHi = segM > 0 ? Math.min(1, (toM - cum[i]) / segM) : 1
+    const tRaw = len2 === 0 ? 0 : -(ax * dx + ay * dy) / len2
+    const t = Math.min(tHi, Math.max(tLo, tRaw))
     const px = ax + t * dx
     const py = ay + t * dy
     const dist = Math.sqrt(px * px + py * py)
@@ -216,9 +221,16 @@ export function projectProgress(
   lat: number,
   lng: number,
   prev: ProgressState | undefined,
+  /** 첫 위치(직전 기록 없음)일 때 갈 수 있었던 최대 거리 — 출발·도착이 같은 순환 코스에서
+   *  출발 지점이 도착(끝 km)으로 잡히는 것을 막는다. 없으면 전체 탐색 */
+  maxPlausibleM?: number,
 ): ProgressResult {
   // 1) 직전 진행거리 주변 윈도우 우선 탐색
   let proj: Projection | null = null
+  if (!prev && maxPlausibleM != null && maxPlausibleM < index.totalM) {
+    const early = projectOnRange(index, lat, lng, 0, maxPlausibleM)
+    if (early && early.crossTrackM <= OFF_COURSE_M) proj = early
+  }
   if (prev) {
     proj = projectOnRange(
       index,
@@ -347,11 +359,17 @@ export function rankEntries(
     let progressM: number | null = null
     let offCourse = false
     if (courseIndex && hasFix) {
+      // 첫 위치는 출발 후 경과 시간으로 갈 수 있는 거리 안에서만 찾는다 (최대 시속 18km 가정, 최소 3km)
+      const maxPlausibleM =
+        startsAtMs != null
+          ? Math.max(3000, (((recordedMs ?? now) - startsAtMs) / 1000) * 5)
+          : undefined
       const r = projectProgress(
         courseIndex,
         entry.lat as number,
         entry.lng as number,
         prevMap.get(entry.entry_id),
+        maxPlausibleM,
       )
       prevMap.set(entry.entry_id, r.next)
       progressM = r.progressM
