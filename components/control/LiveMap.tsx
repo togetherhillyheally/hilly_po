@@ -562,12 +562,13 @@ export default function LiveMap({
           .map((d) => `<path d="${d}"/>`)
           .join("")}</svg>`
         el.title = cp.title
-        // 이름 라벨 — 아이콘 아래에 작게 (absolute 라 마커 기준점은 아이콘 중심 그대로)
+        // 이름 라벨 — 아이콘 아래에 작게 (absolute 라 마커 기준점은 아이콘 중심 그대로).
+        // el 의 position 은 건드리지 않는다 — mapboxgl-marker 가 absolute 로 배치하므로
+        // relative 로 바꾸면 마커가 좌표를 벗어나 문서 흐름대로 쌓인다
         const label = document.createElement("span")
         label.className =
           "pointer-events-none absolute left-1/2 top-full mt-0.5 -translate-x-1/2 whitespace-nowrap rounded bg-white/85 px-1 text-[10px] font-semibold leading-[14px] text-neutral-800 shadow-sm"
         label.textContent = cp.title
-        el.style.position = "relative"
         el.appendChild(label)
         el.addEventListener("click", (ev) => {
           ev.stopPropagation()
