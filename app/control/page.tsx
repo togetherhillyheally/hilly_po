@@ -101,11 +101,11 @@ function StartClock({
   const pad = (n: number) => String(n).padStart(2, "0")
   const hms = `${pad(Math.floor((sec % 86400) / 3600))}:${pad(Math.floor((sec % 3600) / 60))}:${pad(sec % 60)}`
   return (
-    <div className="absolute bottom-3 left-3 flex items-baseline gap-1.5 rounded-lg bg-black/60 px-2.5 py-1 text-white backdrop-blur">
-      <span className="text-[11px] font-semibold opacity-80">
+    <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-lg bg-black/60 px-3 py-1.5 text-white backdrop-blur">
+      <span className="text-[13px] font-semibold leading-none opacity-85">
         {pre ? "출발까지" : "경과"}
       </span>
-      <span className="text-base font-bold tabular-nums">
+      <span className="text-base font-bold leading-none tabular-nums">
         {days > 0 && `${days}일 `}
         {hms}
       </span>
