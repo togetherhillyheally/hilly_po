@@ -46,7 +46,7 @@ export default function LandingPage() {
             <div className="relative min-h-[220px] lg:col-span-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/events/course.jpg"
+                src="/events/course-v2.jpg"
                 alt="광교산 코스"
                 className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
               />

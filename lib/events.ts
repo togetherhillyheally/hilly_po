@@ -39,7 +39,7 @@ export const NATSEONGOT: EventInfo = {
   placeSub: "출발과 도착은 광교산 산림욕장",
   path: "/events/route-gg-san",
   courseTrailId: "8b710f9d-2a53-4720-9c5a-da34e9375e93",
-  cover: "/events/course.jpg",
+  cover: "/events/course-v2.jpg",
   listStatus: "recruiting",
 }
 

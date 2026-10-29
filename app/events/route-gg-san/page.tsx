@@ -452,7 +452,7 @@ export default function NatseongotPage() {
                 <CourseMapLazy className="h-[420px] w-full sm:h-[520px]" />
               ) : (
                 <Image
-                  src="/events/course.jpg"
+                  src="/events/course-v2.jpg"
                   alt="광교산 스탬프 게임 코스 지도"
                   width={1600}
                   height={1468}
