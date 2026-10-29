@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { ChevronsDown, ChevronsUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -191,6 +191,29 @@ export default function ElevationProfile({
     [entries, index, hasEle, minEle, maxEle],
   )
 
+  // 확대 모드 + 모바일: 1km 당 14px 로 펼쳐 가로 스크롤 — 좁은 화면에서 봉우리가 뭉개지지 않게
+  const totalKm = index.totalM / 1000
+  const scrollWidthPx = expanded ? Math.max(0, Math.round(totalKm * 14)) : 0
+  const kmTicks = useMemo(() => {
+    if (!expanded) return []
+    const step = totalKm > 60 ? 10 : totalKm > 20 ? 5 : totalKm > 8 ? 2 : 1
+    const ticks: number[] = []
+    for (let k = step; k < totalKm - step * 0.4; k += step) ticks.push(k)
+    return ticks
+  }, [expanded, totalKm])
+
+  // 참가자를 고르면 그 위치가 보이도록 가로 스크롤 이동 (스크롤이 생길 때만 의미 있음)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const selectedXPct = dots.find((d) => d.r.entry.entry_id === selectedId)?.xPct
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el || selectedXPct == null || el.scrollWidth <= el.clientWidth) return
+    el.scrollTo({
+      left: (selectedXPct / 100) * el.scrollWidth - el.clientWidth / 2,
+      behavior: "smooth",
+    })
+  }, [selectedId, selectedXPct])
+
   const summary =
     `${(index.totalM / 1000).toFixed(1)}km` +
     (index.totalAscentM != null ? ` · +${index.totalAscentM}m` : "") +
@@ -257,8 +280,13 @@ export default function ElevationProfile({
         </div>
       )}
 
-      {/* 그래프 영역 — 좌우 여백으로 0%/100% 지점의 아바타 잘림 방지 */}
-      <div className="relative mx-6 flex-1">
+      {/* 그래프 영역 — 좌우 여백으로 0%/100% 지점의 아바타 잘림 방지.
+          확대 모드 모바일은 가로 스크롤 (데스크톱은 폭에 맞춤) */}
+      <div ref={scrollRef} className="flex flex-1 overflow-x-auto">
+      <div
+        className="relative mx-6 flex-1 min-w-[var(--ep-w)] md:min-w-0"
+        style={{ ["--ep-w" as string]: `${scrollWidthPx}px` }}
+      >
         {gridLevels.map((e) => (
           <div
             key={e}
@@ -406,6 +434,17 @@ export default function ElevationProfile({
         <span className="pointer-events-none absolute bottom-1 right-2 text-[10px] font-medium tabular-nums text-muted-foreground">
           {(index.totalM / 1000).toFixed(1)}km
         </span>
+        {/* 중간 거리 눈금 — 확대 모드(가로 스크롤 시 현재 위치 파악용) */}
+        {kmTicks.map((k) => (
+          <span
+            key={k}
+            className="pointer-events-none absolute top-1 -translate-x-1/2 text-[10px] font-medium tabular-nums text-muted-foreground/70 md:hidden"
+            style={{ left: `${(k / totalKm) * 100}%` }}
+          >
+            {k}km
+          </span>
+        ))}
+      </div>
       </div>
     </div>
   )
