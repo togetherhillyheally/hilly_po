@@ -32,7 +32,8 @@ export function SiteHeader({
   const { user, loading } = useCurrentUser()
   const navClass = (href: string) =>
     pathname === href || pathname.startsWith(href + "/")
-      ? "text-foreground"
+      ? // 지금 보고 있는 메뉴 — 배경으로 구분
+        "bg-foreground/10 font-semibold text-foreground hover:bg-foreground/15"
       : "text-muted-foreground"
   const next = loginNext ?? pathname
 
