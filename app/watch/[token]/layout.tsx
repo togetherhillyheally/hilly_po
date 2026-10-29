@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import type { ReactNode } from "react"
+import { resolveWatchTokenServer } from "@/lib/watch-token"
 
 /**
  * 관전 페이지 메타데이터 — 공개 RPC 로 이벤트 제목을 받아
@@ -11,9 +12,12 @@ export async function generateMetadata({
 }: {
   params: Promise<{ token: string }>
 }): Promise<Metadata> {
-  const { token } = await params
+  const { token: key } = await params
   const base: Metadata = { robots: { index: false, follow: false } }
   try {
+    // 짧은 주소(utnp-9peak)도 토큰으로 바꿔서 조회
+    const token = await resolveWatchTokenServer(key)
+    if (!token) throw new Error("event not found")
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/tracker_event_public_info`,

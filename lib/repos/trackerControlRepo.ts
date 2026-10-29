@@ -175,6 +175,35 @@ export const trackerControlRepo = {
     return (data ?? []) as { id: string; name: string; distance_km: number | null }[]
   },
 
+  /** 관전 짧은 주소(slug) → 공개 토큰. 없거나 비공개면 null */
+  async tokenBySlug(slug: string): Promise<string | null> {
+    const { data, error } = await getSupabase().rpc(
+      "tracker_event_token_by_slug",
+      { p_slug: slug },
+    )
+    if (error) throw error
+    return (data as string | null) || null
+  },
+
+  async getSlug(eventId: string): Promise<string | null> {
+    const { data, error } = await getSupabase().rpc(
+      "admin_get_tracker_event_slug",
+      { p_event_id: eventId },
+    )
+    if (error) throw error
+    return (data as string | null) || null
+  },
+
+  /** 빈 값이면 해제. 형식 오류·중복이면 서버 메시지로 throw */
+  async setSlug(eventId: string, slug: string): Promise<string | null> {
+    const { data, error } = await getSupabase().rpc(
+      "admin_set_tracker_event_slug",
+      { p_event_id: eventId, p_slug: slug },
+    )
+    if (error) throw new Error(error.message)
+    return (data as string | null) || null
+  },
+
   /** 관제에서 골라 볼 추가 코스 (대표 코스 외) */
   async getExtraTrails(eventId: string): Promise<string[]> {
     const { data, error } = await getSupabase().rpc(

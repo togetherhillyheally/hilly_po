@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og"
+import { resolveWatchTokenServer } from "@/lib/watch-token"
 
 /**
  * 관전 링크 공유 미리보기 이미지 (카카오톡·슬랙 등 og:image).
@@ -84,8 +85,9 @@ export default async function Image({
 }: {
   params: Promise<{ token: string }>
 }) {
-  const { token } = await params
-  const info = await fetchInfo(token).catch(() => null)
+  const { token: key } = await params
+  const token = await resolveWatchTokenServer(key)
+  const info = token ? await fetchInfo(token).catch(() => null) : null
   const title = info?.title ?? "힐리힐리 LIVE"
   const course = info?.trail?.name ?? ""
   const km =

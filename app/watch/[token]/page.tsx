@@ -18,6 +18,8 @@ import LiveTableWide from "@/components/control/LiveTableWide"
 import RaceFinishBanner from "@/components/control/RaceFinishBanner"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useLiveEvent } from "@/hooks/use-live-event"
+import { trackerControlRepo } from "@/lib/repos/trackerControlRepo"
+import { isPublicToken } from "@/lib/watch-token"
 
 /** 경과 시계 — 1초마다 갱신. 출발 전엔 "출발까지" 카운트다운으로 */
 function ElapsedClock({
@@ -64,10 +66,51 @@ function ElapsedClock({
 /** 공개 관전 페이지 — 로그인 없이 접근 (middleware matcher 에서 제외됨).
  *  뷰 모드: 지도(풀스크린 지도 + 우측 사이드바) / 고도(UTMB 식 스크롤 페이지 — 프로필 + 순위 리스트).
  *  지도는 모드 전환 시에도 언마운트하지 않는다 (Mapbox map load 재과금 방지). */
+/** /watch/<토큰 또는 짧은 주소> — 짧은 주소(utnp-9peak)면 토큰으로 바꾼 뒤 관전 화면을 그린다 */
 export default function WatchPage() {
   const params = useParams<{ token: string }>()
+  const key = decodeURIComponent(params.token)
+  const [token, setToken] = useState<string | null | undefined>(
+    isPublicToken(key) ? key : undefined,
+  )
+  useEffect(() => {
+    if (isPublicToken(key)) {
+      setToken(key)
+      return
+    }
+    let cancelled = false
+    trackerControlRepo
+      .tokenBySlug(key)
+      .then((t) => !cancelled && setToken(t))
+      .catch(() => !cancelled && setToken(null))
+    return () => {
+      cancelled = true
+    }
+  }, [key])
+
+  if (token === undefined) {
+    return (
+      <main className="theme-light flex min-h-[100dvh] items-center justify-center bg-background text-sm text-muted-foreground">
+        불러오는 중…
+      </main>
+    )
+  }
+  if (token === null) {
+    return (
+      <main className="theme-light flex min-h-[100dvh] flex-col items-center justify-center bg-background px-6 text-center text-foreground">
+        <h1 className="text-lg font-bold">종료되었거나 없는 이벤트예요</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          링크를 다시 확인해 주세요.
+        </p>
+      </main>
+    )
+  }
+  return <WatchView token={token} />
+}
+
+function WatchView({ token }: { token: string }) {
   const { info, courseIndex, ranked, tails, notFound, loading } = useLiveEvent({
-    token: params.token,
+    token,
     mode: "public",
   })
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -79,7 +122,7 @@ export default function WatchPage() {
   const [elevOpen, setElevOpen] = useState(false)
   const [terrainElevations, setTerrainElevations] =
     useState<Map<string, number> | null>(null)
-  const { favs, toggleFav } = useFavorites(params.token)
+  const { favs, toggleFav } = useFavorites(token)
 
   // 같은 참가자를 다시 눌러도 지도가 다시 포커스되도록 신호 카운터 증가
   const handleSelect = (id: string) => {

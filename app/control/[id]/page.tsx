@@ -18,6 +18,7 @@ import {
 import ElevationDrawer from "@/components/control/ElevationDrawer"
 import CourseSelect, { useCourseChoice } from "@/components/control/CourseSelect"
 import ExtraCoursesCard from "@/components/control/ExtraCoursesCard"
+import WatchLinkCard from "@/components/control/WatchLinkCard"
 import ElevationProfile from "@/components/control/ElevationProfile"
 import EntryManager from "@/components/control/EntryManager"
 import EventFormDialog from "@/components/control/EventFormDialog"
@@ -222,8 +223,14 @@ function ControlRoom({
   const hasProfileView = event.event_type === "race" && courseIndex != null
   const showMap = viewMode === "map" || !hasProfileView
 
+  // 관전 짧은 주소 — 있으면 복사·표시에 우선 사용
+  const [slug, setSlug] = useState<string | null>(null)
+  useEffect(() => {
+    trackerControlRepo.getSlug(event.id).then(setSlug).catch(() => {})
+  }, [event.id])
+
   function copyWatchLink() {
-    const url = `${window.location.origin}/watch/${event.public_token}`
+    const url = `${window.location.origin}/watch/${slug ?? event.public_token}`
     navigator.clipboard
       .writeText(url)
       .then(() => toast.success("관전 링크를 복사했어요."))
@@ -499,17 +506,12 @@ function ControlRoom({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <h2 className="text-sm font-semibold">관전 링크</h2>
-            <div className="flex items-center gap-2">
-              <code className="rounded-md border bg-muted px-3 py-1.5 text-xs">
-                /watch/{event.public_token}
-              </code>
-              <Button variant="outline" size="sm" onClick={copyWatchLink}>
-                복사
-              </Button>
-            </div>
-          </div>
+          <WatchLinkCard
+            eventId={event.id}
+            publicToken={event.public_token}
+            slug={slug}
+            onSlugChange={setSlug}
+          />
 
           <ExtraCoursesCard
             eventId={event.id}
