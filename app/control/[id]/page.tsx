@@ -283,21 +283,13 @@ function ControlRoom({
             <h1 className="text-xl font-bold">{event.title}</h1>
             <p className="text-xs text-muted-foreground">
               {event.event_type === "race" ? "대회" : "모니터링"}
-              {courses.length <= 1 && event.trail_name && ` · ${event.trail_name}`}
+              {event.trail_name && ` · ${event.trail_name}`}
               {lastPolledAt &&
                 ` · 마지막 갱신 ${Math.max(0, Math.round((Date.now() - lastPolledAt) / 1000))}초 전`}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {courses.length > 1 && (
-            <CourseSelect
-              courses={courses}
-              value={activeIdx}
-              onChange={setActiveIdx}
-              className="text-xs"
-            />
-          )}
           {sosCount > 0 && (
             <Badge variant="destructive" className="animate-pulse">
               SOS {sosCount}건
@@ -319,10 +311,15 @@ function ControlRoom({
 
         <TabsContent value="live" className="mt-4">
           <div className="theme-light relative h-[calc(100dvh-220px)] min-h-[480px] overflow-hidden rounded-xl border bg-background text-foreground">
-            {/* 상단 중앙 — 뷰 전환만 */}
-            {hasProfileView && (
-              <div className="absolute left-1/2 top-3 z-30 -translate-x-1/2">
-                <ViewModeSwitch mode={viewMode} onChange={setViewMode} />
+            {/* 상단 중앙 — 지도/고도 전환 + 지도 선택(고도 오른쪽) */}
+            {(hasProfileView || courses.length > 1) && (
+              <div className="absolute left-1/2 top-3 z-30 flex -translate-x-1/2 items-center gap-2">
+                {hasProfileView && (
+                  <ViewModeSwitch mode={viewMode} onChange={setViewMode} />
+                )}
+                {courses.length > 1 && (
+                  <CourseSelect courses={courses} value={activeIdx} onChange={setActiveIdx} />
+                )}
               </div>
             )}
 
@@ -338,6 +335,7 @@ function ControlRoom({
               <LiveMap
                 bare
                 course={activeCourse}
+                enableGeolocate
                 entries={visible}
                 tails={visibleTails}
                 categories={categories}

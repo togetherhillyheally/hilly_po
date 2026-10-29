@@ -137,6 +137,7 @@ export default function WatchPage() {
     new Date(info.starts_at).getTime() > Date.now()
   const hasProfileView = isRace && courseIndex != null
   const showMap = viewMode === "map" || !hasProfileView
+  const hasTopBar = hasProfileView || courses.length > 1
 
   // 이벤트 정보 — 데스크톱은 지도 좌상단, 모바일은 하단 시트 맨 위 (시트를 접으면 지도 위로)
   const eventInfo = (
@@ -146,7 +147,7 @@ export default function WatchPage() {
       </h1>
       <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground md:text-xs">
         <span className="hidden md:inline">{isRace ? "대회" : "실시간 위치"}</span>
-        <CourseSelect courses={courses} value={activeIdx} onChange={setActiveIdx} />
+        {activeCourse?.name && <span>{activeCourse.name}</span>}
         {profileIndex && (
           <span className="tabular-nums">
             {(profileIndex.totalM / 1000).toFixed(1)}km
@@ -174,12 +175,9 @@ export default function WatchPage() {
           {info.title}
         </h1>
         <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground">
-          <CourseSelect
-            courses={courses}
-            value={activeIdx}
-            onChange={setActiveIdx}
-            className="max-w-full truncate"
-          />
+          {activeCourse?.name && (
+            <span className="truncate">{activeCourse.name}</span>
+          )}
           {profileIndex && (
             <span className="tabular-nums">
               {(profileIndex.totalM / 1000).toFixed(1)}km
@@ -214,10 +212,16 @@ export default function WatchPage() {
 
   return (
     <main className="theme-light relative min-h-[100dvh] w-full bg-background text-foreground">
-      {/* 뷰 전환 — 모바일은 좌상단(우상단 줌 버튼과 겹치지 않게), 데스크톱은 상단 중앙 */}
-      {hasProfileView && (
-        <div className="fixed left-3 top-3 z-30 md:left-1/2 md:top-4 md:-translate-x-1/2">
-          <ViewModeSwitch mode={viewMode} onChange={setViewMode} />
+      {/* 상단 컨트롤 — 지도/고도 전환 + 지도 선택(고도 오른쪽).
+          모바일은 좌상단(우상단 줌 버튼과 겹치지 않게), 데스크톱은 상단 중앙 */}
+      {hasTopBar && (
+        <div className="fixed left-3 top-3 z-30 flex items-center gap-2 md:left-1/2 md:top-4 md:-translate-x-1/2">
+          {hasProfileView && (
+            <ViewModeSwitch mode={viewMode} onChange={setViewMode} />
+          )}
+          {courses.length > 1 && (
+            <CourseSelect courses={courses} value={activeIdx} onChange={setActiveIdx} />
+          )}
         </div>
       )}
 
@@ -233,6 +237,7 @@ export default function WatchPage() {
         <LiveMap
           bare
           course={activeCourse}
+          enableGeolocate
           entries={visible}
           tails={visibleTails}
           categories={categories}
@@ -249,7 +254,7 @@ export default function WatchPage() {
         <header
           className={
             "absolute left-3 z-10 max-w-[calc(100%-4.5rem)] rounded-xl border bg-background/85 px-3 py-2 shadow-lg backdrop-blur md:left-4 md:top-4 md:block md:max-w-none md:px-4 md:py-3 " +
-            (hasProfileView ? "top-16 " : "top-3 ") +
+            (hasTopBar ? "top-16 " : "top-3 ") +
             (panelOpen ? "hidden" : "")
           }
         >
@@ -325,7 +330,7 @@ export default function WatchPage() {
             </p>
             <h1 className="text-lg font-bold leading-tight">{info.title}</h1>
             <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-              <CourseSelect courses={courses} value={activeIdx} onChange={setActiveIdx} />
+              {activeCourse?.name && <span>{activeCourse.name}</span>}
               <span>{ranked.length}명</span>
               {info.status === "live" && info.starts_at && (
                 <span>

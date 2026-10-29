@@ -51,9 +51,10 @@ export default function CourseSelect({
     return <span className={className}>{courses[0].name}</span>
   }
   return (
+    // 상단 지도/고도 전환과 같은 pill 모양
     <span
       className={
-        "relative inline-flex items-center rounded-full border border-foreground/15 bg-background/80 " +
+        "relative inline-flex max-w-[50vw] items-center rounded-full border bg-background/85 shadow-lg backdrop-blur md:max-w-xs " +
         (className ?? "")
       }
     >
@@ -61,7 +62,7 @@ export default function CourseSelect({
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         aria-label="지도 선택"
-        className="cursor-pointer appearance-none bg-transparent py-0.5 pl-2 pr-6 font-semibold text-foreground outline-none"
+        className="w-full cursor-pointer appearance-none truncate bg-transparent py-1.5 pl-3 pr-7 text-xs font-semibold text-foreground outline-none"
       >
         {courses.map((c, i) => (
           <option key={c.id ?? i} value={i}>
@@ -69,7 +70,7 @@ export default function CourseSelect({
           </option>
         ))}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-1.5 h-3 w-3 text-muted-foreground" />
+      <ChevronDown className="pointer-events-none absolute right-2.5 h-3.5 w-3.5 text-muted-foreground" />
     </span>
   )
 }
