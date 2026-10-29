@@ -16,6 +16,7 @@ import LiveMap from "@/components/control/LiveMap"
 import LiveSidebar from "@/components/control/LiveSidebar"
 import LiveTableWide from "@/components/control/LiveTableWide"
 import RaceFinishBanner from "@/components/control/RaceFinishBanner"
+import { Mountain } from "lucide-react"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useLiveEvent } from "@/hooks/use-live-event"
 
@@ -195,7 +196,23 @@ export default function WatchPage() {
           }
         />
 
-        {/* 고도표 — 지도 아래에서 펼쳐 보기 (데스크톱은 사이드바 왼쪽, 모바일은 하단 시트 위) */}
+        {/* 모바일 + 고도 뷰가 있는 대회: 고도표 버튼은 전체 화면 고도 뷰로 전환 */}
+        {hasProfileView && (
+          <button
+            type="button"
+            onClick={() => setViewMode("profile")}
+            className={
+              "absolute left-20 z-20 flex items-center gap-1.5 rounded-full border bg-background/90 px-3.5 py-1.5 text-xs font-semibold text-foreground shadow-lg backdrop-blur md:hidden " +
+              (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-4")
+            }
+          >
+            <Mountain className="h-3.5 w-3.5" />
+            고도표
+          </button>
+        )}
+
+        {/* 고도표 — 지도 아래에서 펼쳐 보기 (데스크톱은 사이드바 왼쪽, 모바일은 하단 시트 위)
+            대회(고도 뷰 있음)의 모바일에선 위 버튼이 대신하므로 숨김 */}
         {profileIndex && (
           <ElevationDrawer
             index={profileIndex}
@@ -208,6 +225,7 @@ export default function WatchPage() {
             className={
               // 모바일: 펼치면 전폭으로 하단 시트에 붙어 시트의 연장처럼 보이게
               "absolute z-20 md:left-20 md:right-[376px] md:bottom-4 " +
+              (hasProfileView ? "hidden md:block " : "") +
               (elevOpen ? "left-3 right-3 " : "left-20 right-4 ") +
               (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-4")
             }
