@@ -3,29 +3,48 @@
 import { useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { FileUp, Loader2, Mountain, Route, X } from "lucide-react"
+import { FileUp, Flag, Loader2, Mountain, Route, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import TrailMapPreview from "@/components/map/TrailMapPreview"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import {
   displayNameFromFileName,
+  extractWaypoints,
   prepareTrailFromGpxText,
   type PreparedTrailGeometry,
 } from "@/lib/gpx-prep"
+import { checkpointRepo } from "@/lib/repos/checkpointRepo"
 import { trailUploadOps } from "@/lib/repos/trailUpload"
 
 type GpxEntry = {
+  id: string
   fileName: string
   gpxText: string
   prepared: PreparedTrailGeometry
+}
+
+/** GPX 웨이포인트 → 체크포인트 후보 (이름 수정·표시 여부 선택 가능) */
+type WaypointDraft = {
+  key: string
+  entryId: string
+  name: string
+  lat: number
+  lon: number
+  ele?: number
+  show: boolean
 }
 
 export default function NewCoursePage() {
   const router = useRouter()
   const { user } = useCurrentUser()
   const [entries, setEntries] = useState<GpxEntry[]>([])
+  const [waypoints, setWaypoints] = useState<WaypointDraft[]>([])
+  // 웨이포인트를 체크포인트로 가져올지 (전체 스위치) — 개별 표시 여부는 각 항목 체크
+  const [importWaypoints, setImportWaypoints] = useState(true)
   const [name, setName] = useState("")
   const [creating, setCreating] = useState(false)
   const [dragOver, setDragOver] = useState(false)
@@ -62,6 +81,7 @@ export default function NewCoursePage() {
 
   async function addFiles(files: FileList | File[]) {
     const next: GpxEntry[] = []
+    const nextWpts: WaypointDraft[] = []
     for (const file of Array.from(files)) {
       if (!file.name.toLowerCase().endsWith(".gpx")) {
         toast.error(`${file.name}: GPX 파일만 올릴 수 있어요.`)
@@ -70,13 +90,27 @@ export default function NewCoursePage() {
       try {
         const gpxText = await file.text()
         const prepared = prepareTrailFromGpxText(gpxText)
-        next.push({ fileName: file.name, gpxText, prepared })
+        const id = crypto.randomUUID()
+        next.push({ id, fileName: file.name, gpxText, prepared })
+        extractWaypoints(gpxText).forEach((w, i) => {
+          nextWpts.push({
+            key: `${id}-${i}`,
+            entryId: id,
+            name: w.name || `웨이포인트 ${i + 1}`,
+            lat: w.lat,
+            lon: w.lon,
+            ele: w.ele,
+            // 출발·도착은 지도에 전용 마커가 있어 기본 미표시
+            show: !w.isStartFinish,
+          })
+        })
       } catch {
         toast.error(`${file.name}: 트랙 정보를 읽지 못했어요.`)
       }
     }
     if (next.length === 0) return
     setEntries((prev) => [...prev, ...next])
+    setWaypoints((prev) => [...prev, ...nextWpts])
     setName((prev) => {
       if (prev.trim()) return prev
       const first = next[0]
@@ -100,6 +134,25 @@ export default function NewCoursePage() {
         entries,
         displayName,
       })
+      const picked = importWaypoints
+        ? waypoints.filter((w) => w.show && w.name.trim())
+        : []
+      if (picked.length > 0) {
+        try {
+          await checkpointRepo.createCheckpointsBulk({
+            trailId: trail.id,
+            userId: user.id,
+            items: picked.map((w) => ({
+              title: w.name.trim(),
+              lat: w.lat,
+              lng: w.lon,
+            })),
+          })
+        } catch {
+          // 지도는 이미 만들어짐 — 체크포인트는 편집 화면에서 다시 추가 가능
+          toast.error("웨이포인트를 체크포인트로 옮기지 못했어요. 편집 화면에서 추가해 주세요.")
+        }
+      }
       toast.success(
         "코스지도를 만들었어요. 완료하기 전까지는 앱에 공개되지 않아요.",
       )
@@ -166,9 +219,12 @@ export default function NewCoursePage() {
                   {entry.prepared.distanceKm}km
                   <button
                     type="button"
-                    onClick={() =>
+                    onClick={() => {
                       setEntries((prev) => prev.filter((_, j) => j !== i))
-                    }
+                      setWaypoints((prev) =>
+                        prev.filter((w) => w.entryId !== entry.id),
+                      )
+                    }}
                     className="hover:text-foreground"
                   >
                     <X className="h-4 w-4" />
@@ -192,6 +248,64 @@ export default function NewCoursePage() {
               <Mountain className="h-4 w-4" /> 누적 상승 {merged.totalAscentM}m
             </span>
           </div>
+
+          {waypoints.length > 0 && (
+            <div className="rounded-xl border">
+              <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
+                <div className="min-w-0">
+                  <p className="flex items-center gap-1.5 text-sm font-semibold">
+                    <Flag className="h-4 w-4" />
+                    웨이포인트 {waypoints.length}개
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    체크한 지점을 체크포인트로 지도에 표시해요. 이름은 바로 고칠 수 있어요.
+                  </p>
+                </div>
+                <label className="flex shrink-0 items-center gap-2 text-sm">
+                  가져오기
+                  <Switch
+                    checked={importWaypoints}
+                    onCheckedChange={setImportWaypoints}
+                  />
+                </label>
+              </div>
+              {importWaypoints && (
+                <ul className="max-h-80 divide-y overflow-y-auto">
+                  {waypoints.map((w) => (
+                    <li key={w.key} className="flex items-center gap-3 px-4 py-2">
+                      <Checkbox
+                        checked={w.show}
+                        onCheckedChange={(v) =>
+                          setWaypoints((prev) =>
+                            prev.map((x) =>
+                              x.key === w.key ? { ...x, show: v === true } : x,
+                            ),
+                          )
+                        }
+                        aria-label="지도에 표시"
+                      />
+                      <Input
+                        value={w.name}
+                        onChange={(e) =>
+                          setWaypoints((prev) =>
+                            prev.map((x) =>
+                              x.key === w.key ? { ...x, name: e.target.value } : x,
+                            ),
+                          )
+                        }
+                        className={
+                          "h-8 flex-1 text-sm " + (w.show ? "" : "opacity-50")
+                        }
+                      />
+                      <span className="w-14 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
+                        {w.ele != null ? `${w.ele}m` : ""}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="course-name">지도 이름</Label>

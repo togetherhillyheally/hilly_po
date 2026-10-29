@@ -234,6 +234,61 @@ function buildPreparedMulti(
   };
 }
 
+export type GpxWaypoint = {
+  name: string;
+  lat: number;
+  lon: number;
+  ele?: number;
+  /** GPX <type> — 대회 GPX 는 depart/arrivee/controle 등을 씀 */
+  type?: string;
+  /** 출발·도착 지점 — 지도에 출발/도착 마커가 따로 있어 기본 미표시 */
+  isStartFinish: boolean;
+};
+
+const START_FINISH_RE =
+  /^(start|finish|end|depart|départ|arrivee|arrivée|arrival|출발|도착|출발\s*\/?\s*도착)$/i;
+
+const decodeXml = (s: string) =>
+  s
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, "&")
+    .trim();
+
+/** GPX <wpt> (웨이포인트) 추출 — 체크포인트 자동 생성용 */
+export function extractWaypoints(gpxText: string): GpxWaypoint[] {
+  const out: GpxWaypoint[] = [];
+  const re = /<wpt\b([^>]*)>([\s\S]*?)<\/wpt>|<wpt\b([^>]*)\/>/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(gpxText)) !== null) {
+    const attrs = m[1] ?? m[3] ?? "";
+    const body = m[2] ?? "";
+    const lat = parseFloat(attrs.match(/\blat="([^"]+)"/)?.[1] ?? "");
+    const lon = parseFloat(attrs.match(/\blon="([^"]+)"/)?.[1] ?? "");
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+    const tag = (t: string) => {
+      const v = body.match(new RegExp(`<${t}>([\\s\\S]*?)</${t}>`))?.[1];
+      return v != null ? decodeXml(v) : undefined;
+    };
+    const name = tag("name") ?? "";
+    const type = tag("type");
+    const eleRaw = parseFloat(tag("ele") ?? "");
+    out.push({
+      name,
+      lat,
+      lon,
+      ele: Number.isFinite(eleRaw) ? Math.round(eleRaw) : undefined,
+      type,
+      isStartFinish:
+        START_FINISH_RE.test(name) || START_FINISH_RE.test(type ?? ""),
+    });
+  }
+  return out;
+}
+
 export function displayNameFromFileName(fileName: string): string {
   const base = fileName.replace(/\.[^/.]+$/, "").replace(/_/g, " ").trim();
   return base.length > 0 ? base : "새 지도";

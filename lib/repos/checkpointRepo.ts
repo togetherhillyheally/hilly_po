@@ -119,6 +119,30 @@ export const checkpointRepo = {
     return parseCheckpointRow(data as Record<string, unknown>)
   },
 
+  /** 여러 체크포인트를 한 번에 — GPX 웨이포인트 가져오기용 (전달 순서대로 정렬) */
+  async createCheckpointsBulk(params: {
+    trailId: string
+    userId: string
+    items: { title: string; lng: number; lat: number }[]
+  }): Promise<void> {
+    if (params.items.length === 0) return
+    const { error } = await getSupabase()
+      .from(CHECKPOINTS_TABLE)
+      .insert(
+        params.items.map((it, i) => ({
+          id: crypto.randomUUID(),
+          trail_id: params.trailId,
+          sort_order: i,
+          title: it.title,
+          lng: it.lng,
+          lat: it.lat,
+          marker_icon: DEFAULT_MARKER_ICON,
+          created_by: params.userId,
+        })),
+      )
+    if (error) throw error
+  },
+
   async updateCheckpoint(
     checkpointId: string,
     update: CheckpointUpdate,
