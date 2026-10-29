@@ -390,6 +390,40 @@ export default function LiveMap({
         "top-right",
       )
     }
+    // 코스 전체 보기 — 내 위치 아래. 지금 표시 중인 코스(지도 선택 포함)에 화면을 맞춘다
+    map.addControl(
+      {
+        onAdd() {
+          const box = document.createElement("div")
+          box.className = "mapboxgl-ctrl mapboxgl-ctrl-group"
+          const btn = document.createElement("button")
+          btn.type = "button"
+          btn.title = "코스 전체 보기"
+          btn.setAttribute("aria-label", "코스 전체 보기")
+          btn.style.display = "flex"
+          btn.style.alignItems = "center"
+          btn.style.justifyContent = "center"
+          // lucide "route" 아이콘
+          btn.innerHTML =
+            '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>'
+          btn.addEventListener("click", () => {
+            const b = courseRef.current?.bounds
+            if (!b) return
+            map.fitBounds(
+              [
+                [b.minLon, b.minLat],
+                [b.maxLon, b.maxLat],
+              ],
+              { padding: 60, duration: 600 },
+            )
+          })
+          box.appendChild(btn)
+          return box
+        },
+        onRemove() {},
+      },
+      "top-right",
+    )
 
     // 스타일 로드 후 반복 사용 가능한 오버레이 재적용 (마커 재생성 없음)
     const applyOverlays = (fitInitial: boolean) => {
