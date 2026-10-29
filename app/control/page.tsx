@@ -77,6 +77,42 @@ function StatusBadge({ status }: { status: TrackerEvent["status"] }) {
   )
 }
 
+/** 카드 썸네일 위 출발 카운트다운 / 경과 시계 — 1초마다 갱신.
+ *  출발 전: "출발까지 1일 02:03:04", 진행 중: "경과 01:02:03", 종료·보관은 표시 안 함 */
+function StartClock({
+  startsAt,
+  status,
+}: {
+  startsAt: string | null
+  status: TrackerEvent["status"]
+}) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(t)
+  }, [])
+  if (!startsAt || (status !== "draft" && status !== "live")) return null
+  const diff = Math.floor((now - new Date(startsAt).getTime()) / 1000)
+  const pre = diff < 0
+  // 출발 전 준비중만 카운트다운, 진행중이면 경과 — 준비중인데 출발 시각이 지났으면 표시 안 함
+  if (!pre && status !== "live") return null
+  const sec = Math.abs(diff)
+  const days = Math.floor(sec / 86400)
+  const pad = (n: number) => String(n).padStart(2, "0")
+  const hms = `${pad(Math.floor((sec % 86400) / 3600))}:${pad(Math.floor((sec % 3600) / 60))}:${pad(sec % 60)}`
+  return (
+    <div className="absolute bottom-3 left-3 flex items-baseline gap-1.5 rounded-lg bg-black/60 px-2.5 py-1 text-white backdrop-blur">
+      <span className="text-[11px] font-semibold opacity-80">
+        {pre ? "출발까지" : "경과"}
+      </span>
+      <span className="text-base font-bold tabular-nums">
+        {days > 0 && `${days}일 `}
+        {hms}
+      </span>
+    </div>
+  )
+}
+
 /** 카드 상단 썸네일 — 코스 썸네일 or 그라데이션 폴백 */
 function CardThumb({
   thumb,
@@ -281,6 +317,7 @@ export default function ControlListPage() {
                       >
                         {ev.event_type === "race" ? "대회" : "모니터링"}
                       </Badge>
+                      <StartClock startsAt={ev.starts_at} status={ev.status} />
                     </CardThumb>
                   </Link>
                   <div className="p-4">
