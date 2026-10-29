@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ProfileMenu } from "@/components/layout/ProfileMenu"
@@ -21,8 +22,22 @@ export function SiteHeader({ className }: { className?: string }) {
     <header
       className={"flex h-16 items-center justify-between " + (className ?? "")}
     >
-      <Link href="/" className="text-sm font-bold tracking-tight">
-        HILLY HEALLY <span className="text-muted-foreground">GROUND</span>
+      {/* 브랜드 — 이벤트 페이지 헤더와 같은 로고 + 이름 (모바일은 GROUND 생략) */}
+      <Link
+        href="/"
+        className="flex items-center gap-2 text-sm font-bold tracking-tight"
+      >
+        <Image
+          src="/images/logo.png"
+          alt="Hilly Heally 로고"
+          width={28}
+          height={28}
+          priority
+        />
+        <span>
+          HILLY HEALLY{" "}
+          <span className="hidden text-muted-foreground sm:inline">GROUND</span>
+        </span>
       </Link>
       <div className="flex items-center gap-1">
         <Button asChild variant="ghost" size="sm" className={"relative " + active(NATSEONGOT.path)}>
