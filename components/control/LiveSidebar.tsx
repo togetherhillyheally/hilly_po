@@ -352,19 +352,20 @@ function EntryRow({
             <span className="font-medium text-foreground/80">{eta.when}</span>
           </span>
         )}
-        {battery && (
-          <span
-            className={
-              "whitespace-nowrap " +
-              (r.lowBattery ? "font-semibold text-red-500" : "")
-            }
-          >
-            🔋{battery}
-            {r.lowBattery && " 부족"}
-          </span>
-        )}
-        <span className="ml-auto">
+        {/* 배터리는 오른쪽 끝 (상태 배지 오른쪽) */}
+        <span className="ml-auto flex items-center gap-2">
           <StatusBadge r={r} preStart={preStart} />
+          {battery && (
+            <span
+              className={
+                "whitespace-nowrap " +
+                (r.lowBattery ? "font-semibold text-red-500" : "")
+              }
+            >
+              🔋{battery}
+              {r.lowBattery && " 부족"}
+            </span>
+          )}
         </span>
       </div>
     </button>
