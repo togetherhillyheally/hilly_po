@@ -13,7 +13,6 @@ import {
   Package,
   Radio,
   ShieldCheck,
-  Handshake,
   Ticket,
   Users,
   Wallet,
@@ -29,11 +28,11 @@ import { EventHeader } from "./EventHeader"
 export const metadata: Metadata = {
   title: "ROUTE @광교산 | 힐리힐리",
   description:
-    "2026.11.14 수원 광교산. 배점이 다른 체크포인트를 4시간 안에 원하는 순서로 모으는 팀 전략 게임. 순위는 없고 팀이 정한 목표만 있어요. 32명 한정.",
+    "2026.11.14 수원 광교산. 배점이 다른 체크포인트를 4시간 안에 원하는 순서로 모으는 전략 게임. 순위는 없고 스스로 정한 목표만 있어요. 32명 한정.",
   openGraph: {
     title: "ROUTE @광교산",
     description:
-      "산과 들에서 펼쳐지는 팀 전략 게임. 2026.11.14 수원 광교산, 32명 한정 모집.",
+      "산과 들에서 펼쳐지는 전략 게임. 2026.11.14 수원 광교산, 32명 한정 모집.",
     images: ["/events/og-route-gwanggyosan-v2.png"],
   },
 }
@@ -50,13 +49,13 @@ const FACTS = [
     icon: Users,
     label: "모집",
     value: `${EV.capacity}명 한정`,
-    sub: "4명씩 8팀, 최대 4명까지 함께 신청",
+    sub: "2인 1조, 혼자 신청하면 짝꿍 매칭 또는 개인전",
   },
   {
     icon: Wallet,
     label: "참가비",
     value: `${EV.fee.toLocaleString()}원`,
-    sub: "2인 이상 10% 할인, 보급과 추첨 포함",
+    sub: "둘이 신청하면 10% 할인, 보급과 추첨 포함",
   },
 ] as const
 
@@ -67,13 +66,13 @@ const B = ({ children }: { children: React.ReactNode }) => (
 const RULES = [
   {
     icon: Users,
-    title: "4명 한 팀, 2명씩 한 조",
+    title: "2인 1조, 원하면 개인전",
     desc: (
       <>
-        팀 안에서 <B>2인 1조</B>로 나뉘어 움직이고 조마다 트래커를 하나씩
-        들어요. 스탬프는 <B>같은 조 짝꿍이 50m 안에 함께 있어야</B> 인정돼요.
-        팀 점수는 두 조가 찍은 곳을 합쳐 계산하고 같은 곳은 한 번만
-        쳐줘요.
+        짝꿍과 <B>2인 1조</B>로 움직이고 조마다 트래커를 하나씩 들어요.
+        스탬프는 <B>짝꿍이 50m 안에 함께 있어야</B> 인정돼요. 혼자 신청했다면
+        운영진이 <B>짝꿍을 매칭</B>해 드리거나, 원하면 <B>개인전</B>으로 혼자
+        뛸 수 있어요.
       </>
     ),
   },
@@ -83,9 +82,9 @@ const RULES = [
     desc: (
       <>
         체크포인트 위치는 <B>모험이 시작되는 순간</B>에야 공개돼요. 미리
-        외워 올 수 없어요. 공개된 지도와 배점을 보고 그 자리에서 두 조의
-        동선을 짜고 팀의 목표를 선언해요 — “우리는 오늘 몇 점.” 남을 이기는
-        게 아니라 <B>우리 팀을 정확히 읽는 게 승부</B>예요.
+        외워 올 수 없어요. 공개된 지도와 배점을 보고 그 자리에서 동선을 짜고
+        목표를 선언해요 — “우리는 오늘 몇 점.” 남을 이기는 게 아니라{" "}
+        <B>스스로를 정확히 읽는 게 승부</B>예요.
       </>
     ),
   },
@@ -97,17 +96,6 @@ const RULES = [
         체크포인트를 어떤 순서로 어떻게 돌아도 괜찮아요. 다만{" "}
         <B>4시간 안에 전부 도는 건 불가능</B>해요. 어디를 가고 어디를 버릴지가
         이 게임의 전부예요.
-      </>
-    ),
-  },
-  {
-    icon: Handshake,
-    title: "특정 포인트는 4명이 함께 찍으면 ×2",
-    desc: (
-      <>
-        <B>특정 포인트</B>에서는 팀원 4명이 모두 한자리(50m 안)에 모여 찍으면{" "}
-        <B>점수가 두 배</B>예요. 갈라져서 더 많은 곳을 찍을지, 모여서 크게
-        찍을지 — <B>팀의 선택</B>이에요.
       </>
     ),
   },
@@ -145,19 +133,19 @@ const RULES = [
 const HOW_TO_PLAY = [
   {
     title: "12:00 집결",
-    desc: "서로 인사를 나누고 준비체조로 몸을 풀어요. 4명 한 팀, 그 안에서 2명씩 두 조를 확인하고 조마다 트래커를 받아요.",
+    desc: "서로 인사를 나누고 준비체조로 몸을 풀어요. 짝꿍을 확인하고 조마다 트래커를 받아요(개인전은 한 명에 하나).",
   },
   {
     title: "13:00 시작과 함께 지도 공개",
-    desc: "체크포인트 위치와 배점을 보고 동선을 짠 뒤, 팀 목표 점수를 선언하고 출발해요.",
+    desc: "체크포인트 위치와 배점을 보고 동선을 짠 뒤, 목표 점수를 선언하고 출발해요.",
   },
   {
     title: "짝꿍과 함께 도착하면 스탬프",
-    desc: "체크포인트에 가면 앱이 위치로 도착을 확인해요. 같은 조 짝꿍이 50m 안에 있어야 인정돼요.",
+    desc: "체크포인트에 가면 앱이 위치로 도착을 확인해요. 짝꿍이 50m 안에 있어야 인정돼요(개인전은 혼자).",
   },
   {
     title: "10~50점 모으기",
-    desc: "멀고 높은 곳일수록 큰 점수예요. 특정 포인트는 팀 4명이 함께 찍으면 점수가 2배예요.",
+    desc: "멀고 높은 곳일수록 큰 점수예요.",
   },
   {
     title: "17:00까지 산림욕장으로 복귀",
@@ -174,7 +162,7 @@ const TIMELINE = [
   {
     time: "12:00",
     title: "광교산 산림욕장에 집결",
-    desc: "밍글링과 준비체조, 팀 확인과 안내",
+    desc: "밍글링과 준비체조, 짝꿍 확인과 안내",
     link: {
       label: "주차: 수원시환경성질환아토피센터",
       href: "https://naver.me/xnhfZnLP",
@@ -219,7 +207,7 @@ const PROVIDED = [
 ] as const
 
 const SAFETY = [
-  "2인 1조 이동이 원칙이에요. 혼자 다니지 않아요.",
+  "짝꿍과는 끝까지 함께 다녀요. 개인전은 트래커를 꼭 몸에 지녀요.",
   "운영본부가 전원의 위치를 실시간으로 봐요.",
   "제한 시각까지 광교산 산림욕장 복귀가 원칙이고, 늦어지면 운영진이 위치를 확인해 찾아가요.",
   "언제든 기권할 수 있어요. 가장 가까운 날머리로 안내할게요.",
@@ -253,13 +241,13 @@ export default function NatseongotPage() {
             ROUTE <span className="text-[#DC2F55]">@광교산</span>
           </h1>
           <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            산과 들에서 펼쳐지는 팀 전략 게임.
+            산과 들에서 펼쳐지는 전략 게임.
             <br />
             배점이 다른 체크포인트를 원하는 순서로 모으고 제한 시간 안에
             출발점으로 돌아오세요.
           </p>
           <p className="mt-3 text-sm font-medium text-[#DC2F55]">
-            순위는 없어요. 팀이 정한 목표만 있어요.
+            순위는 없어요. 스스로 정한 목표만 있어요.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
             <SignupSheet>
@@ -342,7 +330,7 @@ export default function NatseongotPage() {
       <section id="game" className="scroll-mt-8 border-t py-20">
         <Reveal>
           <h2 className="text-2xl font-bold tracking-tighter sm:text-3xl">
-            점수를 모으는 팀 전략 게임
+            점수를 모으는 전략 게임
           </h2>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
             경쟁은 덜고 어디로 갈지 고르는 재미만 남겼어요.
@@ -548,7 +536,7 @@ export default function NatseongotPage() {
                 참가비에 포함된 것
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                1인 {EV.fee.toLocaleString()}원 (2인 이상 신청 시 10% 할인)
+                1인 {EV.fee.toLocaleString()}원 (둘이 신청하면 10% 할인)
               </p>
               <ul className="mt-6 space-y-4">
                 {PROVIDED.map((p) => (
@@ -636,7 +624,7 @@ export default function NatseongotPage() {
               {EV.capacity}명 한정, 함께 가실래요?
             </h2>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-              신청서를 보내고 참가비를 결제하면 신청이 확정돼요. 팀 배정과 집결
+              신청서를 보내고 참가비를 결제하면 신청이 확정돼요. 짝꿍 매칭과 집결
               안내는 행사 일주일 전 개별로 보내드려요.
             </p>
 
@@ -647,7 +635,7 @@ export default function NatseongotPage() {
                   {EV.fee.toLocaleString()}원
                 </dd>
                 <dd className="mt-0.5 text-xs text-muted-foreground">
-                  2인 이상 10% 할인
+                  둘이 신청하면 10% 할인
                 </dd>
               </div>
               <div className="rounded-xl border bg-background px-4 py-3">

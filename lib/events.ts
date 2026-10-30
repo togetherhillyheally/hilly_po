@@ -10,7 +10,7 @@ export type EventInfo = {
   capacity: number
   /** 단체 신청 최대 인원 */
   maxParty: number
-  /** 이 인원수로 신청하면 10% 할인 (2인 이상) */
+  /** 이 인원수로 신청하면 10% 할인 */
   discountSizes: number[]
   dateLabel: string
   timeLabel: string
@@ -30,8 +30,8 @@ export const NATSEONGOT: EventInfo = {
   title: "ROUTE @광교산",
   subtitle: "",
   fee: 40_000,
-  maxParty: 4,
-  discountSizes: [2, 3, 4],
+  maxParty: 2,
+  discountSizes: [2],
   capacity: 32,
   dateLabel: "2026. 11. 14. (토)",
   timeLabel: "12:00 집결, 13:00 ~ 17:00 (4시간)",
@@ -46,7 +46,7 @@ export const NATSEONGOT: EventInfo = {
 /** 이벤트 목록(/events) — 최신 행사가 앞. 새 행사는 여기에 추가 */
 export const EVENTS: EventInfo[] = [NATSEONGOT]
 
-/** 인원수별 가격 — 2인 이상 신청 시 1인 요금 10% 할인 (서버와 동일 규칙) */
+/** 인원수별 가격 — 할인 인원수(2인)로 신청 시 1인 요금 10% 할인 (서버와 동일 규칙) */
 export function partyPricing(size: number): {
   per: number
   total: number

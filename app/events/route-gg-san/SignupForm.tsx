@@ -41,6 +41,8 @@ const EMPTY_P: Participant = {
 type Fields = {
   email: string
   playStyle: string
+  /** 혼자 신청할 때만 — solo: 개인전, match: 운영진이 짝꿍 매칭 */
+  playMode: "" | "solo" | "match"
   emergencyName: string
   emergencyRelation: string
   emergencyPhone: string
@@ -51,6 +53,7 @@ type Fields = {
 const EMPTY: Fields = {
   email: "",
   playStyle: "",
+  playMode: "",
   emergencyName: "",
   emergencyRelation: "",
   emergencyPhone: "",
@@ -58,7 +61,7 @@ const EMPTY: Fields = {
   note: "",
 }
 
-/** 조(2인) 편성 기준 — 같은 조는 페이스가 비슷해야 4시간이 즐겁다 */
+/** 짝꿍 매칭 기준 — 둘이 페이스가 비슷해야 4시간이 즐겁다 */
 const PACE = [
   "산에서 뛰는 게 편해요 — 트레일러닝 해봤어요",
   "빠른 걸음 — 20km+ 장거리 산행 경험 있어요",
@@ -66,7 +69,7 @@ const PACE = [
   "쉬엄쉬엄 — 등산이 아직 익숙하지 않아요",
 ] as const
 
-/** 팀(4인) 궁합 기준 — 목표가 다른 사람끼리 묶이면 서로 괴롭다 */
+/** 목표 궁합 기준 — 목표가 다른 사람끼리 묶이면 서로 괴롭다 */
 const PLAY_STYLE = [
   "도전파 — 고득점, 정상석까지 노려요",
   "전략파 — 머리 쓰는 재미, 효율 좋은 동선으로",
@@ -78,13 +81,13 @@ const AGREEMENTS = [
     key: "terms" as const,
     required: true,
     label:
-      "산행 중 발생할 수 있는 위험을 이해하고, 운영진의 안전 수칙(2인 1조 이동, 귀환 시각 지키기)을 따를게요.",
+      "산행 중 발생할 수 있는 위험을 이해하고, 운영진의 안전 수칙(트래커 휴대, 귀환 시각 지키기)을 따를게요.",
   },
   {
     key: "privacy" as const,
     required: true,
     label:
-      "행사 운영과 조 편성을 위해 입력한 개인정보가 수집·이용되는 데 동의해요. (행사 종료 후 6개월 내 파기)",
+      "행사 운영과 짝꿍 매칭을 위해 입력한 개인정보가 수집·이용되는 데 동의해요. (행사 종료 후 6개월 내 파기)",
   },
   {
     key: "photo" as const,
@@ -96,7 +99,7 @@ const AGREEMENTS = [
 
 export function SignupForm() {
   const [f, setF] = useState<Fields>(EMPTY)
-  // 단체 신청 — 첫 번째가 대장(본인), 최대 EV.maxParty 명
+  // 혼자 또는 짝꿍과 둘이 — 첫 번째가 대장(본인), 최대 EV.maxParty 명
   const [party, setParty] = useState<Participant[]>([{ ...EMPTY_P }])
   const [agree, setAgree] = useState({
     terms: false,
@@ -257,6 +260,7 @@ export function SignupForm() {
   )
   const canSubmit =
     partyValid &&
+    (party.length > 1 || f.playMode !== "") &&
     f.email.includes("@") &&
     f.emergencyName.trim().length >= 2 &&
     f.emergencyPhone.replace(/\D/g, "").length >= 10 &&
@@ -415,7 +419,7 @@ export function SignupForm() {
           <SectionTitle n={1}>
             참가자 정보
             <span className="ml-2 text-xs font-normal text-muted-foreground">
-              최대 {EV.maxParty}명 단체 신청
+              혼자 또는 짝꿍과 둘이
             </span>
           </SectionTitle>
           <div className="space-y-4">
@@ -493,9 +497,40 @@ export function SignupForm() {
                 className="h-11 w-full border-dashed"
                 onClick={() => setParty((list) => [...list, { ...EMPTY_P }])}
               >
-                + 참가자 추가 ({party.length}/{EV.maxParty}명) — 2인 이상은 10%
-                할인
+                + 짝꿍 추가 — 둘이 신청하면 10% 할인
               </Button>
+            )}
+            {party.length === 1 && (
+              <div>
+                <p className="mb-2 text-sm font-medium">
+                  혼자 신청하면 어떻게 할까요?
+                  <span className="ml-0.5 text-[#DC2F55]">*</span>
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {(
+                    [
+                      ["match", "짝꿍 매칭", "운영진이 페이스·목표가 맞는 짝꿍을 이어 드려요"],
+                      ["solo", "개인전", "혼자 움직이며 혼자 점수를 모아요"],
+                    ] as const
+                  ).map(([v, label, desc]) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setF((p) => ({ ...p, playMode: v }))}
+                      className={`rounded-xl border px-4 py-3 text-left text-sm transition-colors ${
+                        f.playMode === v
+                          ? "border-[#DC2F55]/50 bg-[#DC2F55]/5"
+                          : "hover:border-foreground/20"
+                      }`}
+                    >
+                      <span className="font-medium">{label}</span>
+                      <span className="mt-0.5 block text-xs text-muted-foreground">
+                        {desc}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
             <Field label="이메일 (대장)" required>
               <Input
@@ -547,14 +582,14 @@ export function SignupForm() {
           <SectionTitle n={3}>
             페이스 & 플레이 스타일
             <span className="ml-2 text-xs font-normal text-muted-foreground">
-              조 편성과 팀 배정에 그대로 써요
+              짝꿍 매칭에 그대로 써요
             </span>
           </SectionTitle>
 
           <p className="mb-2 text-sm font-medium">
             우리의 산 페이스는?
             <span className="ml-2 text-xs font-normal text-muted-foreground">
-              같은 조(2인)는 페이스가 비슷해야 4시간이 즐거워요
+              짝꿍과 페이스가 비슷해야 4시간이 즐거워요
             </span>
           </p>
           <div className="space-y-2">
@@ -577,7 +612,7 @@ export function SignupForm() {
           <p className="mb-2 mt-6 text-sm font-medium">
             이날의 목표는?
             <span className="ml-2 text-xs font-normal text-muted-foreground">
-              비슷한 목표의 팀끼리 묶어드려요
+              비슷한 목표끼리 짝을 지어드려요
             </span>
           </p>
           <div className="space-y-2">

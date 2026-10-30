@@ -91,7 +91,7 @@ export function SuccessClient() {
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {name ? `${name}님, ` : ""}ROUTE @광교산에서 만나요.
                 <br />
-                팀 배정과 집결 안내는 행사 일주일 전에 문자로 보내드릴게요.
+                짝꿍 매칭과 집결 안내는 행사 일주일 전에 문자로 보내드릴게요.
               </p>
 
               <dl className="mt-7 space-y-3 rounded-xl border bg-background p-5 text-left">

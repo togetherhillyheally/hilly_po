@@ -58,7 +58,7 @@ export function LiveGate() {
         {EV.title} 실시간 응원
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        모험이 시작되면 이 화면에서 팀들의 위치를 실시간으로 볼 수 있어요.
+        모험이 시작되면 이 화면에서 참가자들의 위치를 실시간으로 볼 수 있어요.
         <br />
         {EV.dateLabel}, 시작되면 자동으로 열려요.
       </p>
