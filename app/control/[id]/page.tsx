@@ -404,7 +404,7 @@ function ControlRoom({
                 className={
                   "absolute left-3 z-30 md:bottom-3 " +
                   (elevOpen ? "hidden md:block " : "") +
-                  (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-3")
+                  (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-3")
                 }
               />
               {/* 고도표 — 지도 아래에서 펼쳐 보기 (대회 모바일은 상단 지도/고도 전환이 대신) */}
@@ -421,7 +421,7 @@ function ControlRoom({
                     "absolute z-20 md:left-20 md:right-[372px] md:bottom-3 " +
                     (hasProfileView ? "hidden md:block " : "") +
                     (elevOpen ? "left-3 right-3 " : "left-20 right-3 ") +
-                    (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-3")
+                    (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-3")
                   }
                 />
               )}

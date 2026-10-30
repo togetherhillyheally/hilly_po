@@ -9,6 +9,7 @@ import {
   ChevronsUp,
   Search,
   Star,
+  X,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -423,6 +424,8 @@ export default function LiveSidebar({
   }
   const inline = variant === "inline"
   const [query, setQuery] = useState("")
+  // 모바일은 검색창을 접어 두고 돋보기 버튼으로 연다 (하단 시트 높이 확보)
+  const [searchOpen, setSearchOpen] = useState(false)
   const isRace = eventType === "race"
 
   // 리스트도 지도/프로필과 같은 표시 필터를 따름 (필터 하나로 통합)
@@ -511,8 +514,8 @@ export default function LiveSidebar({
       className={
         inline
           ? "relative flex w-full flex-col overflow-hidden rounded-2xl border bg-background"
-          : // 모바일: 하단 시트(전폭·40% 높이 — 지도를 더 넓게) / 데스크톱: 우측 패널
-            "absolute inset-x-0 bottom-0 z-20 flex h-[40%] flex-col rounded-t-2xl border-t bg-background/90 backdrop-blur " +
+          : // 모바일: 하단 시트(전폭·50% 높이) / 데스크톱: 우측 패널
+            "absolute inset-x-0 bottom-0 z-20 flex h-[50%] flex-col rounded-t-2xl border-t bg-background/90 backdrop-blur " +
             "md:inset-y-0 md:left-auto md:right-0 md:h-auto md:w-[360px] md:max-w-[88vw] md:rounded-none md:border-l md:border-t-0"
       }
     >
@@ -545,7 +548,7 @@ export default function LiveSidebar({
         <div className="border-b px-4 pb-2 pt-4 md:hidden">{mobileHeader}</div>
       )}
 
-      <div className="flex items-center border-b px-3 py-2.5">
+      <div className="flex items-center gap-2 border-b px-3 py-2 md:py-2.5">
         {displayMode && onDisplayModeChange ? (
           // 표시 필터가 헤더 타이틀 자리를 대신함
           <DisplayFilterControl
@@ -561,17 +564,51 @@ export default function LiveSidebar({
             {isRace ? "리더보드" : noun}
           </h2>
         )}
+        <button
+          type="button"
+          onClick={() => setSearchOpen((v) => !v)}
+          aria-label="이름·배번 검색"
+          aria-expanded={searchOpen}
+          className={
+            "ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors md:hidden " +
+            (searchOpen || query
+              ? "bg-foreground/10 text-foreground"
+              : "text-muted-foreground hover:bg-muted")
+          }
+        >
+          <Search className="h-4 w-4" />
+        </button>
       </div>
 
-      <div className="border-b px-3 py-2">
+      <div
+        className={
+          "border-b px-3 py-2 " +
+          (searchOpen || query ? "" : "hidden md:block")
+        }
+      >
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="이름·배번 검색"
-            className="h-8 pl-8 text-sm"
+            // 모바일에서 열 때 바로 입력 (데스크톱은 항상 보이니 자동 포커스 안 함)
+            autoFocus={searchOpen}
+            className="h-8 pl-8 pr-8 text-sm"
           />
+          {(searchOpen || query) && (
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("")
+                setSearchOpen(false)
+              }}
+              aria-label="검색 닫기"
+              className="absolute right-1.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-muted md:hidden"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

@@ -317,7 +317,7 @@ function WatchView({ token }: { token: string }) {
             "absolute left-4 z-30 md:bottom-4 " +
             // 모바일: 고도표가 펼쳐져 있으면 자리 양보 (데스크톱은 겹치지 않음)
             (elevOpen ? "hidden md:block " : "") +
-            (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-4")
+            (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-4")
           }
         />
 
@@ -338,7 +338,7 @@ function WatchView({ token }: { token: string }) {
               "absolute z-20 md:left-20 md:right-[376px] md:bottom-4 " +
               (hasProfileView ? "hidden md:block " : "") +
               (elevOpen ? "left-3 right-3 " : "left-20 right-4 ") +
-              (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-4")
+              (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-4")
             }
           />
         )}
