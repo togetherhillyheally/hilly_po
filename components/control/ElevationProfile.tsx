@@ -160,6 +160,12 @@ export default function ElevationProfile({
       })
       .filter((m): m is NonNullable<typeof m> => m !== null)
       .sort((a, b) => a.xPct - b.xPct)
+      // 바로 앞 CP 와 너무 가까우면(폭의 6% 이내) 라벨을 한 줄 위로 — 이름이 겹치지 않게 (번갈아)
+      .map((m, i, arr) => ({ ...m, lifted: false, close: i > 0 && m.xPct - arr[i - 1].xPct < 6 }))
+      .map((m, i, arr) => {
+        m.lifted = m.close && !arr[i - 1].lifted
+        return m
+      })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkpoints, index, hasEle, minEle, maxEle])
 
@@ -294,7 +300,7 @@ export default function ElevationProfile({
             className="pointer-events-none absolute left-0 right-0 border-t border-dashed border-foreground/10"
             style={{ top: `${yPctOf(e)}%` }}
           >
-            <span className="absolute left-1.5 top-0 -translate-y-full text-[9px] leading-tight text-muted-foreground/80">
+            <span className="absolute left-1.5 top-0 -translate-y-full text-[9px] leading-tight text-muted-foreground/80 md:text-[10px]">
               {e}m
             </span>
           </div>
@@ -322,7 +328,7 @@ export default function ElevationProfile({
         </svg>
 
         {/* 체크포인트 — 세로 점선 + 하단 라벨은 항상, 시설 아이콘만 필터로 숨김 */}
-        {cpMarks.map(({ cp, icon, xPct, yPct, km }, i) => (
+        {cpMarks.map(({ cp, icon, xPct, yPct, km, lifted }, i) => (
           <div key={`${cp.sort_order}-${i}`}>
             <div
               className="pointer-events-none absolute border-l border-dashed border-foreground/25"
@@ -344,13 +350,16 @@ export default function ElevationProfile({
               />
             )}
             <div
-              className="pointer-events-none absolute bottom-1 max-w-28 -translate-x-1/2 text-center leading-tight"
+              className={
+                "pointer-events-none absolute max-w-28 -translate-x-1/2 rounded bg-background/80 px-0.5 text-center leading-tight " +
+                (lifted ? "bottom-7 md:bottom-9" : "bottom-1")
+              }
               style={{ left: `${xPct}%` }}
             >
-              <p className="truncate text-[9px] font-semibold text-foreground/90">
+              <p className="truncate text-[9px] font-semibold text-foreground/90 md:text-[11px]">
                 {cp.title}
               </p>
-              <p className="text-[9px] tabular-nums text-muted-foreground">
+              <p className="text-[9px] tabular-nums text-muted-foreground md:text-[10px]">
                 {km.toFixed(1)}km
               </p>
             </div>
