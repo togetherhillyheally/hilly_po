@@ -7,6 +7,7 @@ import {
   type MovementAnchor,
   type ProgressState,
   type RankedEntry,
+  buildCheckpointMarks,
   buildCourseIndex,
   rankEntries,
 } from "@/lib/course-progress"
@@ -70,6 +71,15 @@ export function useLiveEvent(options: {
   }, [info])
   const courseIndexRef = useRef<CourseIndex | null>(null)
   courseIndexRef.current = courseIndex
+  const checkpointMarks = useMemo(
+    () =>
+      courseIndex && info?.trail?.checkpoints?.length
+        ? buildCheckpointMarks(courseIndex, info.trail.checkpoints)
+        : [],
+    [courseIndex, info],
+  )
+  const checkpointMarksRef = useRef(checkpointMarks)
+  checkpointMarksRef.current = checkpointMarks
   const startsAtMsRef = useRef<number | null>(null)
   startsAtMsRef.current = info?.starts_at
     ? new Date(info.starts_at).getTime()
@@ -148,6 +158,7 @@ export function useLiveEvent(options: {
           Date.now(),
           startsAtMsRef.current,
           movementMapRef.current,
+          checkpointMarksRef.current,
         ),
       )
       setLastPolledAt(Date.now())

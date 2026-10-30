@@ -17,6 +17,7 @@ import {
   isGpsWaiting,
   type RankedEntry,
   formatGap,
+  nextEta,
   formatStationary,
   monitorSeverity,
 } from "@/lib/course-progress"
@@ -148,13 +149,6 @@ function formatReceivedAgo(recordedAt: string | null): string | null {
   return `수신 ${Math.floor(min / 60)}시간 전`
 }
 
-function formatEta(etaAt: number | null): string | null {
-  if (etaAt == null) return null
-  const d = new Date(etaAt)
-  const pad = (n: number) => String(n).padStart(2, "0")
-  return `도착 예상 ${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
-
 /** 프로필 사진 원 — 없으면 이름 첫 글자, 테두리는 구분 색 */
 function AvatarCircle({
   name,
@@ -214,7 +208,8 @@ function EntryRow({
   const podium = isRace && r.rank != null && r.rank <= 3
   // 배터리는 관전 화면에도 보인다 (tracker_event_public_signals)
   const battery = batteryPercent(r.entry.battery_mv, r.entry.battery_pct)
-  const eta = isRace ? formatEta(r.etaAt) : null
+  // 다음 CP(없으면 결승) 도착 예상
+  const eta = isRace ? nextEta(r) : null
   // 레이스: 여기까지의 누적 상승 / 모니터: 현재 해발고도(지형 조회)
   const ascent = isRace && !dimmed ? r.ascentM : null
   const altitude = !isRace && !dimmed ? (terrainEle ?? null) : null
@@ -346,9 +341,10 @@ function EntryRow({
         {!isRace && receivedAgo && (
           <span className="whitespace-nowrap">{receivedAgo}</span>
         )}
-        {!r.finished && eta && (
-          <span className="whitespace-nowrap font-medium text-foreground/80">
-            {eta}
+        {eta && (
+          <span className="whitespace-nowrap" title={`${eta.where} 도착 예상 (지금까지 평균 페이스 기준)`}>
+            {eta.where}{" "}
+            <span className="font-medium text-foreground/80">{eta.when}</span>
           </span>
         )}
         {battery && (

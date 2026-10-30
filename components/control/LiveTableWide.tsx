@@ -8,6 +8,7 @@ import {
   isGpsWaiting,
   type RankedEntry,
   formatGap,
+  nextEta,
   formatStationary,
   monitorSeverity,
 } from "@/lib/course-progress"
@@ -31,13 +32,6 @@ export type LiveTableWideProps = {
   onDisplayModeChange: (mode: DisplayMode) => void
   /** 출발 전 — 신호 없음을 빨간 경고 대신 중립 "출발 대기"로 */
   preStart?: boolean
-}
-
-function formatEtaTime(etaAt: number | null): string {
-  if (etaAt == null) return "—"
-  const d = new Date(etaAt)
-  const pad = (n: number) => String(n).padStart(2, "0")
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 function StatusCell({ r, selected, preStart }: { r: RankedEntry; selected: boolean; preStart?: boolean }) {
@@ -219,7 +213,7 @@ export default function LiveTableWide({
               )}
               {!isRace && <th className="w-24 px-3 py-1 font-medium">수신</th>}
               {isRace && (
-                <th className="w-28 px-3 py-1 font-medium">도착 예상</th>
+                <th className="w-40 px-3 py-1 font-medium">다음 CP 예상</th>
               )}
               {isRace && (
                 <th className="w-32 px-3 py-1 font-medium">1위와의 차이</th>
@@ -372,7 +366,17 @@ export default function LiveTableWide({
                   )}
                   {isRace && (
                     <td className="px-3 py-2.5 align-middle tabular-nums">
-                      {r.finished ? "—" : formatEtaTime(r.etaAt)}
+                      {(() => {
+                        const eta = nextEta(r)
+                        return eta ? (
+                          <span className="whitespace-nowrap">
+                            <span className="text-muted-foreground">{eta.where}</span>{" "}
+                            {eta.when}
+                          </span>
+                        ) : (
+                          "—"
+                        )
+                      })()}
                     </td>
                   )}
                   {isRace && (

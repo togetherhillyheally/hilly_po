@@ -205,6 +205,31 @@ function projectOnRange(
   return best
 }
 
+/** 코스 위 체크포인트 — 진행거리(m)로 환산해 둔 것 (다음 CP 도착 예상용) */
+export interface CheckpointMark {
+  title: string
+  progressM: number
+}
+
+/**
+ * 체크포인트를 코스 진행거리로 환산 — 순서대로, 앞 CP 이후 구간에서만 찾는다
+ * (순환·겹치는 구간에서 엉뚱한 쪽으로 잡히지 않게). 코스에서 300m 넘게 떨어진 CP 는 뺀다.
+ */
+export function buildCheckpointMarks(
+  index: CourseIndex,
+  checkpoints: { title: string; lat: number; lng: number; sort_order: number }[],
+): CheckpointMark[] {
+  const marks: CheckpointMark[] = []
+  let fromM = 0
+  for (const cp of [...checkpoints].sort((a, b) => a.sort_order - b.sort_order)) {
+    const p = projectOnRange(index, cp.lat, cp.lng, fromM, index.totalM)
+    if (!p || p.crossTrackM > 300) continue
+    marks.push({ title: cp.title, progressM: p.progressM })
+    fromM = p.progressM
+  }
+  return marks
+}
+
 export interface ProgressState {
   progressM: number
   backCount: number
@@ -297,6 +322,8 @@ export interface RankedEntry {
   gapSec: number | null
   /** 평균 페이스 기반 예상 완주 시각(epoch ms) — 계산 불가면 null */
   etaAt: number | null
+  /** 다음 체크포인트와 평균 페이스 기반 도착 예상 시각 — CP 가 남아 있지 않으면 null (그땐 etaAt = 결승) */
+  nextCp: { title: string; etaAt: number | null } | null
   /** 코스 프로필 기반 현재 해발고도(m) — 코스/고도 데이터 없으면 null */
   altitudeM: number | null
   /** 여기까지의 누적 상승(m) — 코스/고도 데이터 없으면 null */
@@ -348,6 +375,8 @@ export function rankEntries(
   startsAtMs?: number | null,
   /** 서버 last_moved_at 이 없는 응답(관전/모험)의 클라이언트 정지 감지 앵커 */
   movementMap?: Map<string, MovementAnchor>,
+  /** 코스 위 체크포인트 (buildCheckpointMarks) — 있으면 다음 CP 도착 예상 계산 */
+  checkpointMarks?: CheckpointMark[],
 ): RankedEntry[] {
   const ranked: RankedEntry[] = entries.map((entry) => {
     const hasFix = entry.lat != null && entry.lng != null && entry.recorded_at
@@ -390,6 +419,7 @@ export function rankEntries(
 
     // 평균 페이스(진행거리/경과시간) 기반 예상 완주 시각 — 초반/정지 상태는 제외
     let etaAt: number | null = null
+    let avgMps: number | null = null
     if (
       courseIndex &&
       startsAtMs &&
@@ -399,11 +429,26 @@ export function rankEntries(
       now - startsAtMs > 120_000 &&
       progressM < courseIndex.totalM
     ) {
-      const avgMps = progressM / ((now - startsAtMs) / 1000)
-      if (avgMps > 0.2) {
-        etaAt = now + ((courseIndex.totalM - progressM) / avgMps) * 1000
+      const mps = progressM / ((now - startsAtMs) / 1000)
+      if (mps > 0.2) {
+        avgMps = mps
+        etaAt = now + ((courseIndex.totalM - progressM) / mps) * 1000
       }
     }
+    // 다음 CP — 지금 위치보다 50m 이상 앞에 있는 첫 CP (CP 에 머무는 동안은 다음 CP 로 넘기지 않음)
+    const nextMark =
+      progressM != null
+        ? checkpointMarks?.find((m) => m.progressM > progressM! + 50)
+        : undefined
+    const nextCp = nextMark
+      ? {
+          title: nextMark.title,
+          etaAt:
+            avgMps != null
+              ? now + ((nextMark.progressM - progressM!) / avgMps) * 1000
+              : null,
+        }
+      : null
 
     const altitudeM =
       courseIndex && progressM != null && courseIndex.totalAscentM != null
@@ -457,6 +502,7 @@ export function rankEntries(
       gapM: null,
       gapSec: null,
       etaAt,
+      nextCp,
       altitudeM,
       ascentM,
       finished,
@@ -499,6 +545,29 @@ export function rankEntries(
   })
 
   return ranked
+}
+
+/** 예상 시각 "14:20" — 오늘이 아니면 "내일 02:10" (그 뒤는 "11/1 02:10") */
+export function formatEtaClock(etaAt: number, now = Date.now()): string {
+  const d = new Date(etaAt)
+  const pad = (n: number) => String(n).padStart(2, "0")
+  const hm = `${pad(d.getHours())}:${pad(d.getMinutes())}`
+  const day = (t: Date) => new Date(t.getFullYear(), t.getMonth(), t.getDate()).getTime()
+  const diff = Math.round((day(d) - day(new Date(now))) / 86_400_000)
+  if (diff <= 0) return hm
+  if (diff === 1) return `내일 ${hm}`
+  return `${d.getMonth() + 1}/${d.getDate()} ${hm}`
+}
+
+/** 다음 CP(없으면 결승) 도착 예상 — { 어디, 언제 }. 계산 불가·도착자는 null */
+export function nextEta(r: RankedEntry): { where: string; when: string } | null {
+  if (r.finished) return null
+  if (r.nextCp) {
+    if (r.nextCp.etaAt == null) return null
+    return { where: r.nextCp.title, when: formatEtaClock(r.nextCp.etaAt) }
+  }
+  if (r.etaAt == null) return null
+  return { where: "결승", when: formatEtaClock(r.etaAt) }
 }
 
 export function formatGap(gapM: number | null): string {
