@@ -25,7 +25,7 @@ import {
   DisplayFilterControl,
   filterDisplayEntries,
 } from "./DisplayFilter"
-import { categoryColor } from "./LiveMap"
+import { entryColor } from "@/lib/entry-colors"
 
 export type LiveSidebarProps = {
   ranked: RankedEntry[]
@@ -219,7 +219,7 @@ function EntryRow({
   const ascent = isRace && !dimmed ? r.ascentM : null
   const altitude = !isRace && !dimmed ? (terrainEle ?? null) : null
   const receivedAgo = !isRace ? formatReceivedAgo(r.entry.recorded_at) : null
-  const color = categoryColor(r.entry.category, categories)
+  const color = entryColor(r.entry, categories)
 
   return (
     <button

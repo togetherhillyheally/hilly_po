@@ -15,6 +15,7 @@ import {
 } from "@/lib/course-progress"
 import type { EventCourseCheckpoint } from "@/lib/repos/trackerControlTypes"
 import { categoryColor } from "./LiveMap"
+import { entryColor } from "@/lib/entry-colors"
 
 export type ElevationProfileProps = {
   index: CourseIndex
@@ -362,7 +363,7 @@ export default function ElevationProfile({
           const color =
             r.status === "sos"
               ? "#dc2626"
-              : categoryColor(r.entry.category, categories)
+              : entryColor(r.entry, categories)
           const size = expanded
             ? selected
               ? "h-8 w-8 text-[13px]"

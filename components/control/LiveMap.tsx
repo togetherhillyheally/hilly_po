@@ -11,8 +11,8 @@ import { toast } from "sonner"
 import { haversineMeters } from "@/lib/geo"
 import { applyKoreanLabels } from "@/lib/mapbox-locale"
 import { TRAIL_SEGMENT_PALETTE } from "@/lib/trail-palette"
+import { entryColor } from "@/lib/entry-colors"
 import {
-  batteryPercentOf,
   isGpsWaiting,
   type RankedEntry,
   STATIONARY_THRESHOLD_SEC,
@@ -84,26 +84,7 @@ function courseEnds(
   if (!first || !last) return null
   return { start: [first[0], first[1]], end: [last[0], last[1]] }
 }
-const CATEGORY_COLORS = [
-  "#3b82f6",
-  "#f59e0b",
-  "#10b981",
-  "#a855f7",
-  "#ec4899",
-  "#14b8a6",
-  "#f97316",
-  "#6366f1",
-]
-
-/** 구분(카테고리)별 색 — 구분 없는 엔트리는 첫 색 */
-export function categoryColor(
-  category: string | null,
-  categories: string[],
-): string {
-  if (!category) return CATEGORY_COLORS[0]
-  const idx = categories.indexOf(category)
-  return CATEGORY_COLORS[(idx < 0 ? 0 : idx) % CATEGORY_COLORS.length]
-}
+export { categoryColor } from "@/lib/entry-colors"
 
 export type LiveMapProps = {
   course: EventCourse | null
@@ -175,11 +156,11 @@ function markerShortName(name: string): string {
 
 function markerLabel(r: RankedEntry): string {
   const flag = r.finished ? "✓ " : ""
-  const rank = r.rank != null && r.rank <= 3 ? `${r.rank}위 ` : ""
+  // 순위·배터리는 목록에서 — 지도엔 누군지만
   const bib = r.entry.bib_no ? `#${r.entry.bib_no} ` : ""
   // 스탬프 게임 이벤트 — 조별 실시간 점수를 마커에 함께 표시
   const score = r.gameScore != null ? ` · ${r.gameScore}점` : ""
-  return `${flag}${rank}${bib}${markerShortName(r.entry.display_name)}${score}`
+  return `${flag}${bib}${markerShortName(r.entry.display_name)}${score}`
 }
 
 /** 겹침 대비 z-index: 선택 > SOS > 순위 높은 순. 호버 시 일시적으로 최상단 */
@@ -272,16 +253,6 @@ function styleMarkerEl(
   const text = document.createElement("span")
   text.textContent = members.length > 1 ? `${label} · ${members.length}명` : label
   chip.appendChild(text)
-  // 배터리 — 한 사람 마커만 (묶인 마커는 목록에서 확인). 20% 이하면 빨갛게
-  const pct = members.length === 1 ? batteryPercentOf(r.entry) : null
-  if (pct != null) {
-    const bat = document.createElement("span")
-    bat.textContent = `🔋${pct}%`
-    bat.className =
-      "ml-1.5 rounded-full px-1.5 text-[10px] font-semibold tabular-nums " +
-      (pct <= 20 ? "bg-red-600 text-white" : "bg-black/25 text-white")
-    chip.appendChild(bat)
-  }
   const sos = members.some((m) => m.status === "sos")
   // 도착자는 신호가 끊겨도 정상 표시 유지
   const noSignal = members.every(
@@ -295,15 +266,12 @@ function styleMarkerEl(
       m.stationarySec != null &&
       m.stationarySec >= STATIONARY_THRESHOLD_SEC,
   )
-  const podium = members.length === 1 && r.rank != null && r.rank <= 3
   chip.className =
     "inline-flex w-max items-center rounded-full border border-white/80 px-2 py-0.5 text-[11px] font-bold text-white shadow-md cursor-pointer select-none whitespace-nowrap" +
     (sos ? " animate-pulse ring-2 ring-red-500" : "") +
     // 신호 없음: 빨간 링 + 살짝 흐리게 (SOS 의 빨간 배경/펄스와 구분)
     (noSignal ? " opacity-75 ring-2 ring-red-500" : "") +
     (stationary && !selected ? " ring-2 ring-amber-400" : "") +
-    // 1~3위: 색 구분 없이 살짝 크게 ("n위" 텍스트로만 표시)
-    (podium ? " text-[12px]" : "") +
     (selected ? " ring-2 ring-white scale-110" : "")
   chip.style.background = sos ? "#dc2626" : color
 
@@ -708,7 +676,7 @@ export default function LiveMap({
       for (const g of groupEntries(entries, groupRadiusM)) {
         const r = g.members[0]
         seen.add(g.key)
-        const color = categoryColor(r.entry.category, categories)
+        const color = entryColor(r.entry, categories)
         const selected = g.members.some((m) => m.entry.entry_id === selectedId)
         const label = Array.from(new Set(g.members.map(textOf))).join(" · ")
         const existing = markersRef.current.get(g.key)

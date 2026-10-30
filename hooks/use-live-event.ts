@@ -10,6 +10,7 @@ import {
   buildCourseIndex,
   rankEntries,
 } from "@/lib/course-progress"
+import { registerEntryColors } from "@/lib/entry-colors"
 import { trackerControlRepo } from "@/lib/repos/trackerControlRepo"
 import type {
   PublicEventInfo,
@@ -124,6 +125,7 @@ export function useLiveEvent(options: {
             }
           })
       }
+      registerEntryColors(entries)
       setRanked(
         rankEntries(
           entries,

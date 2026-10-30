@@ -16,7 +16,7 @@ import {
   DisplayFilterControl,
   filterDisplayEntries,
 } from "./DisplayFilter"
-import { categoryColor } from "./LiveMap"
+import { entryColor } from "@/lib/entry-colors"
 
 export type LiveTableWideProps = {
   ranked: RankedEntry[]
@@ -244,7 +244,7 @@ export default function LiveTableWide({
             )}
             {rows.map((r, i) => {
               const selected = selectedId === r.entry.entry_id
-              const color = categoryColor(r.entry.category, categories)
+              const color = entryColor(r.entry, categories)
               const fav = favs.has(r.entry.entry_id)
               const battery = !isAdmin
                 ? null
