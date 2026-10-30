@@ -148,9 +148,10 @@ function ensureDemSource(map: mapboxgl.Map) {
   }
 }
 
-/** 지도용 짧은 이름 — 괄호 부가정보(IMEI 등) 제거 + 길이 제한 (상세는 사이드바) */
+/** 지도용 짧은 이름 — 앞 번호(#3 등)·괄호 부가정보(IMEI 등) 제거 + 길이 제한 (상세는 사이드바) */
 function markerShortName(name: string): string {
-  const base = name.replace(/\s*[(（].*$/, "").trim() || name
+  const base =
+    name.replace(/^#\d+\s*/, "").replace(/\s*[(（].*$/, "").trim() || name
   return base.length > 12 ? `${base.slice(0, 12)}…` : base
 }
 
@@ -242,7 +243,7 @@ function styleMarkerEl(
       stack.appendChild(img)
     } else {
       const initial = document.createElement("span")
-      initial.textContent = (m.entry.display_name.trim() || "?").slice(0, 1)
+      initial.textContent = (markerShortName(m.entry.display_name) || "?").slice(0, 1)
       initial.className =
         "flex h-[18px] w-[18px] items-center justify-center rounded-full border border-white/70 bg-gray-100 text-[9px] font-bold text-gray-800" +
         overlap
