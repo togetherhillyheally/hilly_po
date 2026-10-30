@@ -340,7 +340,7 @@ export default function ElevationProfile({
                 style={{ left: `${xPct}%`, top: `${yPct}%` }}
                 title={cp.title}
               >
-                <CpIcon name={icon} size={expanded ? 16 : 12} />
+                <CpIcon name={icon} size={expanded ? 16 : 14} />
               </div>
             ) : (
               // 아이콘 숨김 상태 — 점선 기준점만 작은 점으로 유지
@@ -356,10 +356,10 @@ export default function ElevationProfile({
               }
               style={{ left: `${xPct}%` }}
             >
-              <p className="truncate text-[9px] font-semibold text-foreground/90 md:text-[11px]">
+              <p className="truncate text-[9px] font-semibold text-foreground/90 md:text-xs">
                 {cp.title}
               </p>
-              <p className="text-[9px] tabular-nums text-muted-foreground md:text-[10px]">
+              <p className="text-[9px] tabular-nums text-muted-foreground md:text-[11px]">
                 {km.toFixed(1)}km
               </p>
             </div>
