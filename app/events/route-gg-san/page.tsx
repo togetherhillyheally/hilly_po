@@ -22,6 +22,7 @@ import { Reveal } from "@/components/landing/Reveal"
 import { CourseMapLazy } from "@/components/events/CourseMapLazy"
 import { NATSEONGOT as EV } from "@/lib/events"
 import { COURSE, CPS, TIERS, TIER_COLOR } from "@/lib/events/gwanggyo-cps"
+import { RuleArt } from "@/components/events/RuleArt"
 import { SignupSheet } from "./SignupSheet"
 import { EventHeader } from "./EventHeader"
 
@@ -66,6 +67,7 @@ const B = ({ children }: { children: React.ReactNode }) => (
 const RULES = [
   {
     icon: Users,
+    art: "pair",
     title: "2인 1조, 원하면 개인전",
     desc: (
       <>
@@ -78,6 +80,7 @@ const RULES = [
   },
   {
     icon: Compass,
+    art: "reveal",
     title: "시작과 함께 지도 공개, 그리고 목표 선언",
     desc: (
       <>
@@ -90,6 +93,7 @@ const RULES = [
   },
   {
     icon: Navigation,
+    art: "route",
     title: "순서도 경로도 자유",
     desc: (
       <>
@@ -101,6 +105,7 @@ const RULES = [
   },
   {
     icon: Ticket,
+    art: "draw",
     title: "모은 점수로 추첨",
     desc: (
       <>
@@ -113,6 +118,7 @@ const RULES = [
   },
   {
     icon: Clock,
+    art: "clock",
     title: (
       <>
         두 발로 4시간 — 늦으면 1분마다{" "}
@@ -361,6 +367,7 @@ export default function NatseongotPage() {
           {RULES.map((r, i) => (
             <Reveal key={i} delay={(i % 3) * 0.06}>
               <div className="h-full rounded-2xl border bg-card px-5 py-5 transition-colors hover:border-foreground/20">
+                <RuleArt kind={r.art} />
                 <p className="flex items-start gap-2 font-semibold leading-snug">
                   <r.icon
                     className="mt-0.5 h-4 w-4 shrink-0 text-[#DC2F55]"
