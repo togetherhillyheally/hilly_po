@@ -109,7 +109,7 @@ function StatusBadge({ r, preStart }: { r: RankedEntry; preStart?: boolean }) {
         <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
       </span>
     )
-  if (isGpsWaiting(r.entry))
+  if (isGpsWaiting(r.entry, Date.now(), r.staleMs))
     return (
       <Badge
         variant="outline"

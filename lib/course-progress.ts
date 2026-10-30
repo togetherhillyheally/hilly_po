@@ -13,7 +13,45 @@ const OFF_COURSE_M = 150 // 코스 이탈 판정 cross-track 거리
 const WINDOW_BACK_M = 300
 const WINDOW_FWD_M = 3000
 const BACKTRACK_ACCEPT_COUNT = 2
-export const STALE_MS = 180_000 // 3분 무신호 = '신호 없음'
+export const STALE_MS = 180_000 // 3분 무신호 = '신호 없음' (기본값 · 기기별 기준의 최솟값)
+const STALE_MAX_MS = 30 * 60_000
+const STALE_INTERVAL_FACTOR = 2.5
+
+/**
+ * 기기별 '신호 없음' 기준 — 최근 전송 간격(중앙값)의 2.5배, 최소 3분 · 최대 30분.
+ * 전송 간격을 늘린 기기(배터리 절약)가 다음 위치를 기다리는 사이 '신호 없음'으로 깜빡이지 않게.
+ * 꼬리(최근 위치들)로 간격을 잰다 — 위치가 2개 미만이면 기본값.
+ */
+export function staleMsByEntry(
+  points: { entry_id: string; recorded_at: string }[],
+): Map<string, number> {
+  const times = new Map<string, number[]>()
+  for (const p of points) {
+    const t = new Date(p.recorded_at).getTime()
+    if (!Number.isFinite(t)) continue
+    const arr = times.get(p.entry_id)
+    if (arr) arr.push(t)
+    else times.set(p.entry_id, [t])
+  }
+  const out = new Map<string, number>()
+  for (const [id, arr] of times) {
+    arr.sort((a, b) => a - b)
+    // 같은 시각 중복·몇 초 차 재전송은 간격에서 뺀다. 최근 10개 간격만
+    const gaps: number[] = []
+    for (let i = 1; i < arr.length; i++) {
+      const g = arr[i] - arr[i - 1]
+      if (g >= 5_000) gaps.push(g)
+    }
+    const recent = gaps.slice(-10).sort((a, b) => a - b)
+    if (recent.length === 0) continue
+    const median = recent[Math.floor(recent.length / 2)]
+    out.set(
+      id,
+      Math.min(STALE_MAX_MS, Math.max(STALE_MS, median * STALE_INTERVAL_FACTOR)),
+    )
+  }
+  return out
+}
 
 /** 배터리 잔량 % — 기기가 %로 보고하면 그대로, 아니면 리튬셀 대략치(3500mV=0% ~ 4200mV=100%) */
 export function batteryPercentOf(entry: LiveEntry): number | null {
@@ -23,13 +61,17 @@ export function batteryPercentOf(entry: LiveEntry): number | null {
 }
 
 /** GPS 대기 — 기기 신호는 최근에 들어오는데 쓸 만한 위치(fix)가 없음 (실내·하늘 가림 등) */
-export function isGpsWaiting(entry: LiveEntry, now = Date.now()): boolean {
+export function isGpsWaiting(
+  entry: LiveEntry,
+  now = Date.now(),
+  staleMs = STALE_MS,
+): boolean {
   const seen = entry.device_last_seen_at
     ? new Date(entry.device_last_seen_at).getTime()
     : 0
-  if (!seen || now - seen > STALE_MS) return false
+  if (!seen || now - seen > staleMs) return false
   const fixMs = entry.recorded_at ? new Date(entry.recorded_at).getTime() : 0
-  return entry.lat == null || entry.lng == null || now - fixMs > STALE_MS
+  return entry.lat == null || entry.lng == null || now - fixMs > staleMs
 }
 
 /** 고도표용 코스 인덱스 — 여러 구간이면 이어 붙여 전체 코스로 (진행률 계산엔 쓰지 않음) */
@@ -331,6 +373,8 @@ export interface RankedEntry {
   /** 결승점 도착 여부 (코스 끝 30m 이내 도달) — 도착 후 신호가 끊겨도 유지 */
   finished: boolean
   status: LiveStatus
+  /** 이 기기의 '신호 없음' 기준(ms) — 전송 간격에 맞춤 (staleMsByEntry) */
+  staleMs: number
   /** 같은 자리(30m 반경)에 머문 시간(초) — 판정 불가면 null */
   stationarySec: number | null
   /** 최근 24시간 누적 이동거리(km) — 관리자 응답에만 있음 */
@@ -377,13 +421,16 @@ export function rankEntries(
   movementMap?: Map<string, MovementAnchor>,
   /** 코스 위 체크포인트 (buildCheckpointMarks) — 있으면 다음 CP 도착 예상 계산 */
   checkpointMarks?: CheckpointMark[],
+  /** 기기별 '신호 없음' 기준 (staleMsByEntry) — 없으면 3분 */
+  staleMsMap?: Map<string, number>,
 ): RankedEntry[] {
   const ranked: RankedEntry[] = entries.map((entry) => {
     const hasFix = entry.lat != null && entry.lng != null && entry.recorded_at
     const recordedMs = entry.recorded_at
       ? new Date(entry.recorded_at).getTime()
       : 0
-    const stale = !hasFix || now - recordedMs > STALE_MS
+    const staleMs = staleMsMap?.get(entry.entry_id) ?? STALE_MS
+    const stale = !hasFix || now - recordedMs > staleMs
 
     let progressM: number | null = null
     let offCourse = false
@@ -507,6 +554,7 @@ export function rankEntries(
       ascentM,
       finished,
       status,
+      staleMs,
       stationarySec,
       distance24hKm: Number.isFinite(distance24hKm as number)
         ? distance24hKm

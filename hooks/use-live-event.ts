@@ -9,6 +9,7 @@ import {
   type RankedEntry,
   buildCheckpointMarks,
   buildCourseIndex,
+  staleMsByEntry,
   rankEntries,
 } from "@/lib/course-progress"
 import { registerEntryColors } from "@/lib/entry-colors"
@@ -78,6 +79,8 @@ export function useLiveEvent(options: {
         : [],
     [courseIndex, info],
   )
+  // 기기별 '신호 없음' 기준 — 꼬리(최근 위치)로 잰 전송 간격에 맞춤
+  const staleMsMapRef = useRef<Map<string, number>>(new Map())
   const checkpointMarksRef = useRef(checkpointMarks)
   checkpointMarksRef.current = checkpointMarks
   const startsAtMsRef = useRef<number | null>(null)
@@ -159,6 +162,7 @@ export function useLiveEvent(options: {
           startsAtMsRef.current,
           movementMapRef.current,
           checkpointMarksRef.current,
+          staleMsMapRef.current,
         ),
       )
       setLastPolledAt(Date.now())
@@ -207,7 +211,9 @@ export function useLiveEvent(options: {
   const pollTails = useCallback(async () => {
     if (document.visibilityState === "hidden") return
     try {
-      setTails(await trackerControlRepo.eventTails(token, tailsMinutes))
+      const t = await trackerControlRepo.eventTails(token, tailsMinutes)
+      staleMsMapRef.current = staleMsByEntry(t)
+      setTails(t)
     } catch {
       // 꼬리는 부가 정보 — 조용히 다음 주기에 재시도
     }

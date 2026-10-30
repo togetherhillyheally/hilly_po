@@ -778,11 +778,11 @@ export default function LiveMap({
     } else if (r && focusSignal > 0) {
       // 위치가 없으면 지도가 움직이지 않아 고장처럼 보임 — 이유를 알려준다
       toast(
-        isGpsWaiting(r.entry)
+        isGpsWaiting(r.entry, Date.now(), r.staleMs)
           ? `${r.entry.display_name}: 아직 GPS 위치가 없어요`
           : `${r.entry.display_name}: 기기 신호가 없어요`,
         {
-          description: isGpsWaiting(r.entry)
+          description: isGpsWaiting(r.entry, Date.now(), r.staleMs)
             ? "기기 신호는 들어오고 있어요. 하늘이 트인 곳에 있으면 곧 위치가 잡혀요."
             : "기기가 꺼져 있거나 통신이 안 되는 곳에 있어요.",
         },

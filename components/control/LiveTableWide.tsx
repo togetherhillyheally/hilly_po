@@ -47,7 +47,7 @@ function StatusCell({ r, selected, preStart }: { r: RankedEntry; selected: boole
         <Check className="h-4 w-4 text-white" strokeWidth={3} />
       </span>
     )
-  if (isGpsWaiting(r.entry))
+  if (isGpsWaiting(r.entry, Date.now(), r.staleMs))
     return (
       <Badge
         variant="outline"
