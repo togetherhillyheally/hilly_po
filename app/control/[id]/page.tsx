@@ -148,7 +148,7 @@ function ControlRoom({
   const [editOpen, setEditOpen] = useState(false)
   const [displayMode, setDisplayMode] = useState<DisplayMode>("all")
   const [viewMode, setViewMode] = useState<ViewMode>("map")
-  const [is3d, setIs3d] = useState(true)
+  const [is3d, setIs3d] = useState(false) // 기본 2D — 3D 는 버튼으로
   const [panelOpen, setPanelOpen] = useState(true)
   const [elevOpen, setElevOpen] = useState(false)
   const [terrainElevations, setTerrainElevations] =
