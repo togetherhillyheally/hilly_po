@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Check, Search, Star } from "lucide-react"
+import { Check, Loader2, Search, Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
@@ -32,6 +32,8 @@ export type LiveTableWideProps = {
   onDisplayModeChange: (mode: DisplayMode) => void
   /** 출발 전 — 신호 없음을 빨간 경고 대신 중립 "출발 대기"로 */
   preStart?: boolean
+  /** 첫 위치를 아직 못 받음 — 빈 목록 문구 대신 로딩 표시 */
+  loading?: boolean
 }
 
 function StatusCell({ r, selected, preStart }: { r: RankedEntry; selected: boolean; preStart?: boolean }) {
@@ -141,6 +143,7 @@ export default function LiveTableWide({
   displayMode,
   onDisplayModeChange,
   preStart = false,
+  loading = false,
 }: LiveTableWideProps) {
   const [query, setQuery] = useState("")
   const isRace = eventType === "race"
@@ -230,7 +233,14 @@ export default function LiveTableWide({
                   colSpan={10}
                   className="px-4 py-10 text-center text-sm text-muted-foreground"
                 >
-                  표시할 참가자가 없어요.
+                  {loading ? (
+                    <span className="inline-flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      불러오는 중…
+                    </span>
+                  ) : (
+                    "표시할 참가자가 없어요."
+                  )}
                 </td>
               </tr>
             )}

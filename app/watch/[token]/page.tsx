@@ -109,7 +109,7 @@ export default function WatchPage() {
 }
 
 function WatchView({ token }: { token: string }) {
-  const { info, courseIndex, ranked, tails, notFound, loading } = useLiveEvent({
+  const { info, courseIndex, ranked, tails, notFound, loading, lastPolledAt } = useLiveEvent({
     token,
     mode: "public",
   })
@@ -348,6 +348,7 @@ function WatchView({ token }: { token: string }) {
           eventType={info.event_type}
           isAdmin={false}
           preStart={preStart}
+          loading={lastPolledAt == null}
           categories={categories}
           selectedId={selectedId}
           onSelect={handleSelect}
@@ -404,6 +405,7 @@ function WatchView({ token }: { token: string }) {
               eventType={info.event_type}
               isAdmin={false}
               preStart={preStart}
+              loading={lastPolledAt == null}
               categories={categories}
               selectedId={selectedId}
               onSelect={handleSelect}

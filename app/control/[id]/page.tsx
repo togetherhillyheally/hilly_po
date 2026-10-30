@@ -426,6 +426,7 @@ function ControlRoom({
                 />
               )}
               <LiveSidebar
+                loading={lastPolledAt == null}
                 ranked={ranked}
                 eventType={event.event_type}
                 isAdmin
@@ -463,6 +464,7 @@ function ControlRoom({
                 </div>
                 <div className="mt-5">
                   <LiveTableWide
+                    loading={lastPolledAt == null}
                     ranked={ranked}
                     eventType={event.event_type}
                     isAdmin

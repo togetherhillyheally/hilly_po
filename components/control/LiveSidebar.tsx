@@ -51,8 +51,28 @@ export type LiveSidebarProps = {
   noun?: string
   /** 출발 전 — 신호 없음을 빨간 경고 대신 중립 "출발 대기"로 */
   preStart?: boolean
+  /** 첫 위치를 아직 못 받음 — 빈 목록 문구 대신 로딩 표시 */
+  loading?: boolean
   /** 모바일 하단 시트 맨 위에 넣을 이벤트 정보 — 지도 위 오버레이 대신 (데스크톱은 숨김) */
   mobileHeader?: React.ReactNode
+}
+
+/** 첫 위치를 받기 전 자리 표시 — "표시할 참가자가 없어요"가 잠깐 보이지 않게 */
+function SkeletonRows() {
+  return (
+    <div aria-busy="true" aria-label="불러오는 중">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="flex items-center gap-2 border-b px-4 py-3">
+          <span className="h-6 w-6 shrink-0 animate-pulse rounded-full bg-foreground/10" />
+          <span className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-foreground/10" />
+          <div className="flex-1 space-y-2">
+            <div className="h-3.5 w-28 animate-pulse rounded bg-foreground/10" />
+            <div className="h-3 w-44 animate-pulse rounded bg-foreground/[0.07]" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 /** 1~3위 카드 — 색 구분 없이 살짝 도드라진 배경만 */
@@ -272,8 +292,8 @@ function EntryRow({
             isRace &&
             r.rank != null &&
             r.rank > 1 && (
-              <span className="text-sm tabular-nums">
-                {/* "+431m" → "1위와 431m" (숫자만으론 뭔지 헷갈려서) */}
+              <span className="text-xs tabular-nums text-muted-foreground">
+                {/* "+431m" → "1위와 431m" (숫자만으론 뭔지 헷갈려서) — 이름보다 작고 옅게 */}
                 {formatGap(r.gapM).startsWith("+")
                   ? `1위와 ${formatGap(r.gapM).slice(1)}`
                   : formatGap(r.gapM)}
@@ -393,6 +413,7 @@ export default function LiveSidebar({
   onOpenChange,
   noun = "참가자",
   preStart = false,
+  loading = false,
   mobileHeader,
 }: LiveSidebarProps) {
   const [open, _setOpen] = useState(true)
@@ -555,7 +576,8 @@ export default function LiveSidebar({
       </div>
 
       <div className={inline ? "" : "flex-1 overflow-y-auto"}>
-        {rows.length === 0 && (
+        {loading && rows.length === 0 && <SkeletonRows />}
+        {!loading && rows.length === 0 && (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground">
             표시할 {noun}가 없어요.
           </p>
