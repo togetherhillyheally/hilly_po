@@ -271,7 +271,12 @@ function EntryRow({
             isRace &&
             r.rank != null &&
             r.rank > 1 && (
-              <span className="text-sm tabular-nums">{formatGap(r.gapM)}</span>
+              <span className="text-sm tabular-nums">
+                {/* "+431m" → "1위와 431m" (숫자만으론 뭔지 헷갈려서) */}
+                {formatGap(r.gapM).startsWith("+")
+                  ? `1위와 ${formatGap(r.gapM).slice(1)}`
+                  : formatGap(r.gapM)}
+              </span>
             )
           )}
         </span>
