@@ -57,8 +57,9 @@ export type LiveSidebarProps = {
 
 /** 1~3위 카드 — 색 구분 없이 살짝 도드라진 배경만 */
 const PODIUM_ROW = "bg-foreground/[0.04]"
-/** 1~3위 순위 원 — 중립(전경색 채움) */
-const PODIUM_CIRCLE = "bg-foreground text-background"
+/** 1~3위 순위 원 — 중립, 흰 바탕 + 얇은 테두리 + 옅은 그림자 (꽉 찬 검정 원 대신) */
+const PODIUM_CIRCLE =
+  "bg-background text-foreground ring-1 ring-inset ring-foreground/15 shadow-sm"
 
 /** 기기가 %로 보고하면 그대로, 아니면 MT710 리튬셀 대략치(3500mV=0% ~ 4200mV=100%)로 환산 */
 function batteryPercent(
@@ -234,7 +235,7 @@ function EntryRow({
           (podium ? (
             <span
               className={
-                "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums " +
+                "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold tabular-nums " +
                 PODIUM_CIRCLE
               }
             >
