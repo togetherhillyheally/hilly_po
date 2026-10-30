@@ -49,3 +49,9 @@ export function entryColor(
   }
   return categoryColor(entry.category, categories)
 }
+
+/** 사진 없을 때 동그라미 글자 — 이름 앞 번호(#3 등)는 건너뛴다 */
+export function nameInitial(name: string): string {
+  const base = name.replace(/^#\d+\s*/, "").trim() || name.trim()
+  return (base || "?").slice(0, 1)
+}

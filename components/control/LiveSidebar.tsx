@@ -25,7 +25,7 @@ import {
   DisplayFilterControl,
   filterDisplayEntries,
 } from "./DisplayFilter"
-import { entryColor } from "@/lib/entry-colors"
+import { entryColor, nameInitial } from "@/lib/entry-colors"
 
 export type LiveSidebarProps = {
   ranked: RankedEntry[]
@@ -178,7 +178,7 @@ function AvatarCircle({
           className="h-full w-full object-cover"
         />
       ) : (
-        name.slice(0, 1)
+        nameInitial(name)
       )}
     </span>
   )

@@ -11,7 +11,7 @@ import { toast } from "sonner"
 import { haversineMeters } from "@/lib/geo"
 import { applyKoreanLabels } from "@/lib/mapbox-locale"
 import { TRAIL_SEGMENT_PALETTE } from "@/lib/trail-palette"
-import { entryColor } from "@/lib/entry-colors"
+import { entryColor, nameInitial } from "@/lib/entry-colors"
 import {
   isGpsWaiting,
   type RankedEntry,
@@ -243,7 +243,7 @@ function styleMarkerEl(
       stack.appendChild(img)
     } else {
       const initial = document.createElement("span")
-      initial.textContent = (markerShortName(m.entry.display_name) || "?").slice(0, 1)
+      initial.textContent = nameInitial(m.entry.display_name)
       initial.className =
         "flex h-[18px] w-[18px] items-center justify-center rounded-full border border-white/70 bg-gray-100 text-[9px] font-bold text-gray-800" +
         overlap

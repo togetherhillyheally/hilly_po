@@ -16,7 +16,7 @@ import {
   DisplayFilterControl,
   filterDisplayEntries,
 } from "./DisplayFilter"
-import { entryColor } from "@/lib/entry-colors"
+import { entryColor, nameInitial } from "@/lib/entry-colors"
 
 export type LiveTableWideProps = {
   ranked: RankedEntry[]
@@ -224,9 +224,7 @@ export default function LiveTableWide({
               {isRace && (
                 <th className="w-32 px-3 py-1 font-medium">1위와의 차이</th>
               )}
-              {isAdmin && (
-                <th className="w-20 px-3 py-1 font-medium">배터리</th>
-              )}
+              <th className="w-20 px-3 py-1 font-medium">배터리</th>
               <th className="w-28 px-3 py-1 font-medium">상태</th>
               <th className="w-12 px-3 py-1" />
             </tr>
@@ -246,9 +244,9 @@ export default function LiveTableWide({
               const selected = selectedId === r.entry.entry_id
               const color = entryColor(r.entry, categories)
               const fav = favs.has(r.entry.entry_id)
-              const battery = !isAdmin
-                ? null
-                : r.entry.battery_pct != null
+              // 배터리는 관전 화면에도 보인다 (tracker_event_public_signals)
+              const battery =
+                r.entry.battery_pct != null
                   ? r.entry.battery_pct
                   : r.entry.battery_mv != null
                     ? Math.min(
@@ -320,7 +318,7 @@ export default function LiveTableWide({
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          r.entry.display_name.slice(0, 1)
+                          nameInitial(r.entry.display_name)
                         )}
                       </span>
                       <span>
@@ -382,21 +380,19 @@ export default function LiveTableWide({
                       {r.rank != null && r.rank > 1 ? formatGap(r.gapM) : ""}
                     </td>
                   )}
-                  {isAdmin && (
-                    <td
-                      className={
-                        "px-3 py-2.5 align-middle tabular-nums" +
-                        (r.lowBattery && !selected
-                          ? " font-semibold text-red-500"
-                          : "")
-                      }
-                    >
-                      {battery != null ? `${battery}%` : "—"}
-                      {r.lowBattery && (
-                        <span className="ml-1 text-xs">부족</span>
-                      )}
-                    </td>
-                  )}
+                  <td
+                    className={
+                      "px-3 py-2.5 align-middle tabular-nums" +
+                      (r.lowBattery && !selected
+                        ? " font-semibold text-red-500"
+                        : "")
+                    }
+                  >
+                    {battery != null ? `${battery}%` : "—"}
+                    {r.lowBattery && (
+                      <span className="ml-1 text-xs">부족</span>
+                    )}
+                  </td>
                   <td className="px-3 py-2.5 align-middle">
                     <StatusCell r={r} selected={selected} preStart={preStart} />
                   </td>

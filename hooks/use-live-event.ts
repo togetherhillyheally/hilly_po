@@ -109,7 +109,21 @@ export function useLiveEvent(options: {
         mode === "admin" && eventId
           ? await trackerControlRepo.adminLiveState(eventId)
           : await trackerControlRepo.publicLiveState(token)
-      if (mode !== "admin") {
+      if (mode === "admin") {
+        // 관리자 응답엔 %로 보고하는 기기(ML100G 등)의 배터리가 없어 공개 신호에서 채운다
+        const seen = await trackerControlRepo
+          .publicSignals(token)
+          .catch(() => null)
+        if (seen)
+          entries = entries.map((e) => {
+            const s = seen.get(e.entry_id)
+            return {
+              ...e,
+              battery_pct: s?.battery_pct ?? e.battery_pct ?? null,
+              battery_mv: e.battery_mv ?? s?.battery_mv ?? null,
+            }
+          })
+      } else {
         // 관전 응답엔 기기 수신 시각이 없어 따로 받는다 — 실패해도 위치 표시는 그대로
         const seen = await trackerControlRepo
           .publicSignals(token)

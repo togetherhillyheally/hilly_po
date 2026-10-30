@@ -15,7 +15,7 @@ import {
 } from "@/lib/course-progress"
 import type { EventCourseCheckpoint } from "@/lib/repos/trackerControlTypes"
 import { categoryColor } from "./LiveMap"
-import { entryColor } from "@/lib/entry-colors"
+import { entryColor, nameInitial } from "@/lib/entry-colors"
 
 export type ElevationProfileProps = {
   index: CourseIndex
@@ -402,7 +402,7 @@ export default function ElevationProfile({
                   className="h-full w-full rounded-full object-cover"
                 />
               ) : (
-                r.entry.display_name.slice(0, 1)
+                nameInitial(r.entry.display_name)
               )}
             </button>
           )
