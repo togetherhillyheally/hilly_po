@@ -26,6 +26,7 @@ import LiveMap from "@/components/control/LiveMap"
 import LiveSidebar from "@/components/control/LiveSidebar"
 import LiveTableWide from "@/components/control/LiveTableWide"
 import RaceFinishBanner from "@/components/control/RaceFinishBanner"
+import SignalLostAlert from "@/components/control/SignalLostAlert"
 import { useEventSos } from "@/hooks/use-event-sos"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useLiveEvent } from "@/hooks/use-live-event"
@@ -356,9 +357,10 @@ function ControlRoom({
                 sosPoints={sosPoints}
                 sosFocus={sosFocus}
               />
-              {/* 앱 SOS 목록 — 좌측 위. 누르면 위치로 이동, 처리 완료로 지도에서 제거 */}
+              {/* 좌측 위: 앱 SOS 목록(누르면 위치로 이동, 처리 완료로 제거) + 장시간 신호 끊김 경고 */}
+              <div className="absolute left-3 top-3 z-30 w-72 max-w-[calc(100%-1.5rem)] space-y-2">
               {appSos.open.length > 0 && (
-                <div className="absolute left-3 top-3 z-30 w-72 max-w-[calc(100%-1.5rem)] space-y-2">
+                <div className="space-y-2">
                   {appSos.open.map((a) => (
                     <div
                       key={a.id}
@@ -397,6 +399,10 @@ function ControlRoom({
                   ))}
                 </div>
               )}
+              {event.status === "live" && (
+                <SignalLostAlert ranked={ranked} onSelect={handleSelect} />
+              )}
+              </div>
               {/* 2D/3D — 좌측 아래 (모바일 하단 시트가 열려 있으면 시트 위로) */}
               <MapDimensionToggle
                 is3d={is3d}
