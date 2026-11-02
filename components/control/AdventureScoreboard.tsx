@@ -10,7 +10,8 @@ const SQUAD_FALLBACK = ["#4C7FA4", "#CE2B37", "#D9A441", "#6B9E78"]
 
 export const teamLabel = (n: number) => `${n}팀`
 
-/** 앱 모험의 팀·조 점수판 — 앱 LiveParticipantPanel 과 같은 구성 (전체 = 팀 순위 / N팀 = 조·조원) */
+/** 앱 모험의 팀·조 점수판 — 앱 LiveParticipantPanel 과 같은 구성 (전체 = 팀 점수판 / N팀 = 조·조원).
+ *  순위 없음 (2026-11-02, 행사 규칙 "순위는 없고 스스로 정한 목표만") — 팀 번호순·조 순서대로, 점수와 목표·추첨권만 */
 export default function AdventureScoreboard({
   board,
   categories,
@@ -33,10 +34,7 @@ export default function AdventureScoreboard({
 
   const total = board.total_points
   const teams = useMemo(
-    () =>
-      [...board.teams].sort(
-        (a, b) => b.score - a.score || a.team_no - b.team_no,
-      ),
+    () => [...board.teams].sort((a, b) => a.team_no - b.team_no),
     [board.teams],
   )
   const multiTeam = teams.length > 1
@@ -50,7 +48,7 @@ export default function AdventureScoreboard({
   const squadsOf = (n: number) =>
     board.squads
       .filter((s) => (s.team_no ?? 1) === n)
-      .sort((a, b) => b.score - a.score)
+      .sort((a, b) => a.sort_order - b.sort_order)
   const late = board.team.penalty > 0
   const name = (uid: string) => board.profiles[uid]?.nickname ?? "참가자"
   const pts = (uid: string) => board.points_by_user[uid] ?? 0
@@ -150,6 +148,16 @@ export default function AdventureScoreboard({
               </span>
             </div>
             {tierCounts(sqs.flatMap((s) => s.point_ids))}
+            {(t.goal != null || t.tickets > 0) && (
+              <div className="mt-1.5 flex items-center gap-3 text-[11px] font-semibold text-muted-foreground">
+                {t.goal != null && (
+                  <span className={t.goal_hit ? "text-[#B8860B]" : ""}>
+                    {t.goal_hit ? `목표 ${t.goal}점 적중` : `목표 ${t.goal}점`}
+                  </span>
+                )}
+                {t.tickets > 0 && <span>추첨권 {t.tickets}장</span>}
+              </div>
+            )}
           </div>
         )}
         {sqs
@@ -179,7 +187,7 @@ export default function AdventureScoreboard({
                 </span>
               </div>
               {[...s.member_ids]
-                .sort((a, b) => pts(b) - pts(a))
+                .sort((a, b) => name(a).localeCompare(name(b), "ko"))
                 .map(memberRow)}
             </div>
           ))}
@@ -246,7 +254,7 @@ export default function AdventureScoreboard({
 
             {activeTab === "all" ? (
               <div>
-                {teams.map((t, i) => {
+                {teams.map((t) => {
                   const sqs = squadsOf(t.team_no)
                   const stamps = new Set(sqs.flatMap((s) => s.point_ids)).size
                   const members = sqs.reduce(
@@ -260,9 +268,6 @@ export default function AdventureScoreboard({
                       onClick={() => setTab(t.team_no)}
                       className="flex w-full items-center gap-2 border-b py-2 text-left last:border-0 hover:bg-muted/40"
                     >
-                      <span className="w-4 text-[13px] font-extrabold text-muted-foreground">
-                        {i + 1}
-                      </span>
                       <span
                         className="h-2.5 w-2.5 rounded-full"
                         style={{
@@ -289,6 +294,11 @@ export default function AdventureScoreboard({
                         {late && (
                           <span className="block text-[10px] font-semibold text-muted-foreground">
                             감점 전 {t.raw + t.set_bonus}
+                          </span>
+                        )}
+                        {t.tickets > 0 && (
+                          <span className="block text-[10px] font-semibold text-muted-foreground">
+                            추첨권 {t.tickets}장
                           </span>
                         )}
                       </span>

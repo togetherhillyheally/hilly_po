@@ -23,7 +23,12 @@ export interface ScoreboardTeam {
   set_bonus: number
   score: number
   gift_open: boolean
+  /** 추첨권 — 100점마다 1장 + 목표 적중 +2 (2026-11-02) */
   tickets: number
+  /** 팀 목표 점수 (score_team_goals, 팀 하나면 score_goal) */
+  goal?: number | null
+  /** 완료 후 최종 점수 = 목표 */
+  goal_hit?: boolean
 }
 
 /** public_session_scoreboard — 앱 session_squad_scores + 사람별 점수·배점·프로필 */
@@ -41,8 +46,11 @@ export interface SessionScoreboard {
     score: number
     tickets: number
     gift_open: boolean
+    goal_hit?: boolean
   }
   goal: number | null
+  /** 목표 적중 시 더해지는 추첨권 수 (서버 상수) */
+  goal_bonus_tickets?: number
   gift_threshold: number | null
   points_by_user: Record<string, number>
   point_tiers: Record<string, number>
