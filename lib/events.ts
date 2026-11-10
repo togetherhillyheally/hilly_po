@@ -40,7 +40,7 @@ export const NATSEONGOT: EventInfo = {
   path: "/events/route-gg-san",
   courseTrailId: "8b710f9d-2a53-4720-9c5a-da34e9375e93",
   cover: "/events/course-v2.jpg",
-  listStatus: "recruiting",
+  listStatus: "closed", // 2026-11-10 모집 마감
 }
 
 /** 이벤트 목록(/events) — 최신 행사가 앞. 새 행사는 여기에 추가 */

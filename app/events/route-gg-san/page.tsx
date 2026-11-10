@@ -26,6 +26,9 @@ import { RuleArt } from "@/components/events/RuleArt"
 import { SignupSheet } from "./SignupSheet"
 import { EventHeader } from "./EventHeader"
 
+/** 모집 마감 — lib/events.ts 의 listStatus (서버 event-signup 도 closed 로 새 신청을 막는다) */
+const CLOSED = EV.listStatus === "closed" || EV.listStatus === "ended"
+
 export const metadata: Metadata = {
   title: "ROUTE @광교산 | 힐리힐리",
   description:
@@ -256,14 +259,20 @@ export default function NatseongotPage() {
             순위는 없어요. 스스로 정한 목표만 있어요.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
-            <SignupSheet>
-              <Button
-                size="lg"
-                className="h-12 bg-[#DC2F55] px-8 text-base text-white hover:bg-[#DC2F55]/90"
-              >
-                신청하기
+            {CLOSED ? (
+              <Button size="lg" disabled className="h-12 px-8 text-base">
+                모집 마감
               </Button>
-            </SignupSheet>
+            ) : (
+              <SignupSheet>
+                <Button
+                  size="lg"
+                  className="h-12 bg-[#DC2F55] px-8 text-base text-white hover:bg-[#DC2F55]/90"
+                >
+                  신청하기
+                </Button>
+              </SignupSheet>
+            )}
             <Button asChild size="lg" variant="outline" className="h-12 px-8 text-base">
               <a href="#game">게임 보기</a>
             </Button>
@@ -628,11 +637,12 @@ export default function NatseongotPage() {
         <Reveal>
           <div className="mx-auto max-w-2xl rounded-2xl border bg-[radial-gradient(120%_120%_at_0%_0%,rgba(220,47,85,0.10),transparent_55%)] p-8 text-center sm:p-12">
             <h2 className="text-2xl font-bold tracking-tighter sm:text-3xl">
-              {EV.capacity}명 한정, 함께 가실래요?
+              {CLOSED ? "모집이 마감됐어요" : `${EV.capacity}명 한정, 함께 가실래요?`}
             </h2>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-              신청서를 보내고 참가비를 결제하면 신청이 확정돼요. 짝꿍 매칭과 집결
-              안내는 행사 일주일 전 개별로 보내드려요.
+              {CLOSED
+                ? "관심 가져 주셔서 고마워요. 신청하신 분은 아래에서 신청 내역과 안내를 볼 수 있어요."
+                : "신청서를 보내고 참가비를 결제하면 신청이 확정돼요. 짝꿍 매칭과 집결 안내는 행사 일주일 전 개별로 보내드려요."}
             </p>
 
             <dl className="mx-auto mt-8 grid max-w-sm grid-cols-2 gap-3 text-left">
@@ -653,14 +663,26 @@ export default function NatseongotPage() {
               </div>
             </dl>
 
-            <SignupSheet>
-              <Button
-                size="lg"
-                className="mt-8 h-12 w-full max-w-sm bg-[#DC2F55] text-base text-white hover:bg-[#DC2F55]/90"
-              >
-                신청서 작성하기
-              </Button>
-            </SignupSheet>
+            {CLOSED ? (
+              <SignupSheet intent="history">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="mt-8 h-12 w-full max-w-sm text-base"
+                >
+                  신청 내역 보기
+                </Button>
+              </SignupSheet>
+            ) : (
+              <SignupSheet>
+                <Button
+                  size="lg"
+                  className="mt-8 h-12 w-full max-w-sm bg-[#DC2F55] text-base text-white hover:bg-[#DC2F55]/90"
+                >
+                  신청서 작성하기
+                </Button>
+              </SignupSheet>
+            )}
 
             <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
               결제 후 행사 7일 전까지 전액 환불돼요.
@@ -726,12 +748,13 @@ export default function NatseongotPage() {
 
       {/* 떠 있는 신청 버튼 — 스크롤 어디서든 우측 아래 (아이폰 홈 바 안전 영역 고려) */}
       <div className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-5 z-40">
-        <SignupSheet>
+        {/* 모집 마감 뒤엔 신청한 사람이 내역을 찾기 쉽게 '신청 내역' */}
+        <SignupSheet intent={CLOSED ? "history" : "signup"}>
           <Button
             size="lg"
             className="h-12 rounded-full bg-[#DC2F55] px-7 text-base font-bold text-white shadow-[0_8px_24px_rgba(220,47,85,0.45)] hover:bg-[#DC2F55]/90"
           >
-            신청하기
+            {CLOSED ? "신청 내역" : "신청하기"}
           </Button>
         </SignupSheet>
       </div>
