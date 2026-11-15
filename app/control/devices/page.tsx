@@ -11,6 +11,7 @@ import LiveMap from "@/components/control/LiveMap"
 import LiveSidebar, {
   type SheetSnap,
   aboveSheetClass,
+  mapCtrlBottomStyle,
 } from "@/components/control/LiveSidebar"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useSuperAdmin } from "@/hooks/use-super-admin"
@@ -195,10 +196,14 @@ export default function DevicesControlPage() {
         </div>
       </div>
 
-      <div className="theme-light relative h-[calc(100dvh-180px)] min-h-[480px] overflow-hidden rounded-xl border bg-background text-foreground">
+      <div
+        className="theme-light relative h-[calc(100dvh-180px)] min-h-[480px] overflow-hidden rounded-xl border bg-background text-foreground"
+        style={mapCtrlBottomStyle(sheet)}
+      >
         <LiveMap
           bare
           course={null}
+          enableGeolocate
           entries={ranked}
           tails={[]}
           categories={categories}

@@ -10,7 +10,6 @@ import {
   ChevronDown,
   ChevronUp,
   Link2,
-  MoreHorizontal,
   Pencil,
   Settings,
   Users,
@@ -42,6 +41,8 @@ import LiveMap from "@/components/control/LiveMap"
 import LiveSidebar, {
   type SheetSnap,
   aboveSheetClass,
+  atSheetTopClass,
+  mapCtrlBottomStyle,
 } from "@/components/control/LiveSidebar"
 import LiveTableWide from "@/components/control/LiveTableWide"
 import RaceFinishBanner from "@/components/control/RaceFinishBanner"
@@ -349,6 +350,16 @@ function ControlRoom({
     }
   }
 
+  // 지도/고도 전환 + 코스 선택 — 데스크톱은 지도 위, 모바일 지도 모드는 시트 안(공간 절약), 고도 모드는 위에
+  const topTools = hasTopBar ? (
+    <>
+      {hasProfileView && <ViewModeSwitch mode={viewMode} onChange={setViewMode} />}
+      {courses.length > 1 && (
+        <CourseSelect courses={courses} value={activeIdx} onChange={setActiveIdx} />
+      )}
+    </>
+  ) : null
+
   return (
     <main className="px-4 py-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -392,38 +403,43 @@ function ControlRoom({
           {/* 모바일: 사이트 헤더·제목·탭 위를 덮는 전체 화면(슬림 바 + 지도) — 폰에선 지도가 화면의 절반도 안 남았다.
               데스크톱: 지금처럼 페이지 안의 상자 */}
           <div className="fixed inset-0 z-50 flex flex-col bg-background md:static md:z-auto md:block">
-            <div className="flex h-11 shrink-0 items-center gap-1 border-b px-1.5 md:hidden">
-              <Button asChild variant="ghost" size="icon" className="h-9 w-9 shrink-0">
+          <div className="theme-light relative min-h-0 flex-1 overflow-hidden bg-background text-foreground md:h-[calc(100dvh-220px)] md:min-h-[480px] md:flex-none md:rounded-xl md:border">
+            {/* 모바일 상단 — 바 없이 지도 위에 ← 와 제목 칩만 (앱과 같은 투명 배경). 칩을 누르면 메뉴 */}
+            <div className="absolute left-3 top-3 z-30 flex max-w-[calc(100%-6rem)] items-center gap-2 md:hidden">
+              {/* 배경 없이 글자만 — 흰 번짐으로 지도 위에서 읽히게, 누르면 살짝 줄어드는 반응 */}
+              <Button
+                asChild
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 shrink-0 rounded-full transition-transform active:scale-90 active:bg-background/60 [filter:drop-shadow(0_1px_2px_rgba(255,255,255,0.9))]"
+              >
                 <Link href="/control" aria-label="관제 목록">
-                  <ArrowLeft className="h-4 w-4" />
+                  <ArrowLeft className="h-5 w-5" />
                 </Link>
               </Button>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold leading-tight">{event.title}</p>
-                <p className="flex items-center gap-1 text-[10px] leading-tight text-muted-foreground">
-                  {lastPolledAt ? (
-                    <>
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      갱신 {Math.max(0, Math.round((Date.now() - lastPolledAt) / 1000))}초 전
-                    </>
-                  ) : (
-                    "연결 중…"
-                  )}
-                  {` · ${ranked.length}명`}
-                </p>
-              </div>
-              {sosCount > 0 && (
-                <Badge variant="destructive" className="animate-pulse">
-                  SOS {sosCount}
-                </Badge>
-              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" aria-label="더보기">
-                    <MoreHorizontal className="h-5 w-5" />
-                  </Button>
+                  <button
+                    type="button"
+                    className="flex h-9 min-w-0 items-center gap-1.5 rounded-full px-2 text-base font-extrabold transition-transform active:scale-95 active:bg-background/60 [text-shadow:0_1px_3px_rgba(255,255,255,0.95),0_0_8px_rgba(255,255,255,0.8)]"
+                  >
+                    {/* 초록 점 = 위치가 들어오고 있음 */}
+                    <span
+                      className={
+                        "h-1.5 w-1.5 shrink-0 rounded-full " +
+                        (lastPolledAt ? "bg-emerald-500" : "bg-muted-foreground/40")
+                      }
+                    />
+                    <span className="truncate">{event.title}</span>
+                    {sosCount > 0 && (
+                      <Badge variant="destructive" className="ml-0.5 shrink-0 animate-pulse px-1.5 py-0 text-[10px]">
+                        SOS {sosCount}
+                      </Badge>
+                    )}
+                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="start" className="theme-light">
                   <DropdownMenuItem onClick={copyWatchLink}>
                     <Link2 className="mr-2 h-4 w-4" />
                     관전 링크 복사
@@ -439,28 +455,37 @@ function ControlRoom({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          <div className="theme-light relative min-h-0 flex-1 overflow-hidden bg-background text-foreground md:h-[calc(100dvh-220px)] md:min-h-[480px] md:flex-none md:rounded-xl md:border">
-            {/* 상단 — 지도/고도 전환 + 지도 선택(고도 오른쪽) */}
+            {/* 상단 — 지도/고도 전환 + 지도 선택(고도 오른쪽). 모바일은 제목 칩 아래 줄 */}
             {hasTopBar && (
-              <div className={"absolute top-3 z-30 flex items-center gap-2 " + topBarPos}>
-                {hasProfileView && (
-                  <ViewModeSwitch mode={viewMode} onChange={setViewMode} />
-                )}
-                {courses.length > 1 && (
-                  <CourseSelect courses={courses} value={activeIdx} onChange={setActiveIdx} />
-                )}
+              <div
+                className={
+                  "absolute top-[3.75rem] z-30 items-center gap-2 md:top-3 " +
+                  (showMap ? "hidden md:flex " : "flex ") +
+                  topBarPos
+                }
+              >
+                {topTools}
               </div>
             )}
 
             {/* 레이스 종료 배너 — 지도 위쪽 가운데(컨트롤 아래) */}
             {event.event_type === "race" && event.status === "finished" && (
-              <div className={"absolute top-14 z-20 " + topBarPos}>
+              <div
+                className={
+                  "absolute z-20 md:top-14 " +
+                  (hasTopBar && !showMap ? "top-[6.5rem] " : "top-[3.75rem] ") +
+                  topBarPos
+                }
+              >
                 <RaceFinishBanner ranked={ranked} />
               </div>
             )}
 
             {/* 지도 모드 (숨겨도 언마운트하지 않음 — Mapbox 재과금 방지) */}
-            <div className={showMap ? "absolute inset-0" : "hidden"}>
+            <div
+              className={showMap ? "absolute inset-0" : "hidden"}
+              style={mapCtrlBottomStyle(sheet)}
+            >
               <LiveMap
                 bare
                 course={activeCourse}
@@ -490,8 +515,7 @@ function ControlRoom({
               {(sosCards.length > 0 || lost.length > 0) && (
                 <div
                   className={
-                    "absolute left-3 right-14 z-30 md:hidden " +
-                    (hasTopBar ? "top-[3.75rem]" : "top-3")
+                    "absolute left-3 right-3 top-[3.75rem] z-30 md:hidden"
                   }
                 >
                   <button
@@ -533,16 +557,20 @@ function ControlRoom({
                   )}
                 </div>
               )}
-              {/* 2D/3D — 좌측 아래 (모바일 하단 시트가 열려 있으면 시트 위로) */}
-              <MapDimensionToggle
-                is3d={is3d}
-                onChange={setIs3d}
+              {/* 좌측 아래 도구 줄 — 2D/3D, 모바일은 지도/고도 전환·코스 선택도 여기(시트 위, 시트 따라 이동).
+                  데스크톱의 전환 핀은 위쪽 */}
+              <div
                 className={
-                  "absolute left-3 z-30 md:bottom-3 " +
-                  (elevOpen ? "hidden md:block " : "") +
+                  "absolute left-3 z-30 flex max-w-[calc(100%-4.5rem)] flex-wrap items-center gap-2 md:bottom-3 " +
+                  (elevOpen ? "max-md:hidden " : "") +
                   aboveSheetClass(sheet)
                 }
-              />
+              >
+                <MapDimensionToggle is3d={is3d} onChange={setIs3d} />
+                {topTools && (
+                  <div className="flex items-center gap-2 md:hidden">{topTools}</div>
+                )}
+              </div>
               {/* 고도표 — 지도 아래에서 펼쳐 보기 (대회 모바일은 상단 지도/고도 전환이 대신) */}
               {profileIndex && (
                 <ElevationDrawer
@@ -556,8 +584,10 @@ function ControlRoom({
                   className={
                     "absolute z-20 md:left-20 md:right-[372px] md:bottom-3 " +
                     (hasProfileView ? "hidden md:block " : "") +
-                    (elevOpen ? "left-3 right-3 " : "left-20 right-3 ") +
-                    aboveSheetClass(sheet)
+                    // 모바일: 펼치면 시트 윗변에 전폭으로 붙음
+                    (elevOpen
+                      ? "left-0 right-0 " + atSheetTopClass(sheet)
+                      : "left-20 right-3 " + aboveSheetClass(sheet))
                   }
                 />
               )}
@@ -583,7 +613,10 @@ function ControlRoom({
               <div
                 className={
                   "h-full overflow-y-auto px-4 pb-8 " +
-                  (event.status === "finished" ? "pt-32" : "pt-14")
+                  // 모바일은 제목 칩 + 전환 핀 두 줄(+종료 배너) 아래부터
+                  (event.status === "finished"
+                    ? "pt-44 md:pt-32"
+                    : "pt-[6.5rem] md:pt-14")
                 }
               >
                 <div className="overflow-hidden rounded-2xl bg-background">

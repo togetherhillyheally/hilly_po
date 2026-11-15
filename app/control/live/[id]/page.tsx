@@ -23,6 +23,8 @@ import LiveMap from "@/components/control/LiveMap"
 import LiveSidebar, {
   type SheetSnap,
   aboveSheetClass,
+  atSheetTopClass,
+  mapCtrlBottomStyle,
 } from "@/components/control/LiveSidebar"
 import LiveTableWide from "@/components/control/LiveTableWide"
 import { useFavorites } from "@/hooks/use-favorites"
@@ -71,6 +73,7 @@ export default function LiveAdventureControlPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("map")
   const [is3d, setIs3d] = useState(true)
   const [sheet, setSheet] = useState<SheetSnap>("peek")
+  const [elevOpen, setElevOpen] = useState(false)
   const [terrainElevations, setTerrainElevations] =
     useState<Map<string, number> | null>(null)
   const { favs, toggleFav } = useFavorites(`adventure-${params.id}`)
@@ -173,7 +176,8 @@ export default function LiveAdventureControlPage() {
 
   return (
     <main className="px-4 py-6">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      {/* 데스크톱 헤더 — 모바일은 아래 전체 화면의 슬림 바가 대신 */}
+      <div className="mb-4 hidden flex-wrap items-center justify-between gap-3 md:flex">
         <div className="flex items-center gap-3">
           <Button asChild variant="ghost" size="icon" className="h-8 w-8">
             <Link href="/control">
@@ -202,19 +206,49 @@ export default function LiveAdventureControlPage() {
         </div>
       </div>
 
-      <div className="theme-light relative h-[calc(100dvh-180px)] min-h-[480px] overflow-hidden rounded-xl border bg-background text-foreground">
-        {/* 상단 중앙 — 뷰 전환만 */}
+      {/* 모바일: 사이트 헤더·제목 위를 덮는 전체 화면(슬림 바 + 지도). 데스크톱: 페이지 안의 상자 */}
+      <div className="fixed inset-0 z-50 flex flex-col bg-background md:static md:z-auto md:block">
+      <div className="theme-light relative min-h-0 flex-1 overflow-hidden bg-background text-foreground md:h-[calc(100dvh-180px)] md:min-h-[480px] md:flex-none md:rounded-xl md:border">
+        {/* 모바일 상단 — 바 없이 지도 위에 ← 와 제목 칩만 (앱과 같은 투명 배경) */}
+        <div className="absolute left-3 top-3 z-30 flex max-w-[calc(100%-6rem)] items-center gap-2 md:hidden">
+          {/* 배경 없이 글자만 — 흰 번짐으로 지도 위에서 읽히게, 누르면 살짝 줄어드는 반응 */}
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 shrink-0 rounded-full transition-transform active:scale-90 active:bg-background/60 [filter:drop-shadow(0_1px_2px_rgba(255,255,255,0.9))]"
+          >
+            <Link href="/control" aria-label="관제 목록">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          </Button>
+          <span className="flex h-9 min-w-0 items-center rounded-full px-2 text-base font-extrabold [text-shadow:0_1px_3px_rgba(255,255,255,0.95),0_0_8px_rgba(255,255,255,0.8)]">
+            <span className="truncate">{session.title}</span>
+          </span>
+        </div>
+        {/* 상단 — 뷰 전환만. 모바일은 제목 칩 아래 줄, 데스크톱은 지도 영역(사이드바 제외) 가운데 */}
         {hasProfileView && (
-          <div className="absolute left-1/2 top-3 z-30 -translate-x-1/2">
+          <div
+            className={
+              "absolute left-1/2 top-[3.75rem] z-30 -translate-x-1/2 md:top-3 " +
+              // 모바일 지도 모드는 시트 안(mobileTools)에 있다 — 고도 모드에서만 위에
+              (showMap ? "hidden md:block " : "") +
+              (sheet !== "closed" ? "md:left-[calc(50%-180px)]" : "")
+            }
+          >
             <ViewModeSwitch mode={viewMode} onChange={setViewMode} />
           </div>
         )}
 
         {/* 지도 모드 (숨겨도 언마운트하지 않음 — Mapbox 재과금 방지) */}
-        <div className={showMap ? "absolute inset-0" : "hidden"}>
+        <div
+          className={showMap ? "absolute inset-0" : "hidden"}
+          style={mapCtrlBottomStyle(sheet)}
+        >
           <LiveMap
             bare
             course={course}
+            enableGeolocate
             entries={visible}
             tails={[]}
             categories={categories}
@@ -235,19 +269,27 @@ export default function LiveAdventureControlPage() {
               liveIds={liveIds}
               selectedId={selectedId}
               onSelect={handleSelect}
-              className="absolute left-3 top-3 z-30"
+              className="absolute left-3 top-[3.75rem] z-30 md:top-3"
             />
           )}
           {/* 2D/3D — 좌측 아래 (모바일 하단 시트가 열려 있으면 시트 위로) */}
-          <MapDimensionToggle
-            is3d={is3d}
-            onChange={setIs3d}
+          {/* 좌측 아래 도구 줄 — 2D/3D, 모바일은 지도/고도 전환도 여기(시트 위, 시트 따라 이동) */}
+          <div
             className={
-              "absolute left-3 z-30 md:bottom-3 " +
+              "absolute left-3 z-30 flex items-center gap-2 md:bottom-3 " +
+              // 모바일: 고도표가 펼쳐져 있으면 자리 양보
+              (elevOpen ? "max-md:hidden " : "") +
               aboveSheetClass(sheet)
             }
-          />
-          {/* 고도표 — 지도 아래에서 펼쳐 보기 */}
+          >
+            <MapDimensionToggle is3d={is3d} onChange={setIs3d} />
+            {hasProfileView && (
+              <div className="md:hidden">
+                <ViewModeSwitch mode={viewMode} onChange={setViewMode} />
+              </div>
+            )}
+          </div>
+          {/* 고도표 — 지도 아래에서 펼쳐 보기. 모바일은 펼치면 시트 윗변에 전폭으로 붙음 */}
           {profileIndex && (
             <ElevationDrawer
               index={profileIndex}
@@ -256,9 +298,14 @@ export default function LiveAdventureControlPage() {
               checkpoints={course?.checkpoints}
               selectedId={selectedId}
               onSelect={handleSelect}
+              onOpenChange={setElevOpen}
               className={
-                "absolute left-20 right-3 z-20 md:bottom-3 md:right-[372px] " +
-                aboveSheetClass(sheet)
+                "absolute z-20 md:left-20 md:right-[372px] md:bottom-3 " +
+                // 모바일은 상단 지도/고도 전환이 고도를 보여주므로 서랍은 숨김 (같은 내용 중복)
+                (hasProfileView ? "hidden md:block " : "") +
+                (elevOpen
+                  ? "left-0 right-0 " + atSheetTopClass(sheet)
+                  : "left-20 right-3 " + aboveSheetClass(sheet))
               }
             />
           )}
@@ -275,12 +322,46 @@ export default function LiveAdventureControlPage() {
             displayMode={displayMode}
             onDisplayModeChange={setDisplayMode}
             onSnapChange={setSheet}
+            // 솔로 모험 — 순위·TOP 3·필터·검색 없이 그 사람 정보만
+            single={session.is_solo}
+            mobileHeader={
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold leading-tight">
+                    {session.mountain_name}
+                  </p>
+                  <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                    {[
+                      session.is_solo ? "솔로" : `그룹 ${ranked.length}명`,
+                      // 코스 이름이 산 이름과 같으면 한 번만
+                      course?.name && course.name !== session.mountain_name
+                        ? course.name
+                        : null,
+                      profileIndex && `${(profileIndex.totalM / 1000).toFixed(1)}km`,
+                      profileIndex?.totalAscentM != null && `D+${profileIndex.totalAscentM}m`,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                </div>
+                {session.started_at && (
+                  <span className="flex shrink-0 flex-col items-end leading-none">
+                    <span className="text-[10px] font-semibold text-muted-foreground">
+                      경과
+                    </span>
+                    <span className="mt-1 text-lg font-bold">
+                      <ElapsedClock startsAt={session.started_at} />
+                    </span>
+                  </span>
+                )}
+              </div>
+            }
           />
         </div>
 
         {/* 고도 모드: 스크롤 — 프로필 + 순위 리스트 */}
         {!showMap && hasProfileView && courseIndex && (
-          <div className="h-full overflow-y-auto px-4 pb-8 pt-14">
+          <div className="h-full overflow-y-auto px-4 pb-8 pt-[6.5rem] md:pt-14">
             <div className="overflow-hidden rounded-2xl bg-background">
               <ElevationProfile
                 index={courseIndex}
@@ -309,6 +390,7 @@ export default function LiveAdventureControlPage() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </main>
   )

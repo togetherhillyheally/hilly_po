@@ -16,6 +16,8 @@ import LiveMap from "@/components/control/LiveMap"
 import LiveSidebar, {
   type SheetSnap,
   aboveSheetClass,
+  atSheetTopClass,
+  mapCtrlBottomStyle,
 } from "@/components/control/LiveSidebar"
 import LiveTableWide from "@/components/control/LiveTableWide"
 import RaceFinishBanner from "@/components/control/RaceFinishBanner"
@@ -263,18 +265,29 @@ function WatchView({ token }: { token: string }) {
     </div>
   )
 
+  // 지도/고도 전환 + 코스 선택 — 데스크톱은 지도 위, 모바일 지도 모드는 시트 안(공간 절약), 고도 모드는 위에
+  const topTools = hasTopBar ? (
+    <>
+      {hasProfileView && <ViewModeSwitch mode={viewMode} onChange={setViewMode} />}
+      {courses.length > 1 && (
+        <CourseSelect courses={courses} value={activeIdx} onChange={setActiveIdx} />
+      )}
+    </>
+  ) : null
+
   return (
     <main className="theme-light relative min-h-[100dvh] w-full bg-background text-foreground">
       {/* 상단 컨트롤 — 지도/고도 전환 + 지도 선택(고도 오른쪽).
           모바일은 좌상단(우상단 줌 버튼과 겹치지 않게), 데스크톱은 상단 중앙 */}
       {hasTopBar && (
-        <div className={"fixed top-3 z-30 flex items-center gap-2 md:top-4 " + topBarPos}>
-          {hasProfileView && (
-            <ViewModeSwitch mode={viewMode} onChange={setViewMode} />
-          )}
-          {courses.length > 1 && (
-            <CourseSelect courses={courses} value={activeIdx} onChange={setActiveIdx} />
-          )}
+        <div
+          className={
+            "fixed top-3 z-30 items-center gap-2 md:top-4 " +
+            (showMap ? "hidden md:flex " : "flex ") +
+            topBarPos
+          }
+        >
+          {topTools}
         </div>
       )}
 
@@ -283,7 +296,7 @@ function WatchView({ token }: { token: string }) {
         <div
           className={
             // 모바일: 핀 아래(카드는 시트 안). 데스크톱: 핀 → 이벤트 카드 → 배너 순으로 쌓기
-            "fixed top-16 z-20 " +
+            "fixed top-[4.75rem] z-20 " +
             (hasTopBar ? "md:top-[9.5rem] " : "md:top-[6.5rem] ") +
             topBarPos
           }
@@ -293,7 +306,10 @@ function WatchView({ token }: { token: string }) {
       )}
 
       {/* ── 지도 모드 (숨겨도 언마운트하지 않음) ── */}
-      <div className={showMap ? "absolute inset-0 overflow-hidden" : "hidden"}>
+      <div
+        className={showMap ? "absolute inset-0 overflow-hidden" : "hidden"}
+        style={mapCtrlBottomStyle(sheet)}
+      >
         <LiveMap
           bare
           course={activeCourse}
@@ -315,7 +331,8 @@ function WatchView({ token }: { token: string }) {
           className={
             // 데스크톱도 상단 핀이 있으면 그 아래로 — 핀을 지도 영역 가운데로 옮기니 태블릿에선 카드와 겹친다
             "absolute left-3 z-10 max-w-[calc(100%-4.5rem)] rounded-xl border bg-background/85 px-3 py-2 shadow-lg backdrop-blur md:left-4 md:block md:max-w-none md:px-4 md:py-3 " +
-            (hasTopBar ? "top-16 " : "top-3 md:top-4 ") +
+            // 모바일 지도 모드는 핀이 시트 안에 있으니 카드가 맨 위
+            (hasTopBar ? "top-3 md:top-16 " : "top-3 md:top-4 ") +
             (panelOpen ? "hidden" : "")
           }
         >
@@ -326,16 +343,20 @@ function WatchView({ token }: { token: string }) {
         </header>
 
         {/* 2D/3D — 좌측 아래 (모바일 하단 시트가 열려 있으면 시트 위로) */}
-        <MapDimensionToggle
-          is3d={is3d}
-          onChange={setIs3d}
+        {/* 좌측 아래 도구 줄 — 2D/3D, 모바일은 지도/고도 전환·코스 선택도 여기(시트 위, 시트 따라 이동) */}
+        <div
           className={
-            "absolute left-4 z-30 md:bottom-4 " +
+            "absolute left-4 z-30 flex max-w-[calc(100%-4.5rem)] flex-wrap items-center gap-2 md:bottom-4 " +
             // 모바일: 고도표가 펼쳐져 있으면 자리 양보 (데스크톱은 겹치지 않음)
-            (elevOpen ? "hidden md:block " : "") +
+            (elevOpen ? "max-md:hidden " : "") +
             aboveSheetClass(sheet)
           }
-        />
+        >
+          <MapDimensionToggle is3d={is3d} onChange={setIs3d} />
+          {topTools && (
+            <div className="flex items-center gap-2 md:hidden">{topTools}</div>
+          )}
+        </div>
 
         {/* 고도표 — 지도 아래에서 펼쳐 보기 (데스크톱은 사이드바 왼쪽, 모바일은 하단 시트 위)
             대회(고도 뷰 있음)의 모바일에선 상단 지도/고도 전환이 대신하므로 숨김 */}
@@ -350,11 +371,12 @@ function WatchView({ token }: { token: string }) {
             onSelect={handleSelect}
             onOpenChange={setElevOpen}
             className={
-              // 모바일: 펼치면 전폭으로 하단 시트에 붙어 시트의 연장처럼 보이게
+              // 모바일: 펼치면 전폭으로 하단 시트 윗변에 붙어 시트의 연장처럼 보이게
               "absolute z-20 md:left-20 md:right-[376px] md:bottom-4 " +
               (hasProfileView ? "hidden md:block " : "") +
-              (elevOpen ? "left-3 right-3 " : "left-20 right-4 ") +
-              aboveSheetClass(sheet)
+              (elevOpen
+                ? "left-0 right-0 " + atSheetTopClass(sheet)
+                : "left-20 right-4 " + aboveSheetClass(sheet))
             }
           />
         )}

@@ -124,6 +124,7 @@ export type LiveMapProps = {
 
 const DEM_SOURCE = "mapbox-dem"
 const TERRAIN_PITCH = 55
+const AUTO_GROUP_RADIUS_M = 25
 
 /** geojson 소스를 지우지 않고 데이터만 교체 — 3D 지형이 켜진 상태에서
  *  removeSource 를 하면 mapbox-gl 이 지형 갱신 중 예외를 던진다. */
@@ -221,6 +222,19 @@ function styleMarkerEl(
   label: string,
 ) {
   const r = members[0]
+  // 바뀐 게 없으면 DOM 을 다시 만들지 않는다 — 500명 × 5초 폴링에서 모바일이 버벅이지 않게
+  const sig =
+    `${label}#${color}#${selected ? 1 : 0}#` +
+    members
+      .map(
+        (m) =>
+          `${m.entry.entry_id}:${m.entry.avatar_url ?? ""}:${m.status}:${m.finished ? 1 : 0}:${m.rank ?? ""}:${
+            m.stationarySec != null && m.stationarySec >= STATIONARY_THRESHOLD_SEC ? 1 : 0
+          }`,
+      )
+      .join("|")
+  if (el.dataset.sig === sig) return
+  el.dataset.sig = sig
   let chip = el.firstElementChild as HTMLDivElement | null
   if (!chip) {
     chip = document.createElement("div")
@@ -346,10 +360,17 @@ export default function LiveMap({
     mapRef.current = map
     // 터치 기기는 핀치로 줌 — ＋/－ 버튼은 오른쪽 세로 공간만 차지하므로 뺀다
     const coarsePointer = window.matchMedia?.("(pointer: coarse)").matches ?? false
+    // 폰은 버튼을 오른쪽 아래(엄지 닿는 곳, 하단 시트 바로 위)에 — 위쪽은 제목·전환 핀 자리.
+    // 시트 높이만큼의 간격은 부모가 --map-ctrl-bottom 으로 준다 (globals.css)
+    const ctrlPos: mapboxgl.ControlPosition = window.matchMedia?.(
+      "(max-width: 767px)",
+    ).matches
+      ? "bottom-right"
+      : "top-right"
     if (!coarsePointer) {
       map.addControl(
         new mapboxgl.NavigationControl({ showCompass: false }),
-        "top-right",
+        ctrlPos,
       )
     }
     if (enableGeolocate) {
@@ -360,7 +381,7 @@ export default function LiveMap({
           trackUserLocation: true,
           showUserHeading: true,
         }),
-        "top-right",
+        ctrlPos,
       )
     }
     // 코스 전체 보기 — 내 위치 아래. 지금 표시 중인 코스(지도 선택 포함)에 화면을 맞춘다
@@ -395,7 +416,7 @@ export default function LiveMap({
         },
         onRemove() {},
       },
-      "top-right",
+      ctrlPos,
     )
 
     // 스타일 로드 후 반복 사용 가능한 오버레이 재적용 (마커 재생성 없음)
@@ -678,7 +699,10 @@ export default function LiveMap({
       const seen = new Set<string>()
       const textOf = (r: RankedEntry) =>
         markerTextRef.current?.(r) ?? markerLabel(r)
-      for (const g of groupEntries(entries, groupRadiusM)) {
+      // 인원이 많으면(150+) 25m 안에 모인 사람은 마커 하나로 — 출발 직후 수백 개 칩이 겹치지 않게
+      const radius =
+        groupRadiusM ?? (entries.length > 150 ? AUTO_GROUP_RADIUS_M : undefined)
+      for (const g of groupEntries(entries, radius)) {
         const r = g.members[0]
         seen.add(g.key)
         const color = entryColor(r.entry, categories)

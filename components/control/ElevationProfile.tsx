@@ -27,6 +27,8 @@ export type ElevationProfileProps = {
   /** 확대 보기 여부 (페이지가 컨테이너 높이와 함께 관리) */
   expanded?: boolean
   onToggleExpanded?: () => void
+  /** 모바일 시트 위 작은 패널용 — 그래프 위 요약 문구를 빼고(헤더가 보여줌), 붙어 있는 체크포인트 이름은 숨겨 겹치지 않게 */
+  compact?: boolean
   className?: string
 }
 
@@ -97,6 +99,7 @@ export default function ElevationProfile({
   onSelect,
   expanded = false,
   onToggleExpanded,
+  compact = false,
   className,
 }: ElevationProfileProps) {
   const hasEle = index.totalAscentM != null
@@ -328,7 +331,7 @@ export default function ElevationProfile({
         </svg>
 
         {/* 체크포인트 — 세로 점선 + 하단 라벨은 항상, 시설 아이콘만 필터로 숨김 */}
-        {cpMarks.map(({ cp, icon, xPct, yPct, km, lifted }, i) => (
+        {cpMarks.map(({ cp, icon, xPct, yPct, km, lifted, close }, i) => (
           <div key={`${cp.sort_order}-${i}`}>
             <div
               className="pointer-events-none absolute border-l border-dashed border-foreground/25"
@@ -349,20 +352,23 @@ export default function ElevationProfile({
                 style={{ left: `${xPct}%`, top: `${yPct}%` }}
               />
             )}
-            <div
-              className={
-                "pointer-events-none absolute max-w-28 -translate-x-1/2 rounded bg-background/80 px-0.5 text-center leading-tight " +
-                (lifted ? "bottom-7 md:bottom-9" : "bottom-1")
-              }
-              style={{ left: `${xPct}%` }}
-            >
-              <p className="truncate text-[9px] font-semibold text-foreground/90 md:text-xs">
-                {cp.title}
-              </p>
-              <p className="text-[9px] tabular-nums text-muted-foreground md:text-[11px]">
-                {km.toFixed(1)}km
-              </p>
-            </div>
+            {/* 작은 패널에선 바로 앞 CP 와 붙은 라벨은 생략 — 좁은 폭에서 한 줄 올려도 겹친다 */}
+            {!(compact && close) && (
+              <div
+                className={
+                  "pointer-events-none absolute max-w-28 -translate-x-1/2 rounded bg-background/80 px-0.5 text-center leading-tight " +
+                  (lifted ? "bottom-7 md:bottom-9" : "bottom-1")
+                }
+                style={{ left: `${xPct}%` }}
+              >
+                <p className="truncate text-[9px] font-semibold text-foreground/90 md:text-xs">
+                  {cp.title}
+                </p>
+                <p className="text-[9px] tabular-nums text-muted-foreground md:text-[11px]">
+                  {km.toFixed(1)}km
+                </p>
+              </div>
+            )}
           </div>
         ))}
 
@@ -420,9 +426,11 @@ export default function ElevationProfile({
         {/* 작은(스트립) 모드: 우상단 요약 + 확대 버튼 */}
         {!expanded && (
           <>
-            <span className="pointer-events-none absolute right-8 top-1 text-[10px] font-semibold tabular-nums text-foreground/80">
-              {summary}
-            </span>
+            {!compact && (
+              <span className="pointer-events-none absolute right-8 top-1 text-[10px] font-semibold tabular-nums text-foreground/80">
+                {summary}
+              </span>
+            )}
             {onToggleExpanded && (
               <Button
                 variant="ghost"

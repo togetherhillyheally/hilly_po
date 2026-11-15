@@ -32,6 +32,8 @@ import { entryColor, nameInitial } from "@/lib/entry-colors"
  *  데스크톱은 closed 가 아니면 우측 패널(높이 무관) */
 export type SheetSnap = "closed" | "peek" | "half" | "full"
 const SNAP_ORDER: SheetSnap[] = ["closed", "peek", "half", "full"]
+/** 한 번에 그리는 목록 줄 수 — 이상 상태·순위 순이라 위쪽만 먼저 보여도 관제엔 충분하다 */
+const ROW_PAGE = 80
 const SHEET_HEIGHT: Record<Exclude<SheetSnap, "closed">, string> = {
   peek: "h-[30%]",
   half: "h-[55%]",
@@ -49,7 +51,34 @@ export function aboveSheetClass(snap: SheetSnap): string {
     case "half":
       return "bottom-[calc(55%+0.75rem)]"
     case "full":
-      return "hidden md:block bottom-3"
+      return "max-md:hidden bottom-3"
+  }
+}
+
+/** 지도 안 Mapbox 버튼(내 위치·코스 전체)이 시트 위에 머물도록 부모에 줄 CSS 변수 값 — 모바일에서만 쓰인다 */
+export function mapCtrlBottomStyle(snap: SheetSnap): React.CSSProperties {
+  const bottom =
+    snap === "closed"
+      ? "0.25rem"
+      : snap === "peek"
+        ? "calc(30% + 0.25rem)"
+        : snap === "half"
+          ? "calc(55% + 0.25rem)"
+          : "calc(100% - 3.25rem)"
+  return { ["--map-ctrl-bottom" as string]: bottom }
+}
+
+/** 시트 윗변에 딱 붙이는 패널(펼친 고도표)의 모바일 bottom 클래스 — 간격 없이 시트의 연장처럼 */
+export function atSheetTopClass(snap: SheetSnap): string {
+  switch (snap) {
+    case "closed":
+      return "bottom-0"
+    case "peek":
+      return "bottom-[30%]"
+    case "half":
+      return "bottom-[55%]"
+    case "full":
+      return "max-md:hidden bottom-0"
   }
 }
 
@@ -82,6 +111,8 @@ export type LiveSidebarProps = {
   loading?: boolean
   /** 모바일 하단 시트 맨 위에 넣을 이벤트 정보 — 지도 위 오버레이 대신 (데스크톱은 숨김) */
   mobileHeader?: React.ReactNode
+  /** 한 명만 관제(솔로 모험) — 순위·TOP 3·필터·검색을 빼고 그 사람 정보만 */
+  single?: boolean
 }
 
 /** 첫 위치를 받기 전 자리 표시 — "표시할 참가자가 없어요"가 잠깐 보이지 않게 */
@@ -229,6 +260,7 @@ function AvatarCircle({
 function EntryRow({
   r,
   isRace,
+  showRank,
   isAdmin,
   categories,
   selected,
@@ -240,6 +272,8 @@ function EntryRow({
 }: {
   r: RankedEntry
   isRace: boolean
+  /** 순위 원·TOP 3 강조 — 레이스이되 한 명 관제가 아닐 때 */
+  showRank: boolean
   isAdmin: boolean
   categories: string[]
   selected: boolean
@@ -253,7 +287,7 @@ function EntryRow({
     (r.status === "stale" || r.status === "noSignal") &&
     !r.finished &&
     !preStart
-  const podium = isRace && r.rank != null && r.rank <= 3
+  const podium = showRank && r.rank != null && r.rank <= 3
   // 배터리는 관전 화면에도 보인다 (tracker_event_public_signals)
   const battery = batteryPercent(r.entry.battery_mv, r.entry.battery_pct)
   // 다음 CP(없으면 결승) 도착 예상
@@ -269,7 +303,7 @@ function EntryRow({
       type="button"
       onClick={() => onSelect?.(r.entry.entry_id)}
       className={
-        "block w-full border-b px-4 py-2.5 text-left transition-colors hover:bg-accent/50 " +
+        "flex w-full items-center gap-2 border-b px-4 py-2.5 text-left transition-colors hover:bg-accent/50 " +
         (podium ? PODIUM_ROW + " " : "") +
         (selected ? "bg-accent " : "") +
         (r.status === "sos" && isAdmin ? "bg-red-500/10 " : "") +
@@ -277,8 +311,7 @@ function EntryRow({
         (dimmed ? "bg-red-500/5" : "")
       }
     >
-      <div className="flex items-center gap-2">
-        {isRace &&
+        {showRank &&
           (podium ? (
             <span
               className={
@@ -298,6 +331,9 @@ function EntryRow({
           avatarUrl={r.entry.avatar_url}
           color={color}
         />
+        {/* 오른쪽 두 줄(이름 / 정보) — 순위·아바타는 두 줄의 세로 가운데에 맞춰 들여쓰기 고정값이 필요 없다 */}
+        <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
         {r.entry.bib_no && (
           <span className="shrink-0 text-xs text-muted-foreground">
             #{r.entry.bib_no}
@@ -316,7 +352,7 @@ function EntryRow({
               {r.gameScore}점
             </span>
           ) : (
-            isRace &&
+            showRank &&
             r.rank != null &&
             r.rank > 1 && (
               <span className="text-xs tabular-nums text-muted-foreground">
@@ -356,12 +392,7 @@ function EntryRow({
           />
         </span>
       </div>
-      <div
-        className={
-          "mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground " +
-          (isRace ? "pl-[68px]" : "pl-10")
-        }
-      >
+      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
         {r.entry.category && (
           <span className="whitespace-nowrap">
             {r.entry.category}
@@ -417,6 +448,7 @@ function EntryRow({
           )}
         </span>
       </div>
+      </div>
     </button>
   )
 }
@@ -444,6 +476,7 @@ export default function LiveSidebar({
   preStart = false,
   loading = false,
   mobileHeader,
+  single = false,
 }: LiveSidebarProps) {
   // 모바일은 '살짝(30%)'으로 시작 — 지도가 먼저 보이고, 손잡이를 끌어 절반·전체로
   const [snap, _setSnap] = useState<SheetSnap>("peek")
@@ -470,6 +503,15 @@ export default function LiveSidebar({
   // 모바일은 검색창을 접어 두고 돋보기 버튼으로 연다 (하단 시트 높이 확보)
   const [searchOpen, setSearchOpen] = useState(false)
   const isRace = eventType === "race"
+  const showRank = isRace && !single
+
+  // 500명 대비 — 처음엔 80줄만 그리고 스크롤이 끝에 가까워지면 80줄씩 더. 필터·검색이 바뀌면 처음부터
+  const [rowLimit, setRowLimit] = useState(ROW_PAGE)
+  useEffect(() => {
+    setRowLimit(ROW_PAGE)
+  }, [query, displayMode])
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const sentinelRef = useRef<HTMLDivElement>(null)
 
   // 리스트도 지도/프로필과 같은 표시 필터를 따름 (필터 하나로 통합)
   const rows = useMemo(() => {
@@ -508,13 +550,13 @@ export default function LiveSidebar({
     })
   }, [ranked, displayMode, favs, categories, query, isAdmin, isRace])
 
-  const podiumRows = isRace
+  const podiumRows = showRank
     ? rows
         .filter((r) => r.rank != null && r.rank <= 3)
         .sort((a, b) => (a.rank as number) - (b.rank as number))
     : []
   // 모니터 모드는 이상 상태 정렬이 즐겨찾기보다 우선 (SOS 가 ⭐ 아래로 내려가면 안 됨)
-  const restRows = isRace
+  const restRows = showRank
     ? rows
         .filter((r) => !(r.rank != null && r.rank <= 3))
         .sort((a, b) => {
@@ -524,6 +566,19 @@ export default function LiveSidebar({
           return fa - fb
         })
     : rows
+  const hasMoreRows = restRows.length > rowLimit
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el || !hasMoreRows) return
+    const io = new IntersectionObserver(
+      (es) => {
+        if (es.some((e) => e.isIntersecting)) setRowLimit((l) => l + ROW_PAGE)
+      },
+      { root: inline ? null : scrollRef.current, rootMargin: "400px" },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [hasMoreRows, rowLimit, inline])
 
   if (!inline && !open) {
     return (
@@ -604,6 +659,8 @@ export default function LiveSidebar({
         <div className="border-b px-4 pb-2 pt-4 md:hidden">{mobileHeader}</div>
       )}
 
+      {/* 한 명 관제엔 필터·검색이 없다 */}
+      {!single && (
       <div className="flex items-center gap-2 border-b px-3 py-2 md:py-2.5">
         {displayMode && onDisplayModeChange ? (
           // 표시 필터가 헤더 타이틀 자리를 대신함
@@ -635,7 +692,9 @@ export default function LiveSidebar({
           <Search className="h-4 w-4" />
         </button>
       </div>
+      )}
 
+      {!single && (
       <div
         className={
           "border-b px-3 py-2 " +
@@ -667,9 +726,11 @@ export default function LiveSidebar({
           )}
         </div>
       </div>
+      )}
 
       {/* 아이폰 홈 바 영역만큼 아래 여백 — 마지막 줄이 가려지지 않게 */}
       <div
+        ref={scrollRef}
         className={
           inline
             ? ""
@@ -693,6 +754,7 @@ export default function LiveSidebar({
                 key={r.entry.entry_id}
                 r={r}
                 isRace={isRace}
+                showRank={showRank}
                 isAdmin={isAdmin}
                 categories={categories}
                 selected={selectedId === r.entry.entry_id}
@@ -706,11 +768,12 @@ export default function LiveSidebar({
           </div>
         )}
 
-        {restRows.map((r) => (
+        {restRows.slice(0, rowLimit).map((r) => (
           <EntryRow
             key={r.entry.entry_id}
             r={r}
             isRace={isRace}
+            showRank={showRank}
             isAdmin={isAdmin}
             categories={categories}
             selected={selectedId === r.entry.entry_id}
@@ -721,6 +784,14 @@ export default function LiveSidebar({
             preStart={preStart}
           />
         ))}
+        {hasMoreRows && (
+          <div
+            ref={sentinelRef}
+            className="py-3 text-center text-xs text-muted-foreground"
+          >
+            {restRows.length - rowLimit}명 더 있어요 — 내리면 이어서 보여요
+          </div>
+        )}
       </div>
     </aside>
   )

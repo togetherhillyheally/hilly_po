@@ -206,6 +206,14 @@ body {
   display: none !important;
 }
 
+/* 폰에선 Mapbox 버튼(내 위치·코스 전체)을 오른쪽 아래에 두고 하단 시트 높이만큼 띄운다
+   (LiveSidebar.mapCtrlBottomStyle 이 --map-ctrl-bottom 을 준다) */
+.mapboxgl-ctrl-bottom-right {
+  /* mapbox-gl.css 가 이 파일보다 뒤에 와서 bottom:0 이 이기므로 !important */
+  bottom: var(--map-ctrl-bottom, 0px) !important;
+  transition: bottom 0.2s;
+}
+
 /* 투명 이미지(오브젝트 카탈로그 등) 배경 확인용 체커보드 */
 .bg-checkerboard {
   background-image:
