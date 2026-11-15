@@ -36,7 +36,7 @@ export function ViewModeSwitch({
           type="button"
           onClick={() => onChange(o.value)}
           className={
-            "flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors " +
+            "flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors md:py-1 " +
             (mode === o.value
               ? "bg-[#DC2F55] text-white"
               : "text-muted-foreground hover:text-foreground")
@@ -107,7 +107,7 @@ export function MapDimensionToggle({
       onClick={() => onChange(!is3d)}
       title={is3d ? "평면 지도로 전환" : "3D 지형으로 전환"}
       className={
-        "rounded-full border bg-background/85 px-3 py-1 text-xs font-bold shadow-lg backdrop-blur transition-colors " +
+        "rounded-full border bg-background/85 px-3.5 py-1.5 text-xs font-bold shadow-lg backdrop-blur transition-colors md:px-3 md:py-1 " +
         (is3d
           ? "text-[#DC2F55]"
           : "text-muted-foreground hover:text-foreground") +
@@ -168,7 +168,7 @@ export function DisplayFilterControl({
           type="button"
           onClick={() => onChange(o.value)}
           className={
-            "rounded-full px-3 py-1 text-xs font-medium transition-colors " +
+            "rounded-full px-3 py-1.5 text-xs font-medium transition-colors md:py-1 " +
             (mode === o.value
               ? "bg-[#DC2F55] text-white"
               : "text-muted-foreground hover:text-foreground")

@@ -23,6 +23,20 @@ function formatSince(ms: number): string {
   return min % 60 ? `${h}시간 ${min % 60}분째` : `${h}시간째`
 }
 
+/** 15분 넘게 소식 없는 참가자 — 오래 끊긴 순. 모바일 경고 띠의 인원수 계산에도 쓴다 */
+export function signalLostEntries(
+  ranked: RankedEntry[],
+  now = Date.now(),
+): { r: RankedEntry; last: number }[] {
+  return ranked
+    .filter((r) => !r.finished && r.status !== "sos")
+    .map((r) => ({ r, last: lastSignalMs(r) }))
+    // 한 번도 신호가 없던 참가자는 '출발 대기' — 경고 대상이 아니다
+    .filter((x): x is { r: RankedEntry; last: number } => x.last != null)
+    .filter((x) => now - x.last > SIGNAL_LOST_ALERT_MS)
+    .sort((a, b) => a.last - b.last)
+}
+
 /**
  * 장시간 신호 끊김 경고 — 진행 중 관제에서 15분 넘게 소식 없는 참가자.
  * 2026-10-30 UTNP: #2 가 11:05 에 끊긴 뒤 21시간 동안 목록의 '신호 없음' 한 줄로만 보였다.
@@ -39,13 +53,7 @@ export default function SignalLostAlert({
 }) {
   const [open, setOpen] = useState(true)
   const now = Date.now()
-  const lost = ranked
-    .filter((r) => !r.finished && r.status !== "sos")
-    .map((r) => ({ r, last: lastSignalMs(r) }))
-    // 한 번도 신호가 없던 참가자는 '출발 대기' — 경고 대상이 아니다
-    .filter((x): x is { r: RankedEntry; last: number } => x.last != null)
-    .filter((x) => now - x.last > SIGNAL_LOST_ALERT_MS)
-    .sort((a, b) => a.last - b.last)
+  const lost = signalLostEntries(ranked, now)
 
   if (lost.length === 0) return null
 

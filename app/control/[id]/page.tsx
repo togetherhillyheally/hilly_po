@@ -4,9 +4,25 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { ArrowLeft, Link2, Pencil } from "lucide-react"
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  Link2,
+  MoreHorizontal,
+  Pencil,
+  Settings,
+  Users,
+} from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   type DisplayMode,
@@ -23,10 +39,15 @@ import ElevationProfile from "@/components/control/ElevationProfile"
 import EntryManager from "@/components/control/EntryManager"
 import EventFormDialog from "@/components/control/EventFormDialog"
 import LiveMap from "@/components/control/LiveMap"
-import LiveSidebar from "@/components/control/LiveSidebar"
+import LiveSidebar, {
+  type SheetSnap,
+  aboveSheetClass,
+} from "@/components/control/LiveSidebar"
 import LiveTableWide from "@/components/control/LiveTableWide"
 import RaceFinishBanner from "@/components/control/RaceFinishBanner"
-import SignalLostAlert from "@/components/control/SignalLostAlert"
+import SignalLostAlert, {
+  signalLostEntries,
+} from "@/components/control/SignalLostAlert"
 import { useEventSos } from "@/hooks/use-event-sos"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useLiveEvent } from "@/hooks/use-live-event"
@@ -150,8 +171,11 @@ function ControlRoom({
   const [displayMode, setDisplayMode] = useState<DisplayMode>("all")
   const [viewMode, setViewMode] = useState<ViewMode>("map")
   const [is3d, setIs3d] = useState(false) // 기본 2D — 3D 는 버튼으로
-  const [panelOpen, setPanelOpen] = useState(true)
+  const [sheet, setSheet] = useState<SheetSnap>("peek")
   const [elevOpen, setElevOpen] = useState(false)
+  // 모바일 ⋯ 메뉴에서 참가자·설정 탭으로 보내기 위해 탭을 직접 관리
+  const [tab, setTab] = useState("live")
+  const [alertsOpen, setAlertsOpen] = useState(false)
   const [terrainElevations, setTerrainElevations] =
     useState<Map<string, number> | null>(null)
   const { favs, toggleFav } = useFavorites(event.id)
@@ -223,6 +247,53 @@ function ControlRoom({
   const sosCount = ranked.filter((r) => r.status === "sos").length + appSos.open.length
   const hasProfileView = event.event_type === "race" && courseIndex != null
   const showMap = viewMode === "map" || !hasProfileView
+  const hasTopBar = hasProfileView || courses.length > 1
+  // 상단 핀 — 데스크톱은 지도 영역(사이드바 360px 제외) 가운데, 모바일은 왼쪽 위
+  const topBarPos =
+    "left-3 md:-translate-x-1/2 " +
+    (sheet !== "closed" ? "md:left-[calc(50%-180px)]" : "md:left-1/2")
+  const lost = event.status === "live" ? signalLostEntries(ranked) : []
+
+  // 앱 SOS 카드 — 누르면 위치로 이동, 처리 완료로 제거 (데스크톱 좌상단·모바일 경고 띠 공용)
+  const sosCards = appSos.open.map((a) => (
+    <div
+      key={a.id}
+      className="rounded-xl border border-red-500 bg-red-600 p-3 text-white shadow-lg"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-extrabold">SOS · {a.nickname ?? "참가자"}</span>
+        <span className="text-xs opacity-90">
+          {new Date(a.createdAt).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
+        </span>
+      </div>
+      {a.sessionTitle && <p className="mt-0.5 truncate text-xs opacity-90">{a.sessionTitle}</p>}
+      {a.note && <p className="mt-1 text-xs">{a.note}</p>}
+      <p className="mt-1 font-mono text-[11px] opacity-90">
+        {a.lat != null && a.lng != null ? `${a.lat.toFixed(5)}, ${a.lng.toFixed(5)}` : "위치 없음"}
+      </p>
+      <div className="mt-2 flex gap-2">
+        {a.lat != null && a.lng != null && (
+          <button
+            type="button"
+            className="flex-1 rounded-md bg-white/20 px-2 py-1.5 text-xs font-bold hover:bg-white/30"
+            onClick={() => {
+              setAlertsOpen(false)
+              setSosFocus((f) => ({ id: a.id, n: (f?.n ?? 0) + 1 }))
+            }}
+          >
+            위치 보기
+          </button>
+        )}
+        <button
+          type="button"
+          className="flex-1 rounded-md bg-white px-2 py-1.5 text-xs font-bold text-red-700 hover:bg-white/90"
+          onClick={() => void resolveSos(a.id)}
+        >
+          처리 완료
+        </button>
+      </div>
+    </div>
+  ))
 
   // 관전 짧은 주소 — 있으면 복사·표시에 우선 사용
   const [slug, setSlug] = useState<string | null>(null)
@@ -310,18 +381,68 @@ function ControlRoom({
         </div>
       </div>
 
-      <Tabs defaultValue="live">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="live">관제</TabsTrigger>
           <TabsTrigger value="entries">참가자</TabsTrigger>
           <TabsTrigger value="settings">설정</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="live" className="mt-4">
-          <div className="theme-light relative h-[calc(100dvh-220px)] min-h-[480px] overflow-hidden rounded-xl border bg-background text-foreground">
-            {/* 상단 중앙 — 지도/고도 전환 + 지도 선택(고도 오른쪽) */}
-            {(hasProfileView || courses.length > 1) && (
-              <div className="absolute left-1/2 top-3 z-30 flex -translate-x-1/2 items-center gap-2">
+        <TabsContent value="live" className="mt-0 md:mt-4">
+          {/* 모바일: 사이트 헤더·제목·탭 위를 덮는 전체 화면(슬림 바 + 지도) — 폰에선 지도가 화면의 절반도 안 남았다.
+              데스크톱: 지금처럼 페이지 안의 상자 */}
+          <div className="fixed inset-0 z-50 flex flex-col bg-background md:static md:z-auto md:block">
+            <div className="flex h-11 shrink-0 items-center gap-1 border-b px-1.5 md:hidden">
+              <Button asChild variant="ghost" size="icon" className="h-9 w-9 shrink-0">
+                <Link href="/control" aria-label="관제 목록">
+                  <ArrowLeft className="h-4 w-4" />
+                </Link>
+              </Button>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold leading-tight">{event.title}</p>
+                <p className="flex items-center gap-1 text-[10px] leading-tight text-muted-foreground">
+                  {lastPolledAt ? (
+                    <>
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      갱신 {Math.max(0, Math.round((Date.now() - lastPolledAt) / 1000))}초 전
+                    </>
+                  ) : (
+                    "연결 중…"
+                  )}
+                  {` · ${ranked.length}명`}
+                </p>
+              </div>
+              {sosCount > 0 && (
+                <Badge variant="destructive" className="animate-pulse">
+                  SOS {sosCount}
+                </Badge>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" aria-label="더보기">
+                    <MoreHorizontal className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={copyWatchLink}>
+                    <Link2 className="mr-2 h-4 w-4" />
+                    관전 링크 복사
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTab("entries")}>
+                    <Users className="mr-2 h-4 w-4" />
+                    참가자 관리
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTab("settings")}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    설정
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          <div className="theme-light relative min-h-0 flex-1 overflow-hidden bg-background text-foreground md:h-[calc(100dvh-220px)] md:min-h-[480px] md:flex-none md:rounded-xl md:border">
+            {/* 상단 — 지도/고도 전환 + 지도 선택(고도 오른쪽) */}
+            {hasTopBar && (
+              <div className={"absolute top-3 z-30 flex items-center gap-2 " + topBarPos}>
                 {hasProfileView && (
                   <ViewModeSwitch mode={viewMode} onChange={setViewMode} />
                 )}
@@ -333,7 +454,7 @@ function ControlRoom({
 
             {/* 레이스 종료 배너 — 지도 위쪽 가운데(컨트롤 아래) */}
             {event.event_type === "race" && event.status === "finished" && (
-              <div className="absolute left-1/2 top-14 z-20 -translate-x-1/2">
+              <div className={"absolute top-14 z-20 " + topBarPos}>
                 <RaceFinishBanner ranked={ranked} />
               </div>
             )}
@@ -357,52 +478,61 @@ function ControlRoom({
                 sosPoints={sosPoints}
                 sosFocus={sosFocus}
               />
-              {/* 좌측 위: 앱 SOS 목록(누르면 위치로 이동, 처리 완료로 제거) + 장시간 신호 끊김 경고 */}
-              <div className="absolute left-3 top-3 z-30 w-72 max-w-[calc(100%-1.5rem)] space-y-2">
-              {appSos.open.length > 0 && (
-                <div className="space-y-2">
-                  {appSos.open.map((a) => (
-                    <div
-                      key={a.id}
-                      className="rounded-xl border border-red-500 bg-red-600 p-3 text-white shadow-lg"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-extrabold">SOS · {a.nickname ?? "참가자"}</span>
-                        <span className="text-xs opacity-90">
-                          {new Date(a.createdAt).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
-                        </span>
-                      </div>
-                      {a.sessionTitle && <p className="mt-0.5 truncate text-xs opacity-90">{a.sessionTitle}</p>}
-                      {a.note && <p className="mt-1 text-xs">{a.note}</p>}
-                      <p className="mt-1 font-mono text-[11px] opacity-90">
-                        {a.lat != null && a.lng != null ? `${a.lat.toFixed(5)}, ${a.lng.toFixed(5)}` : "위치 없음"}
-                      </p>
-                      <div className="mt-2 flex gap-2">
-                        {a.lat != null && a.lng != null && (
-                          <button
-                            type="button"
-                            className="flex-1 rounded-md bg-white/20 px-2 py-1 text-xs font-bold hover:bg-white/30"
-                            onClick={() => setSosFocus((f) => ({ id: a.id, n: (f?.n ?? 0) + 1 }))}
-                          >
-                            위치 보기
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className="flex-1 rounded-md bg-white px-2 py-1 text-xs font-bold text-red-700 hover:bg-white/90"
-                          onClick={() => void resolveSos(a.id)}
-                        >
-                          처리 완료
-                        </button>
-                      </div>
+              {/* 데스크톱 좌측 위: 앱 SOS 카드 + 장시간 신호 끊김 경고 */}
+              <div className="absolute left-3 top-3 z-30 hidden w-72 space-y-2 md:block">
+                {sosCards.length > 0 && <div className="space-y-2">{sosCards}</div>}
+                {event.status === "live" && (
+                  <SignalLostAlert ranked={ranked} onSelect={handleSelect} />
+                )}
+              </div>
+              {/* 모바일: 288px 카드가 지도를 다 가리던 자리 — 한 줄 띠로 요약하고 누르면 펼침.
+                  오른쪽은 지도 버튼(내 위치·코스 전체) 자리를 비운다 */}
+              {(sosCards.length > 0 || lost.length > 0) && (
+                <div
+                  className={
+                    "absolute left-3 right-14 z-30 md:hidden " +
+                    (hasTopBar ? "top-[3.75rem]" : "top-3")
+                  }
+                >
+                  <button
+                    type="button"
+                    onClick={() => setAlertsOpen((v) => !v)}
+                    aria-expanded={alertsOpen}
+                    className={
+                      "flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm font-extrabold shadow-lg " +
+                      (sosCards.length > 0
+                        ? "border-red-500 bg-red-600 text-white"
+                        : "border-amber-500 bg-amber-50 text-amber-950")
+                    }
+                  >
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    <span className="flex-1 truncate">
+                      {sosCards.length > 0 && `SOS ${sosCards.length}건`}
+                      {sosCards.length > 0 && lost.length > 0 && " · "}
+                      {lost.length > 0 && `신호 끊김 ${lost.length}명`}
+                    </span>
+                    {alertsOpen ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </button>
+                  {alertsOpen && (
+                    <div className="mt-2 max-h-[40dvh] space-y-2 overflow-y-auto">
+                      {sosCards}
+                      {lost.length > 0 && (
+                        <SignalLostAlert
+                          ranked={ranked}
+                          onSelect={(id) => {
+                            setAlertsOpen(false)
+                            handleSelect(id)
+                          }}
+                        />
+                      )}
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
-              {event.status === "live" && (
-                <SignalLostAlert ranked={ranked} onSelect={handleSelect} />
-              )}
-              </div>
               {/* 2D/3D — 좌측 아래 (모바일 하단 시트가 열려 있으면 시트 위로) */}
               <MapDimensionToggle
                 is3d={is3d}
@@ -410,7 +540,7 @@ function ControlRoom({
                 className={
                   "absolute left-3 z-30 md:bottom-3 " +
                   (elevOpen ? "hidden md:block " : "") +
-                  (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-3")
+                  aboveSheetClass(sheet)
                 }
               />
               {/* 고도표 — 지도 아래에서 펼쳐 보기 (대회 모바일은 상단 지도/고도 전환이 대신) */}
@@ -427,7 +557,7 @@ function ControlRoom({
                     "absolute z-20 md:left-20 md:right-[372px] md:bottom-3 " +
                     (hasProfileView ? "hidden md:block " : "") +
                     (elevOpen ? "left-3 right-3 " : "left-20 right-3 ") +
-                    (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-3")
+                    aboveSheetClass(sheet)
                   }
                 />
               )}
@@ -444,7 +574,7 @@ function ControlRoom({
                 terrainElevations={terrainElevations}
                 displayMode={displayMode}
                 onDisplayModeChange={setDisplayMode}
-                onOpenChange={setPanelOpen}
+                onSnapChange={setSheet}
               />
             </div>
 
@@ -485,6 +615,7 @@ function ControlRoom({
                 </div>
               </div>
             )}
+          </div>
           </div>
         </TabsContent>
 

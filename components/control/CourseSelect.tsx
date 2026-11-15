@@ -89,7 +89,7 @@ export default function CourseSelect({
             title={c.name}
             onClick={() => onChange(i)}
             className={
-              "max-w-[28vw] truncate rounded-full px-3 py-1 text-xs font-medium transition-colors md:max-w-[160px] " +
+              "max-w-[28vw] truncate rounded-full px-3 py-1.5 text-xs font-medium transition-colors md:max-w-[160px] md:py-1 " +
               (value === i
                 ? "bg-foreground text-background"
                 : "text-muted-foreground hover:text-foreground")
@@ -108,7 +108,7 @@ export default function CourseSelect({
         <button
           type="button"
           aria-label="지도 선택"
-          className={pill + " px-3 py-1 text-xs font-medium text-foreground"}
+          className={pill + " px-3 py-1.5 text-xs font-medium text-foreground md:py-1"}
         >
           <span className="max-w-[40vw] truncate md:max-w-[200px]">
             {labels[value]}

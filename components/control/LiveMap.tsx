@@ -344,10 +344,14 @@ export default function LiveMap({
       attributionControl: false,
     })
     mapRef.current = map
-    map.addControl(
-      new mapboxgl.NavigationControl({ showCompass: false }),
-      "top-right",
-    )
+    // 터치 기기는 핀치로 줌 — ＋/－ 버튼은 오른쪽 세로 공간만 차지하므로 뺀다
+    const coarsePointer = window.matchMedia?.("(pointer: coarse)").matches ?? false
+    if (!coarsePointer) {
+      map.addControl(
+        new mapboxgl.NavigationControl({ showCompass: false }),
+        "top-right",
+      )
+    }
     if (enableGeolocate) {
       // 내 위치 — 버튼 클릭 시 권한 요청, 파란 점 + 정확도 원, 이동 시 따라가기
       map.addControl(

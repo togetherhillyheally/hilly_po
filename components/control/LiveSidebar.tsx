@@ -1,9 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   Check,
-  ChevronsDown,
   ChevronsLeft,
   ChevronsRight,
   ChevronsUp,
@@ -29,6 +28,31 @@ import {
 } from "./DisplayFilter"
 import { entryColor, nameInitial } from "@/lib/entry-colors"
 
+/** 모바일 하단 시트 단계 — closed(접힘) / peek(살짝) / half(절반) / full(거의 전체).
+ *  데스크톱은 closed 가 아니면 우측 패널(높이 무관) */
+export type SheetSnap = "closed" | "peek" | "half" | "full"
+const SNAP_ORDER: SheetSnap[] = ["closed", "peek", "half", "full"]
+const SHEET_HEIGHT: Record<Exclude<SheetSnap, "closed">, string> = {
+  peek: "h-[30%]",
+  half: "h-[55%]",
+  full: "h-[calc(100%-3.5rem)]",
+}
+
+/** 시트 바로 위에 두는 컨트롤(2D/3D·고도표)의 모바일 bottom 클래스.
+ *  데스크톱 위치는 호출부가 md:bottom-* 로 따로 준다 */
+export function aboveSheetClass(snap: SheetSnap): string {
+  switch (snap) {
+    case "closed":
+      return "bottom-3"
+    case "peek":
+      return "bottom-[calc(30%+0.75rem)]"
+    case "half":
+      return "bottom-[calc(55%+0.75rem)]"
+    case "full":
+      return "hidden md:block bottom-3"
+  }
+}
+
 export type LiveSidebarProps = {
   ranked: RankedEntry[]
   eventType: "race" | "monitor"
@@ -48,6 +72,8 @@ export type LiveSidebarProps = {
   onDisplayModeChange?: (mode: DisplayMode) => void
   /** 열림/접힘 변경 알림 — 페이지가 지도 위 다른 컨트롤 위치를 조정할 때 사용 */
   onOpenChange?: (open: boolean) => void
+  /** 모바일 시트 단계 변경 알림 — 시트 위 컨트롤의 bottom 을 aboveSheetClass 로 맞출 때 사용 */
+  onSnapChange?: (snap: SheetSnap) => void
   /** 목록 항목 명칭 — 기본 "참가자", 전역 기기 관제는 "기기" */
   noun?: string
   /** 출발 전 — 신호 없음을 빨간 경고 대신 중립 "출발 대기"로 */
@@ -317,7 +343,8 @@ function EntryRow({
               onToggleFav(r.entry.entry_id)
             }
           }}
-          className="shrink-0 p-0.5"
+          // 손가락 크기 터치 영역 — 보이는 자리는 그대로(-m 으로 상쇄)
+          className="-m-1.5 shrink-0 p-2"
         >
           <Star
             className={
@@ -412,16 +439,32 @@ export default function LiveSidebar({
   displayMode,
   onDisplayModeChange,
   onOpenChange,
+  onSnapChange,
   noun = "참가자",
   preStart = false,
   loading = false,
   mobileHeader,
 }: LiveSidebarProps) {
-  const [open, _setOpen] = useState(true)
-  const setOpen = (v: boolean) => {
-    _setOpen(v)
-    onOpenChange?.(v)
+  // 모바일은 '살짝(30%)'으로 시작 — 지도가 먼저 보이고, 손잡이를 끌어 절반·전체로
+  const [snap, _setSnap] = useState<SheetSnap>("peek")
+  const open = snap !== "closed"
+  const setSnap = (v: SheetSnap) => {
+    _setSnap(v)
+    onSnapChange?.(v)
+    onOpenChange?.(v !== "closed")
   }
+  const setOpen = (v: boolean) => setSnap(v ? "half" : "closed")
+  const stepSnap = (dir: 1 | -1) => {
+    const i = SNAP_ORDER.indexOf(snap)
+    const next = SNAP_ORDER[Math.min(SNAP_ORDER.length - 1, Math.max(0, i + dir))]
+    if (next !== snap) setSnap(next)
+  }
+  const dragStartY = useRef<number | null>(null)
+  // 폰 가로 모드(높이 500px 이하)는 패널이 지도의 절반을 먹으므로 접은 채 시작
+  useEffect(() => {
+    if (window.matchMedia("(max-height: 500px)").matches) setSnap("closed")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const inline = variant === "inline"
   const [query, setQuery] = useState("")
   // 모바일은 검색창을 접어 두고 돋보기 버튼으로 연다 (하단 시트 높이 확보)
@@ -514,8 +557,10 @@ export default function LiveSidebar({
       className={
         inline
           ? "relative flex w-full flex-col overflow-hidden rounded-2xl border bg-background"
-          : // 모바일: 하단 시트(전폭·50% 높이) / 데스크톱: 우측 패널
-            "absolute inset-x-0 bottom-0 z-20 flex h-[50%] flex-col rounded-t-2xl border-t bg-background/90 backdrop-blur " +
+          : // 모바일: 하단 시트(전폭, 30/55/전체 3단) / 데스크톱: 우측 패널
+            "absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-2xl border-t bg-background/90 backdrop-blur transition-[height] duration-200 " +
+            SHEET_HEIGHT[snap as Exclude<SheetSnap, "closed">] +
+            " " +
             "md:inset-y-0 md:left-auto md:right-0 md:h-auto md:w-[360px] md:max-w-[88vw] md:rounded-none md:border-l md:border-t-0"
       }
     >
@@ -531,16 +576,27 @@ export default function LiveSidebar({
           >
             <ChevronsRight className="h-5 w-5" />
           </Button>
-          {/* 모바일: 시트 상단 중앙 접기 버튼 */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setOpen(false)}
-            title="접기"
-            className="absolute -top-4 left-1/2 z-30 h-8 w-12 -translate-x-1/2 rounded-full bg-background/85 shadow-lg backdrop-blur md:hidden"
+          {/* 모바일: 손잡이 — 위로 끌면 커지고 아래로 끌면 작아짐(끝까지 내리면 접힘), 탭하면 살짝↔절반 */}
+          <div
+            role="button"
+            aria-label="목록 크기 조절"
+            className="flex h-7 w-full shrink-0 cursor-grab touch-none items-center justify-center md:hidden"
+            onPointerDown={(e) => {
+              dragStartY.current = e.clientY
+              e.currentTarget.setPointerCapture(e.pointerId)
+            }}
+            onPointerUp={(e) => {
+              const start = dragStartY.current
+              dragStartY.current = null
+              if (start == null) return
+              const dy = e.clientY - start
+              if (dy < -24) stepSnap(1)
+              else if (dy > 24) stepSnap(-1)
+              else setSnap(snap === "half" ? "peek" : "half")
+            }}
           >
-            <ChevronsDown className="h-4 w-4" />
-          </Button>
+            <span className="h-1.5 w-10 rounded-full bg-foreground/20" />
+          </div>
         </>
       )}
 
@@ -570,7 +626,7 @@ export default function LiveSidebar({
           aria-label="이름·배번 검색"
           aria-expanded={searchOpen}
           className={
-            "ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors md:hidden " +
+            "ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors md:hidden " +
             (searchOpen || query
               ? "bg-foreground/10 text-foreground"
               : "text-muted-foreground hover:bg-muted")
@@ -612,7 +668,14 @@ export default function LiveSidebar({
         </div>
       </div>
 
-      <div className={inline ? "" : "flex-1 overflow-y-auto"}>
+      {/* 아이폰 홈 바 영역만큼 아래 여백 — 마지막 줄이 가려지지 않게 */}
+      <div
+        className={
+          inline
+            ? ""
+            : "flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)] md:pb-0"
+        }
+      >
         {loading && rows.length === 0 && <SkeletonRows />}
         {!loading && rows.length === 0 && (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground">

@@ -20,7 +20,10 @@ import ElevationDrawer from "@/components/control/ElevationDrawer"
 import { buildProfileIndex } from "@/lib/course-progress"
 import ElevationProfile from "@/components/control/ElevationProfile"
 import LiveMap from "@/components/control/LiveMap"
-import LiveSidebar from "@/components/control/LiveSidebar"
+import LiveSidebar, {
+  type SheetSnap,
+  aboveSheetClass,
+} from "@/components/control/LiveSidebar"
 import LiveTableWide from "@/components/control/LiveTableWide"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useLiveAdventure } from "@/hooks/use-live-adventure"
@@ -67,7 +70,7 @@ export default function LiveAdventureControlPage() {
   const [displayMode, setDisplayMode] = useState<DisplayMode>("all")
   const [viewMode, setViewMode] = useState<ViewMode>("map")
   const [is3d, setIs3d] = useState(true)
-  const [panelOpen, setPanelOpen] = useState(true)
+  const [sheet, setSheet] = useState<SheetSnap>("peek")
   const [terrainElevations, setTerrainElevations] =
     useState<Map<string, number> | null>(null)
   const { favs, toggleFav } = useFavorites(`adventure-${params.id}`)
@@ -241,7 +244,7 @@ export default function LiveAdventureControlPage() {
             onChange={setIs3d}
             className={
               "absolute left-3 z-30 md:bottom-3 " +
-              (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-3")
+              aboveSheetClass(sheet)
             }
           />
           {/* 고도표 — 지도 아래에서 펼쳐 보기 */}
@@ -255,7 +258,7 @@ export default function LiveAdventureControlPage() {
               onSelect={handleSelect}
               className={
                 "absolute left-20 right-3 z-20 md:bottom-3 md:right-[372px] " +
-                (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-3")
+                aboveSheetClass(sheet)
               }
             />
           )}
@@ -271,7 +274,7 @@ export default function LiveAdventureControlPage() {
             terrainElevations={terrainElevations}
             displayMode={displayMode}
             onDisplayModeChange={setDisplayMode}
-            onOpenChange={setPanelOpen}
+            onSnapChange={setSheet}
           />
         </div>
 

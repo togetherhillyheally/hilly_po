@@ -13,7 +13,10 @@ import ElevationDrawer from "@/components/control/ElevationDrawer"
 import CourseSelect, { useCourseChoice } from "@/components/control/CourseSelect"
 import ElevationProfile from "@/components/control/ElevationProfile"
 import LiveMap from "@/components/control/LiveMap"
-import LiveSidebar from "@/components/control/LiveSidebar"
+import LiveSidebar, {
+  type SheetSnap,
+  aboveSheetClass,
+} from "@/components/control/LiveSidebar"
 import LiveTableWide from "@/components/control/LiveTableWide"
 import RaceFinishBanner from "@/components/control/RaceFinishBanner"
 import { useFavorites } from "@/hooks/use-favorites"
@@ -118,7 +121,8 @@ function WatchView({ token }: { token: string }) {
   const [displayMode, setDisplayMode] = useState<DisplayMode>("all")
   const [viewMode, setViewMode] = useState<ViewMode>("map")
   const [is3d, setIs3d] = useState(false) // 기본 2D — 3D 는 버튼으로
-  const [panelOpen, setPanelOpen] = useState(true)
+  const [sheet, setSheet] = useState<SheetSnap>("peek")
+  const panelOpen = sheet !== "closed"
   const [elevOpen, setElevOpen] = useState(false)
   const [terrainElevations, setTerrainElevations] =
     useState<Map<string, number> | null>(null)
@@ -183,6 +187,10 @@ function WatchView({ token }: { token: string }) {
   const hasProfileView = isRace && courseIndex != null
   const showMap = viewMode === "map" || !hasProfileView
   const hasTopBar = hasProfileView || courses.length > 1
+  // 상단 핀 — 데스크톱은 지도 영역(사이드바 360px 제외) 가운데. 화면 전체 가운데로 두면 태블릿에서 사이드바 필터를 덮는다
+  const topBarPos =
+    "left-3 md:-translate-x-1/2 " +
+    (panelOpen ? "md:left-[calc(50%-180px)]" : "md:left-1/2")
 
   // 이벤트 정보 — 데스크톱은 지도 좌상단, 모바일은 하단 시트 맨 위 (시트를 접으면 지도 위로)
   const eventInfo = (
@@ -260,7 +268,7 @@ function WatchView({ token }: { token: string }) {
       {/* 상단 컨트롤 — 지도/고도 전환 + 지도 선택(고도 오른쪽).
           모바일은 좌상단(우상단 줌 버튼과 겹치지 않게), 데스크톱은 상단 중앙 */}
       {hasTopBar && (
-        <div className="fixed left-3 top-3 z-30 flex items-center gap-2 md:left-1/2 md:top-4 md:-translate-x-1/2">
+        <div className={"fixed top-3 z-30 flex items-center gap-2 md:top-4 " + topBarPos}>
           {hasProfileView && (
             <ViewModeSwitch mode={viewMode} onChange={setViewMode} />
           )}
@@ -272,7 +280,14 @@ function WatchView({ token }: { token: string }) {
 
       {/* 레이스 종료 배너 — 지도 위쪽 가운데(컨트롤 아래) */}
       {isRace && info.status === "finished" && (
-        <div className="fixed left-1/2 top-16 z-20 -translate-x-1/2">
+        <div
+          className={
+            // 모바일: 핀 아래(카드는 시트 안). 데스크톱: 핀 → 이벤트 카드 → 배너 순으로 쌓기
+            "fixed top-16 z-20 " +
+            (hasTopBar ? "md:top-[9.5rem] " : "md:top-[6.5rem] ") +
+            topBarPos
+          }
+        >
           <RaceFinishBanner ranked={ranked} />
         </div>
       )}
@@ -298,8 +313,9 @@ function WatchView({ token }: { token: string }) {
         {/* 좌상단 이벤트 정보 오버레이 — 모바일은 시트 안에 있으므로 시트를 접었을 때만 */}
         <header
           className={
-            "absolute left-3 z-10 max-w-[calc(100%-4.5rem)] rounded-xl border bg-background/85 px-3 py-2 shadow-lg backdrop-blur md:left-4 md:top-4 md:block md:max-w-none md:px-4 md:py-3 " +
-            (hasTopBar ? "top-16 " : "top-3 ") +
+            // 데스크톱도 상단 핀이 있으면 그 아래로 — 핀을 지도 영역 가운데로 옮기니 태블릿에선 카드와 겹친다
+            "absolute left-3 z-10 max-w-[calc(100%-4.5rem)] rounded-xl border bg-background/85 px-3 py-2 shadow-lg backdrop-blur md:left-4 md:block md:max-w-none md:px-4 md:py-3 " +
+            (hasTopBar ? "top-16 " : "top-3 md:top-4 ") +
             (panelOpen ? "hidden" : "")
           }
         >
@@ -317,7 +333,7 @@ function WatchView({ token }: { token: string }) {
             "absolute left-4 z-30 md:bottom-4 " +
             // 모바일: 고도표가 펼쳐져 있으면 자리 양보 (데스크톱은 겹치지 않음)
             (elevOpen ? "hidden md:block " : "") +
-            (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-4")
+            aboveSheetClass(sheet)
           }
         />
 
@@ -338,7 +354,7 @@ function WatchView({ token }: { token: string }) {
               "absolute z-20 md:left-20 md:right-[376px] md:bottom-4 " +
               (hasProfileView ? "hidden md:block " : "") +
               (elevOpen ? "left-3 right-3 " : "left-20 right-4 ") +
-              (panelOpen ? "bottom-[calc(50%+0.75rem)]" : "bottom-4")
+              aboveSheetClass(sheet)
             }
           />
         )}
@@ -357,7 +373,7 @@ function WatchView({ token }: { token: string }) {
           terrainElevations={terrainElevations}
           displayMode={displayMode}
           onDisplayModeChange={setDisplayMode}
-          onOpenChange={setPanelOpen}
+          onSnapChange={setSheet}
           mobileHeader={sheetInfo}
         />
       </div>

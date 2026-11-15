@@ -8,7 +8,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { MapDimensionToggle } from "@/components/control/DisplayFilter"
 import LiveMap from "@/components/control/LiveMap"
-import LiveSidebar from "@/components/control/LiveSidebar"
+import LiveSidebar, {
+  type SheetSnap,
+  aboveSheetClass,
+} from "@/components/control/LiveSidebar"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useSuperAdmin } from "@/hooks/use-super-admin"
 import {
@@ -57,7 +60,7 @@ export default function DevicesControlPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [focusSignal, setFocusSignal] = useState(0)
   const [is3d, setIs3d] = useState(false)
-  const [panelOpen, setPanelOpen] = useState(true)
+  const [sheet, setSheet] = useState<SheetSnap>("peek")
   const { favs, toggleFav } = useFavorites("devices")
 
   const progressMapRef = useRef<Map<string, ProgressState>>(new Map())
@@ -211,7 +214,7 @@ export default function DevicesControlPage() {
           onChange={setIs3d}
           className={
             "absolute left-3 z-30 md:bottom-3 " +
-            (panelOpen ? "bottom-[calc(40%+0.75rem)]" : "bottom-3")
+            aboveSheetClass(sheet)
           }
         />
         <LiveSidebar
@@ -223,7 +226,7 @@ export default function DevicesControlPage() {
           onSelect={handleSelect}
           favs={favs}
           onToggleFav={toggleFav}
-          onOpenChange={setPanelOpen}
+          onSnapChange={setSheet}
           noun="기기"
         />
       </div>
