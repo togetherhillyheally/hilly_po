@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { toast } from "sonner"
 import {
@@ -154,6 +154,20 @@ export default function ControlListPage() {
   const [intervalOpen, setIntervalOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<TrackerEvent | null>(null)
 
+  // 현재(준비중·진행중) / 지난(종료·보관) — 레이스가 쌓이면 지난 것이 목록을 덮어서 나눔 (2026-11-16)
+  const [scope, setScope] = useState<"current" | "past">("current")
+  const isCurrent = (ev: TrackerEvent) => ev.status === "draft" || ev.status === "live"
+  const scopedEvents = useMemo(
+    () =>
+      events?.filter((ev) => (scope === "current" ? isCurrent(ev) : !isCurrent(ev))) ??
+      null,
+    [events, scope],
+  )
+  const scopeCounts = useMemo(() => {
+    const cur = events?.filter(isCurrent).length ?? 0
+    return { current: cur, past: (events?.length ?? 0) - cur }
+  }, [events])
+
   const reload = useCallback(async () => {
     let evs: TrackerEvent[] = []
     let advs: LiveAdventure[] = []
@@ -269,6 +283,39 @@ export default function ControlListPage() {
         )}
       </div>
 
+      {/* 현재 / 지난 — 진행 중인 것만 먼저, 끝난 레이스는 '지난 관제'에서 */}
+      <div className="mb-6 flex items-center gap-0.5 self-start rounded-full border bg-background/85 p-0.5 w-fit">
+        {(
+          [
+            ["current", "현재 관제"],
+            ["past", "지난 관제"],
+          ] as const
+        ).map(([k, label]) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => setScope(k)}
+            aria-pressed={scope === k}
+            className={
+              "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors " +
+              (scope === k
+                ? "bg-[#DC2F55] text-white"
+                : "text-muted-foreground hover:text-foreground")
+            }
+          >
+            {label}
+            <span
+              className={
+                "tabular-nums text-xs " +
+                (scope === k ? "text-white/80" : "text-muted-foreground/70")
+              }
+            >
+              {events ? scopeCounts[k] + (k === "current" ? (adventures?.length ?? 0) : 0) : "–"}
+            </span>
+          </button>
+        ))}
+      </div>
+
       {/* ── 트래커 이벤트 — 레이스 / 상시 관제 분리 (UTMB 허브식 카드) ── */}
       {(
         [
@@ -276,7 +323,7 @@ export default function ControlListPage() {
           ["monitor", "상시 관제"],
         ] as const
       ).map(([type, label]) => {
-        const list = events?.filter((ev) => ev.event_type === type) ?? null
+        const list = scopedEvents?.filter((ev) => ev.event_type === type) ?? null
         // 상시 관제 이벤트가 아직 없으면 섹션 자체를 숨김 (레이스 섹션이 목록 기본)
         if (type === "monitor" && (list?.length ?? 0) === 0) return null
         return (
@@ -290,9 +337,11 @@ export default function ControlListPage() {
               </p>
             ) : list.length === 0 ? (
               <p className="rounded-2xl border px-4 py-10 text-center text-sm text-muted-foreground">
-                {isAdmin
-                  ? "아직 이벤트가 없어요. 새 이벤트를 만들어 보세요."
-                  : "지금 진행 중인 행사가 없어요."}
+                {scope === "past"
+                  ? "지난 관제가 없어요."
+                  : isAdmin
+                    ? "진행 중이거나 준비 중인 이벤트가 없어요. 새 이벤트를 만들어 보세요."
+                    : "지금 진행 중인 행사가 없어요."}
               </p>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -391,8 +440,8 @@ export default function ControlListPage() {
         )
       })}
 
-      {/* ── 모험 라이브 (앱 hiking_sessions) — 진행 중인 모험이 없으면 섹션째 숨김 ── */}
-      {adventures && adventures.length > 0 && (
+      {/* ── 모험 라이브 (앱 hiking_sessions) — 진행 중인 모험이 없으면 섹션째 숨김. 지난 관제엔 없음 ── */}
+      {scope === "current" && adventures && adventures.length > 0 && (
       <section>
         <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
           <span className="relative flex h-2 w-2">
