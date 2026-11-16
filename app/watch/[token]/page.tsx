@@ -2,6 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useParams } from "next/navigation"
+import { Share2 } from "lucide-react"
+import { toast } from "sonner"
+import { shareLink } from "@/lib/share-link"
 import {
   type DisplayMode,
   type ViewMode,
@@ -194,12 +197,33 @@ function WatchView({ token }: { token: string }) {
     "left-3 md:-translate-x-1/2 " +
     (panelOpen ? "md:left-[calc(50%-180px)]" : "md:left-1/2")
 
+  // 관전 링크 공유 — 폰은 시스템 공유 시트(카카오톡 등), PC 는 복사
+  async function onShare() {
+    const r = await shareLink(window.location.href, `${info!.title} · 힐리힐리 LIVE`)
+    if (r === "copied") toast.success("관전 링크를 복사했어요.")
+    else if (r === "failed") toast.error("공유하지 못했어요.")
+  }
+  const shareButton = (
+    <button
+      type="button"
+      onClick={onShare}
+      aria-label="관전 링크 공유"
+      title="관전 링크 공유"
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-background/70 text-foreground transition-colors hover:bg-background active:scale-95"
+    >
+      <Share2 className="h-4 w-4" />
+    </button>
+  )
+
   // 이벤트 정보 — 데스크톱은 지도 좌상단, 모바일은 하단 시트 맨 위 (시트를 접으면 지도 위로)
   const eventInfo = (
     <>
-      <h1 className="truncate text-sm font-bold leading-tight md:text-base">
-        {info.title}
-      </h1>
+      <div className="flex items-start justify-between gap-3">
+        <h1 className="truncate text-sm font-bold leading-tight md:text-base">
+          {info.title}
+        </h1>
+        {shareButton}
+      </div>
       <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground md:text-xs">
         <span className="hidden md:inline">{isRace ? "대회" : "실시간 위치"}</span>
         {activeCourse?.name && <span>{activeCourse.name}</span>}
@@ -261,6 +285,7 @@ function WatchView({ token }: { token: string }) {
             종료
           </span>
         )}
+        {shareButton}
       </div>
     </div>
   )

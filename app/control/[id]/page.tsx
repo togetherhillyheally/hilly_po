@@ -50,6 +50,7 @@ import SignalLostAlert, {
   signalLostEntries,
 } from "@/components/control/SignalLostAlert"
 import { useEventSos } from "@/hooks/use-event-sos"
+import { shareLink } from "@/lib/share-link"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useLiveEvent } from "@/hooks/use-live-event"
 import { useSuperAdmin } from "@/hooks/use-super-admin"
@@ -302,12 +303,12 @@ function ControlRoom({
     trackerControlRepo.getSlug(event.id).then(setSlug).catch(() => {})
   }, [event.id])
 
-  function copyWatchLink() {
+  // 관전 링크 — 폰은 시스템 공유 시트(카카오톡 등), PC 는 복사
+  async function copyWatchLink() {
     const url = `${window.location.origin}/watch/${slug ?? event.public_token}`
-    navigator.clipboard
-      .writeText(url)
-      .then(() => toast.success("관전 링크를 복사했어요."))
-      .catch(() => toast.error("복사에 실패했어요."))
+    const r = await shareLink(url, `${event.title} · 힐리힐리 LIVE`)
+    if (r === "copied") toast.success("관전 링크를 복사했어요.")
+    else if (r === "failed") toast.error("공유하지 못했어요.")
   }
 
   async function setStatus(status: TrackerEventStatus) {
@@ -442,7 +443,7 @@ function ControlRoom({
                 <DropdownMenuContent align="start" className="theme-light">
                   <DropdownMenuItem onClick={copyWatchLink}>
                     <Link2 className="mr-2 h-4 w-4" />
-                    관전 링크 복사
+                    관전 링크 공유
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTab("entries")}>
                     <Users className="mr-2 h-4 w-4" />

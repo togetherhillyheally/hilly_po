@@ -49,14 +49,16 @@ async function fetchThumbUrl(trailId: string): Promise<string | null> {
 /** 필요한 글자만 담은 Noto Sans KR (truetype) — 실패하면 null (기본 글꼴로 그림) */
 async function loadFont(text: string, weight: 500 | 800): Promise<ArrayBuffer | null> {
   try {
+    // 글꼴은 하루 캐시 — 카카오톡 스크래퍼는 몇 초만 기다려서, 매번 구글에서 받아오면 미리보기가 비기도 한다
     const css = await (
       await fetch(
         `https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@${weight}&text=${encodeURIComponent(text)}`,
+        { next: { revalidate: 86400 } },
       )
     ).text()
     const url = css.match(/src: url\((.+?)\) format\('(opentype|truetype)'\)/)?.[1]
     if (!url) return null
-    return await (await fetch(url)).arrayBuffer()
+    return await (await fetch(url, { next: { revalidate: 86400 } })).arrayBuffer()
   } catch {
     return null
   }
