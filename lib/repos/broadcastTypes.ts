@@ -61,6 +61,53 @@ export interface PublicBroadcast {
 
 export type ModerateAction = "pin" | "unpin" | "delete"
 
+/** 광고 자리 — 시트 머리 아래 / 채팅 15개마다 / 종료 배너 아래 */
+export type AdPlacement = "sheet_header" | "chat_inline" | "finish_banner"
+
+export interface AdCampaign {
+  id: string
+  name: string
+  advertiser: string | null
+  image_path: string
+  /** 공개 버킷 URL (클라이언트가 만든다) */
+  image_url: string
+  link_url: string | null
+  alt_text: string | null
+  placement: AdPlacement
+}
+
+export type AdSet = Record<AdPlacement, AdCampaign | null>
+
+/** 버킷 경로 → 공개 URL. 이미 절대 URL(외부 이미지)이면 그대로 */
+export function adImageUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/ad-images/${path}`
+}
+
+export function parseAdSet(raw: unknown): AdSet {
+  const r = (raw ?? {}) as Record<string, unknown>
+  const one = (v: unknown): AdCampaign | null => {
+    if (!v || typeof v !== "object") return null
+    const c = v as Record<string, unknown>
+    if (!c.id || !c.image_path) return null
+    return {
+      id: String(c.id),
+      name: String(c.name ?? ""),
+      advertiser: (c.advertiser as string | null) ?? null,
+      image_path: String(c.image_path),
+      image_url: adImageUrl(String(c.image_path)),
+      link_url: (c.link_url as string | null) ?? null,
+      alt_text: (c.alt_text as string | null) ?? null,
+      placement: c.placement as AdPlacement,
+    }
+  }
+  return {
+    sheet_header: one(r.sheet_header),
+    chat_inline: one(r.chat_inline),
+    finish_banner: one(r.finish_banner),
+  }
+}
+
 export function parseBroadcastMessage(raw: unknown): BroadcastMessage {
   const r = (raw ?? {}) as Record<string, unknown>
   return {

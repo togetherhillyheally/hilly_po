@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Share2 } from "lucide-react"
 import { toast } from "sonner"
+import AdCard from "@/components/broadcast/AdCard"
 import BroadcastPanel from "@/components/broadcast/BroadcastPanel"
 import { MapDimensionToggle } from "@/components/control/DisplayFilter"
 import ElapsedClock from "@/components/control/ElapsedClock"
@@ -16,6 +17,7 @@ import LiveSidebar, {
   mapCtrlBottomStyle,
 } from "@/components/control/LiveSidebar"
 import { useBroadcast } from "@/hooks/use-broadcast"
+import { useBroadcastAds } from "@/hooks/use-broadcast-ads"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useLiveAdventure } from "@/hooks/use-live-adventure"
@@ -109,6 +111,8 @@ function AdventureLive({ broadcast }: { broadcast: PublicBroadcast }) {
   const { isAdmin } = useSuperAdmin()
   const isHost = !!user && (broadcast.host?.user_id === user.id || isAdmin === true)
   const fallbackCourse = useFallbackCourse(broadcast.trail_id, !live.loading && !live.course)
+  // 광고 — 시트 머리 아래 1장, 끝난 중계엔 종료 배너 자리 1장 (채팅 사이는 BroadcastPanel 이)
+  const ads = useBroadcastAds(broadcast.id, "hiking_session")
   const course = live.course ?? fallbackCourse
   const profileIndex = useMemo(
     () => live.courseIndex ?? buildProfileIndex(course?.coordinates),
@@ -191,6 +195,11 @@ function AdventureLive({ broadcast }: { broadcast: PublicBroadcast }) {
         </div>
       </div>
       {broadcast.intro && <p className="line-clamp-2 text-xs leading-snug text-foreground/80">{broadcast.intro}</p>}
+      {ended && ads.ads.finish_banner ? (
+        <AdCard ad={ads.ads.finish_banner} variant="wide" onImpression={ads.impression} onClick={ads.click} />
+      ) : ads.ads.sheet_header ? (
+        <AdCard ad={ads.ads.sheet_header} variant="banner" onImpression={ads.impression} onClick={ads.click} />
+      ) : null}
     </div>
   )
 
@@ -251,6 +260,17 @@ function AdventureLive({ broadcast }: { broadcast: PublicBroadcast }) {
           )}
           {preStart && !ended && (
             <p className="mt-1.5 text-xs text-muted-foreground">아직 출발 전이에요. 출발하면 위치가 보여요.</p>
+          )}
+          {/* 데스크톱 광고 — 카드 아래 (모바일은 시트 머리에서) */}
+          {(ended ? ads.ads.finish_banner : ads.ads.sheet_header) && (
+            <div className="mt-2 hidden md:block">
+              <AdCard
+                ad={(ended ? ads.ads.finish_banner : ads.ads.sheet_header)!}
+                variant="banner"
+                onImpression={ads.impression}
+                onClick={ads.click}
+              />
+            </div>
           )}
         </header>
 

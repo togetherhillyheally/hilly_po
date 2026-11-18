@@ -4,10 +4,12 @@
  */
 import { getSupabase } from "@/lib/supabase/client"
 import {
+  type AdSet,
   type BroadcastKind,
   type BroadcastMessage,
   type ModerateAction,
   type PublicBroadcast,
+  parseAdSet,
   parseBroadcastMessage,
   parsePublicBroadcast,
 } from "./broadcastTypes"
@@ -99,6 +101,31 @@ export const broadcastRepo = {
     })
     if (error) fail(error, "상태를 바꾸지 못했어요.")
     return parsePublicBroadcast(data)
+  },
+
+  /** 광고 — 자리별 1장 (없는 자리는 null). 방송이 없는 관전 페이지는 broadcastId null 로 전체 광고만 */
+  async ads(broadcastId: string | null, kind: BroadcastKind | null): Promise<AdSet> {
+    const { data, error } = await getSupabase().rpc("public_ads_for_broadcast", {
+      p_broadcast_id: broadcastId,
+      p_kind: kind,
+    })
+    if (error) throw error
+    return parseAdSet(data)
+  },
+
+  /** 노출/클릭 기록 — 실패해도 조용히 */
+  async adEvent(campaignId: string, broadcastId: string | null, kind: "impression" | "click", viewerHash: string) {
+    await getSupabase()
+      .rpc("public_ad_event", {
+        p_campaign_id: campaignId,
+        p_broadcast_id: broadcastId,
+        p_kind: kind,
+        p_viewer_hash: viewerHash,
+      })
+      .then(
+        () => {},
+        () => {},
+      )
   },
 
   /** 관리자 — 트래커 이벤트에 방송(채팅) 켜기. 이미 있으면 그대로 돌려준다 */

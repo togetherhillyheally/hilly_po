@@ -19,6 +19,7 @@ export default function ChatList({
   canModerate,
   onModerate,
   onMute,
+  inlineAd,
   className,
 }: {
   messages: BroadcastMessage[]
@@ -30,6 +31,8 @@ export default function ChatList({
   canModerate: boolean
   onModerate?: (id: string, action: ModerateAction) => void
   onMute?: (userId: string, nickname: string) => void
+  /** 채팅 사이 광고 — 15개마다 한 번 */
+  inlineAd?: React.ReactNode
   className?: string
 }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -95,15 +98,17 @@ export default function ChatList({
             아직 대화가 없어요. 첫 응원을 남겨 보세요.
           </p>
         )}
-        {messages.map((m) => (
-          <ChatMessageRow
-            key={m.id}
-            m={m}
-            mine={!!myUserId && m.user_id === myUserId}
-            canModerate={canModerate}
-            onModerate={onModerate}
-            onMute={onMute}
-          />
+        {messages.map((m, i) => (
+          <div key={m.id}>
+            <ChatMessageRow
+              m={m}
+              mine={!!myUserId && m.user_id === myUserId}
+              canModerate={canModerate}
+              onModerate={onModerate}
+              onMute={onMute}
+            />
+            {inlineAd && i % 15 === 14 && inlineAd}
+          </div>
         ))}
       </div>
       {unseen > 0 && (

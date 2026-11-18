@@ -2,10 +2,12 @@
 
 import { Pin } from "lucide-react"
 import { toast } from "sonner"
+import { useBroadcastAds } from "@/hooks/use-broadcast-ads"
 import { useBroadcastChat } from "@/hooks/use-broadcast-chat"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { broadcastRepo } from "@/lib/repos/broadcastRepo"
 import type { PublicBroadcast } from "@/lib/repos/broadcastTypes"
+import AdCard from "./AdCard"
 import ChatComposer, { LoginPrompt } from "./ChatComposer"
 import ChatList from "./ChatList"
 
@@ -24,6 +26,7 @@ export default function BroadcastPanel({
 }) {
   const { user } = useCurrentUser()
   const chat = useBroadcastChat(broadcast.id)
+  const ads = useBroadcastAds(broadcast.id, broadcast.kind)
   const live = broadcast.status === "live"
   const pinned = chat.pinned ?? broadcast.pinned_message
 
@@ -67,6 +70,11 @@ export default function BroadcastPanel({
         canModerate={isHost}
         onModerate={(id, a) => void moderate(id, a)}
         onMute={(uid, name) => void mute(uid, name)}
+        inlineAd={
+          ads.ads.chat_inline ? (
+            <AdCard ad={ads.ads.chat_inline} variant="inline" onImpression={ads.impression} onClick={ads.click} />
+          ) : undefined
+        }
       />
       <div className="border-t px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         {!live ? (

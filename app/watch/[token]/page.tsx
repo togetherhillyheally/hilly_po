@@ -24,8 +24,10 @@ import LiveSidebar, {
 } from "@/components/control/LiveSidebar"
 import LiveTableWide from "@/components/control/LiveTableWide"
 import RaceFinishBanner from "@/components/control/RaceFinishBanner"
+import AdCard from "@/components/broadcast/AdCard"
 import BroadcastPanel from "@/components/broadcast/BroadcastPanel"
 import { useBroadcast } from "@/hooks/use-broadcast"
+import { useBroadcastAds } from "@/hooks/use-broadcast-ads"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useSuperAdmin } from "@/hooks/use-super-admin"
 import { useLiveEvent } from "@/hooks/use-live-event"
@@ -138,6 +140,8 @@ function WatchView({ token }: { token: string }) {
   // 라이브 중계(관전 채팅) — 관리자가 켠 이벤트만 방송이 있다. 없으면 탭도 없다
   const { broadcast } = useBroadcast(info ? { kind: "tracker_event", refId: info.id } : null)
   const { isAdmin } = useSuperAdmin()
+  // 광고 — 방송이 없어도 전체 광고는 나온다 (시트 머리 아래 / 종료 배너 아래)
+  const ads = useBroadcastAds(broadcast?.id ?? null, "tracker_event")
   const broadcastTabs = broadcast
     ? [
         {
@@ -262,9 +266,10 @@ function WatchView({ token }: { token: string }) {
     </>
   )
 
-  // 모바일 시트 헤더 — 인원·경과 시간을 오른쪽에 크게
+  // 모바일 시트 헤더 — 인원·경과 시간을 오른쪽에 크게 (+ 그 아래 광고 1장)
   const sheetInfo = (
-    <div className="flex items-center justify-between gap-3">
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-3">
       <div className="min-w-0">
         <h1 className="truncate text-sm font-bold leading-tight">
           {info.title}
@@ -303,6 +308,10 @@ function WatchView({ token }: { token: string }) {
         )}
         {shareButton}
       </div>
+      </div>
+      {ads.ads.sheet_header && (
+        <AdCard ad={ads.ads.sheet_header} variant="banner" onImpression={ads.impression} onClick={ads.click} />
+      )}
     </div>
   )
 
@@ -342,7 +351,18 @@ function WatchView({ token }: { token: string }) {
             topBarPos
           }
         >
-          <RaceFinishBanner ranked={ranked} />
+          <div className="flex flex-col items-center gap-2">
+            <RaceFinishBanner ranked={ranked} />
+            {ads.ads.finish_banner && (
+              <AdCard
+                ad={ads.ads.finish_banner}
+                variant="wide"
+                onImpression={ads.impression}
+                onClick={ads.click}
+                className="w-[min(92vw,420px)] shadow-xl"
+              />
+            )}
+          </div>
         </div>
       )}
 
