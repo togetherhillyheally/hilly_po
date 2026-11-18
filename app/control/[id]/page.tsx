@@ -49,7 +49,11 @@ import RaceFinishBanner from "@/components/control/RaceFinishBanner"
 import SignalLostAlert, {
   signalLostEntries,
 } from "@/components/control/SignalLostAlert"
+import BroadcastPanel from "@/components/broadcast/BroadcastPanel"
+import HostConsole from "@/components/broadcast/HostConsole"
+import { useBroadcast } from "@/hooks/use-broadcast"
 import { useEventSos } from "@/hooks/use-event-sos"
+import { broadcastRepo } from "@/lib/repos/broadcastRepo"
 import { shareLink } from "@/lib/share-link"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useLiveEvent } from "@/hooks/use-live-event"
@@ -181,6 +185,31 @@ function ControlRoom({
   const [terrainElevations, setTerrainElevations] =
     useState<Map<string, number> | null>(null)
   const { favs, toggleFav } = useFavorites(event.id)
+
+  // 라이브 중계(관전 채팅) — 설정 탭에서 켜면 관전 페이지와 여기 사이드바에 채팅 탭이 생긴다
+  const { broadcast, apply: applyBroadcast } = useBroadcast({ kind: "tracker_event", refId: event.id })
+  const [enablingBroadcast, setEnablingBroadcast] = useState(false)
+  async function enableBroadcast() {
+    setEnablingBroadcast(true)
+    try {
+      applyBroadcast(await broadcastRepo.adminEnsureForEvent(event.id))
+      toast.success("관전 채팅을 켰어요. 관전 페이지에 채팅 탭이 보여요.")
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "중계를 켜지 못했어요.")
+    } finally {
+      setEnablingBroadcast(false)
+    }
+  }
+  const broadcastTabs = broadcast
+    ? [
+        {
+          key: "chat",
+          label: "채팅",
+          badge: broadcast.message_count || null,
+          node: <BroadcastPanel broadcast={broadcast} isHost />,
+        },
+      ]
+    : undefined
 
   // 같은 참가자를 다시 눌러도 지도가 다시 포커스되도록 신호 카운터 증가
   const handleSelect = (id: string) => {
@@ -606,6 +635,7 @@ function ControlRoom({
                 displayMode={displayMode}
                 onDisplayModeChange={setDisplayMode}
                 onSnapChange={setSheet}
+                tabs={broadcastTabs}
               />
             </div>
 
@@ -678,6 +708,27 @@ function ControlRoom({
               ))}
             </div>
           </div>
+
+          {/* 라이브 중계 — 관전 페이지 채팅 (후원·라디오는 다음 단계) */}
+          {broadcast ? (
+            <HostConsole broadcast={broadcast} onChanged={applyBroadcast} />
+          ) : (
+            <div className="space-y-2 rounded-xl border p-4">
+              <h2 className="text-sm font-semibold">라이브 중계</h2>
+              <p className="text-xs text-muted-foreground">
+                켜면 관전 페이지에 채팅 탭이 생겨요. 읽기는 누구나, 글쓰기는 힐리힐리 로그인이 필요해요.
+                진행자(관리자) 글은 강조되고 위에 고정할 수 있어요.
+              </p>
+              <Button
+                size="sm"
+                disabled={enablingBroadcast}
+                className="bg-[#DC2F55] text-white hover:bg-[#DC2F55]/90"
+                onClick={() => void enableBroadcast()}
+              >
+                관전 채팅 켜기
+              </Button>
+            </div>
+          )}
 
           <WatchLinkCard
             eventId={event.id}

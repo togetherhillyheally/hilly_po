@@ -27,6 +27,9 @@ import LiveSidebar, {
   mapCtrlBottomStyle,
 } from "@/components/control/LiveSidebar"
 import LiveTableWide from "@/components/control/LiveTableWide"
+import BroadcastPanel from "@/components/broadcast/BroadcastPanel"
+import HostConsole from "@/components/broadcast/HostConsole"
+import { useBroadcast } from "@/hooks/use-broadcast"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useLiveAdventure } from "@/hooks/use-live-adventure"
 import { useSessionScoreboard } from "@/hooks/use-session-scoreboard"
@@ -77,6 +80,31 @@ export default function LiveAdventureControlPage() {
   const [terrainElevations, setTerrainElevations] =
     useState<Map<string, number> | null>(null)
   const { favs, toggleFav } = useFavorites(`adventure-${params.id}`)
+  // 이 모험의 공개 중계(앱에서 켬) — 있으면 채팅 탭 + 관리자용 진행자 콘솔
+  const { broadcast, apply: applyBroadcast } = useBroadcast({ kind: "hiking_session", refId: params.id })
+  const broadcastTabs = broadcast
+    ? [
+        {
+          key: "chat",
+          label: "채팅",
+          badge: broadcast.message_count || null,
+          node: <BroadcastPanel broadcast={broadcast} isHost={isAdmin === true} />,
+        },
+        ...(isAdmin === true
+          ? [
+              {
+                key: "console",
+                label: "중계",
+                node: (
+                  <div className="overflow-y-auto p-3">
+                    <HostConsole broadcast={broadcast} onChanged={applyBroadcast} />
+                  </div>
+                ),
+              },
+            ]
+          : []),
+      ]
+    : undefined
 
   const handleSelect = (id: string) => {
     setSelectedId(id)
@@ -109,10 +137,19 @@ export default function LiveAdventureControlPage() {
     })
   }, [rawRanked, board])
   // 지도 마커 글자 = 소속 조 이름 (점수는 점수판에서). 조가 없으면 닉네임
+  // 2인 1팀(팀마다 조 하나)이면 점수판과 같은 동물 조 이름으로 — DB 조 이름("1팀")은 그대로 둔다
   const squadNameOf = useMemo(() => {
+    const perTeam = new Map<number, number>()
+    for (const sq of board?.squads ?? []) {
+      const t = sq.team_no ?? 1
+      perTeam.set(t, (perTeam.get(t) ?? 0) + 1)
+    }
     const m = new Map<string, string>()
-    for (const sq of board?.squads ?? [])
-      for (const uid of sq.member_ids) m.set(uid, sq.name)
+    for (const sq of board?.squads ?? []) {
+      const t = sq.team_no ?? 1
+      const label = (perTeam.get(t) ?? 0) <= 1 ? teamLabel(t) : sq.name
+      for (const uid of sq.member_ids) m.set(uid, label)
+    }
     return m
   }, [board])
   const markerText = useCallback(
@@ -324,6 +361,7 @@ export default function LiveAdventureControlPage() {
             onSnapChange={setSheet}
             // 솔로 모험 — 순위·TOP 3·필터·검색 없이 그 사람 정보만
             single={session.is_solo}
+            tabs={broadcastTabs}
             mobileHeader={
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">

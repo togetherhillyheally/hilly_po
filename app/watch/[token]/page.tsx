@@ -24,7 +24,10 @@ import LiveSidebar, {
 } from "@/components/control/LiveSidebar"
 import LiveTableWide from "@/components/control/LiveTableWide"
 import RaceFinishBanner from "@/components/control/RaceFinishBanner"
+import BroadcastPanel from "@/components/broadcast/BroadcastPanel"
+import { useBroadcast } from "@/hooks/use-broadcast"
 import { useFavorites } from "@/hooks/use-favorites"
+import { useSuperAdmin } from "@/hooks/use-super-admin"
 import { useLiveEvent } from "@/hooks/use-live-event"
 import { trackerControlRepo } from "@/lib/repos/trackerControlRepo"
 import { isPublicToken } from "@/lib/watch-token"
@@ -132,6 +135,19 @@ function WatchView({ token }: { token: string }) {
   const [terrainElevations, setTerrainElevations] =
     useState<Map<string, number> | null>(null)
   const { favs, toggleFav } = useFavorites(token)
+  // 라이브 중계(관전 채팅) — 관리자가 켠 이벤트만 방송이 있다. 없으면 탭도 없다
+  const { broadcast } = useBroadcast(info ? { kind: "tracker_event", refId: info.id } : null)
+  const { isAdmin } = useSuperAdmin()
+  const broadcastTabs = broadcast
+    ? [
+        {
+          key: "chat",
+          label: "채팅",
+          badge: broadcast.message_count || null,
+          node: <BroadcastPanel broadcast={broadcast} isHost={isAdmin === true} />,
+        },
+      ]
+    : undefined
 
   // 같은 참가자를 다시 눌러도 지도가 다시 포커스되도록 신호 카운터 증가
   const handleSelect = (id: string) => {
@@ -422,6 +438,7 @@ function WatchView({ token }: { token: string }) {
           onDisplayModeChange={setDisplayMode}
           onSnapChange={setSheet}
           mobileHeader={sheetInfo}
+          tabs={broadcastTabs}
         />
       </div>
 

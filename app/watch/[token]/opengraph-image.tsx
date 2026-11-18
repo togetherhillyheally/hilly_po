@@ -1,13 +1,12 @@
-import { ImageResponse } from "next/og"
+import { fetchTrailThumbUrl, LIVE_CARD_SIZE, liveCardImage } from "@/lib/og/live-card"
 import { resolveWatchTokenServer } from "@/lib/watch-token"
 
 /**
  * 관전 링크 공유 미리보기 이미지 (카카오톡·슬랙 등 og:image).
- * 코스 썸네일을 배경으로, 이벤트 제목 · 코스/거리 · 출발 시각(또는 LIVE/종료)을 얹는다.
- * 한글은 기본 글꼴에 없어서 Noto Sans KR 을 쓰는 글자만 받아 넣는다.
+ * 코스 썸네일을 배경으로, 이벤트 제목 · 코스/거리 · 출발 시각(또는 LIVE/종료)을 얹는다. 그리기는 lib/og/live-card.
  */
 export const alt = "힐리힐리 LIVE 관전"
-export const size = { width: 1200, height: 630 }
+export const size = LIVE_CARD_SIZE
 export const contentType = "image/png"
 export const revalidate = 60
 
@@ -35,39 +34,10 @@ async function fetchInfo(token: string): Promise<Info | null> {
   return res.ok ? ((await res.json()) as Info) : null
 }
 
-async function fetchThumbUrl(trailId: string): Promise<string | null> {
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/trails?id=eq.${trailId}&select=thumbnail_path`,
-    { headers: { apikey: ANON }, next: { revalidate: 300 } },
-  )
-  if (!res.ok) return null
-  const rows = (await res.json()) as { thumbnail_path: string | null }[]
-  const path = rows[0]?.thumbnail_path
-  return path ? `${SUPABASE_URL}/storage/v1/object/public/trail-thumbnails/${path}` : null
-}
-
-/** 필요한 글자만 담은 Noto Sans KR (truetype) — 실패하면 null (기본 글꼴로 그림) */
-async function loadFont(text: string, weight: 500 | 800): Promise<ArrayBuffer | null> {
-  try {
-    // 글꼴은 하루 캐시 — 카카오톡 스크래퍼는 몇 초만 기다려서, 매번 구글에서 받아오면 미리보기가 비기도 한다
-    const css = await (
-      await fetch(
-        `https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@${weight}&text=${encodeURIComponent(text)}`,
-        { next: { revalidate: 86400 } },
-      )
-    ).text()
-    const url = css.match(/src: url\((.+?)\) format\('(opentype|truetype)'\)/)?.[1]
-    if (!url) return null
-    return await (await fetch(url, { next: { revalidate: 86400 } })).arrayBuffer()
-  } catch {
-    return null
-  }
-}
-
-function startLabel(info: Info): string {
-  if (info.status === "finished") return "종료된 이벤트"
-  if (!info.starts_at) return "실시간 위치"
-  const start = new Date(info.starts_at)
+function startLabel(status: string | undefined, startsAt: string | null | undefined): string {
+  if (status === "finished") return "종료된 이벤트"
+  if (!startsAt) return "실시간 위치"
+  const start = new Date(startsAt)
   const fmt = new Intl.DateTimeFormat("ko-KR", {
     timeZone: "Asia/Seoul",
     month: "numeric",
@@ -82,127 +52,18 @@ function startLabel(info: Info): string {
   return start.getTime() > Date.now() ? `${when} 출발` : `LIVE · ${when} 출발`
 }
 
-export default async function Image({
-  params,
-}: {
-  params: Promise<{ token: string }>
-}) {
+export default async function Image({ params }: { params: Promise<{ token: string }> }) {
   const { token: key } = await params
   const token = await resolveWatchTokenServer(key)
   const info = token ? await fetchInfo(token).catch(() => null) : null
-  const title = info?.title ?? "힐리힐리 LIVE"
-  const course = info?.trail?.name ?? ""
-  const km =
-    info?.trail?.distance_km != null ? `${Number(info.trail.distance_km).toFixed(1)}km` : ""
-  const when = info ? startLabel(info) : "실시간 관전"
-  const thumb = info?.trail?.id ? await fetchThumbUrl(info.trail.id).catch(() => null) : null
-
-  const allText = `HILLY HEALLY LIVE ${title} ${course} ${km} ${when} 실시간으로 함께 관전해요`
-  const [bold, medium] = await Promise.all([loadFont(allText, 800), loadFont(allText, 500)])
-  const fonts = [
-    ...(bold ? [{ name: "NotoKR", data: bold, weight: 800 as const, style: "normal" as const }] : []),
-    ...(medium ? [{ name: "NotoKR", data: medium, weight: 500 as const, style: "normal" as const }] : []),
-  ]
-
-  return new ImageResponse(
-    (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          position: "relative",
-          background: "#0f1115",
-          fontFamily: "NotoKR",
-        }}
-      >
-        {thumb && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={thumb}
-            alt=""
-            width={1200}
-            height={630}
-            style={{ position: "absolute", top: 0, left: 0, width: 1200, height: 630, objectFit: "cover" }}
-          />
-        )}
-        {/* 글자 가독성 — 왼쪽은 진하게, 오른쪽은 지도가 보이게 */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: 1200,
-            height: 630,
-            display: "flex",
-            backgroundImage:
-              "linear-gradient(90deg, rgba(15,17,21,0.94) 0%, rgba(15,17,21,0.82) 45%, rgba(15,17,21,0.25) 100%)",
-          }}
-        />
-        <div
-          style={{
-            position: "relative",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            padding: "64px 72px",
-            width: "100%",
-            height: "100%",
-            color: "white",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div
-              style={{
-                display: "flex",
-                padding: "8px 18px",
-                borderRadius: 999,
-                background: "#DC2F55",
-                fontSize: 26,
-                fontWeight: 800,
-                letterSpacing: 2,
-              }}
-            >
-              LIVE
-            </div>
-            <div style={{ display: "flex", fontSize: 26, fontWeight: 800, letterSpacing: 3, opacity: 0.75 }}>
-              HILLY HEALLY
-            </div>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 820 }}>
-            <div style={{ display: "flex", fontSize: 84, fontWeight: 800, lineHeight: 1.05 }}>
-              {title}
-            </div>
-            {(course || km) && (
-              <div style={{ display: "flex", gap: 20, fontSize: 34, fontWeight: 500, opacity: 0.8 }}>
-                {course && <span>{course}</span>}
-                {km && <span>{km}</span>}
-              </div>
-            )}
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-            <div
-              style={{
-                display: "flex",
-                padding: "12px 24px",
-                borderRadius: 16,
-                background: "rgba(255,255,255,0.16)",
-                border: "2px solid rgba(255,255,255,0.25)",
-                fontSize: 36,
-                fontWeight: 800,
-              }}
-            >
-              {when}
-            </div>
-            <div style={{ display: "flex", fontSize: 28, fontWeight: 500, opacity: 0.7 }}>
-              실시간으로 함께 관전해요
-            </div>
-          </div>
-        </div>
-      </div>
-    ),
-    { ...size, fonts: fonts.length ? fonts : undefined },
-  )
+  const thumb = info?.trail?.id ? await fetchTrailThumbUrl(info.trail.id) : null
+  return liveCardImage({
+    title: info?.title ?? "힐리힐리 LIVE",
+    subtitle: [
+      info?.trail?.name,
+      info?.trail?.distance_km != null ? `${Number(info.trail.distance_km).toFixed(1)}km` : null,
+    ],
+    when: info ? startLabel(info.status, info.starts_at) : "실시간 관전",
+    thumbUrl: thumb,
+  })
 }

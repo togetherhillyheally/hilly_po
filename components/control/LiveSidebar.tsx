@@ -113,6 +113,17 @@ export type LiveSidebarProps = {
   mobileHeader?: React.ReactNode
   /** 한 명만 관제(솔로 모험) — 순위·TOP 3·필터·검색을 빼고 그 사람 정보만 */
   single?: boolean
+  /** 목록 옆에 붙는 탭(채팅·후원 등). 있으면 헤더 아래 세그먼트가 생기고 첫 탭은 기존 목록 (2026-11-19 중계) */
+  tabs?: SidebarTab[]
+  /** 처음 열 탭 key (기본 participants) */
+  initialTab?: string
+}
+
+export type SidebarTab = {
+  key: string
+  label: string
+  node: React.ReactNode
+  badge?: number | string | null
 }
 
 /** 첫 위치를 받기 전 자리 표시 — "표시할 참가자가 없어요"가 잠깐 보이지 않게 */
@@ -477,7 +488,11 @@ export default function LiveSidebar({
   loading = false,
   mobileHeader,
   single = false,
+  tabs,
+  initialTab,
 }: LiveSidebarProps) {
+  const [tab, setTab] = useState(initialTab ?? "participants")
+  const activeTab = tabs?.find((t) => t.key === tab) ?? null
   // 모바일은 '살짝(30%)'으로 시작 — 지도가 먼저 보이고, 손잡이를 끌어 절반·전체로
   const [snap, _setSnap] = useState<SheetSnap>("peek")
   const open = snap !== "closed"
@@ -659,6 +674,42 @@ export default function LiveSidebar({
         <div className="border-b px-4 pb-2 pt-4 md:hidden">{mobileHeader}</div>
       )}
 
+      {/* 탭 — 참가자 목록 | 채팅 | … 모바일에서 채팅을 열면 시트를 절반으로 올려 입력창이 보이게 */}
+      {tabs && tabs.length > 0 && (
+        <div className="flex items-center gap-1 border-b px-3 py-2" role="tablist">
+          {[{ key: "participants", label: isRace && !single ? "리더보드" : noun, badge: null }, ...tabs].map((t) => {
+            const active = (t.key === "participants" && !activeTab) || t.key === tab
+            return (
+              <button
+                key={t.key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => {
+                  setTab(t.key)
+                  if (t.key !== "participants" && snap === "peek") setSnap("half")
+                }}
+                className={
+                  "flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors " +
+                  (active ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted")
+                }
+              >
+                {t.label}
+                {t.badge != null && t.badge !== 0 && t.badge !== "" && (
+                  <span className={"tabular-nums " + (active ? "text-background/70" : "text-muted-foreground/70")}>
+                    {t.badge}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {activeTab ? (
+        <div className="flex min-h-0 flex-1 flex-col">{activeTab.node}</div>
+      ) : (
+      <>
       {/* 한 명 관제엔 필터·검색이 없다 */}
       {!single && (
       <div className="flex items-center gap-2 border-b px-3 py-2 md:py-2.5">
@@ -793,6 +844,8 @@ export default function LiveSidebar({
           </div>
         )}
       </div>
+      </>
+      )}
     </aside>
   )
 }
