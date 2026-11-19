@@ -9,9 +9,11 @@ import {
   type BroadcastMessage,
   type ModerateAction,
   type PublicBroadcast,
+  type SponsorPublic,
   parseAdSet,
   parseBroadcastMessage,
   parsePublicBroadcast,
+  parseSponsor,
 } from "./broadcastTypes"
 
 /** 서버 RAISE 메시지를 그대로 쓰기 위해 Error 로 감싼다 */
@@ -101,6 +103,16 @@ export const broadcastRepo = {
     })
     if (error) fail(error, "상태를 바꾸지 못했어요.")
     return parsePublicBroadcast(data)
+  },
+
+  /** 최근 후원 (공개, 익명은 이름 숨김) */
+  async sponsors(broadcastId: string, limit = 30): Promise<SponsorPublic[]> {
+    const { data, error } = await getSupabase().rpc("public_broadcast_sponsors", {
+      p_broadcast_id: broadcastId,
+      p_limit: limit,
+    })
+    if (error) throw error
+    return ((data ?? []) as unknown[]).map(parseSponsor)
   },
 
   /** 광고 — 자리별 1장 (없는 자리는 null). 방송이 없는 관전 페이지는 broadcastId null 로 전체 광고만 */

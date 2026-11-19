@@ -29,6 +29,7 @@ import LiveSidebar, {
 import LiveTableWide from "@/components/control/LiveTableWide"
 import BroadcastPanel from "@/components/broadcast/BroadcastPanel"
 import HostConsole from "@/components/broadcast/HostConsole"
+import SponsorPanel from "@/components/broadcast/SponsorPanel"
 import { useBroadcast } from "@/hooks/use-broadcast"
 import { useFavorites } from "@/hooks/use-favorites"
 import { useLiveAdventure } from "@/hooks/use-live-adventure"
@@ -90,6 +91,16 @@ export default function LiveAdventureControlPage() {
           badge: broadcast.message_count || null,
           node: <BroadcastPanel broadcast={broadcast} isHost={isAdmin === true} />,
         },
+        ...(broadcast.sponsor_enabled
+          ? [
+              {
+                key: "sponsor",
+                label: "후원",
+                badge: broadcast.sponsor_count || null,
+                node: <SponsorPanel broadcast={broadcast} isHost={isAdmin === true} />,
+              },
+            ]
+          : []),
         ...(isAdmin === true
           ? [
               {

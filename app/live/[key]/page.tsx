@@ -6,6 +6,7 @@ import { Share2 } from "lucide-react"
 import { toast } from "sonner"
 import AdCard from "@/components/broadcast/AdCard"
 import BroadcastPanel from "@/components/broadcast/BroadcastPanel"
+import SponsorPanel from "@/components/broadcast/SponsorPanel"
 import { MapDimensionToggle } from "@/components/control/DisplayFilter"
 import ElapsedClock from "@/components/control/ElapsedClock"
 import ElevationDrawer from "@/components/control/ElevationDrawer"
@@ -210,6 +211,16 @@ function AdventureLive({ broadcast }: { broadcast: PublicBroadcast }) {
       badge: broadcast.message_count || null,
       node: <BroadcastPanel broadcast={broadcast} isHost={isHost} />,
     },
+    ...(broadcast.sponsor_enabled
+      ? [
+          {
+            key: "sponsor",
+            label: "후원",
+            badge: broadcast.sponsor_count || null,
+            node: <SponsorPanel broadcast={broadcast} isHost={isHost} />,
+          },
+        ]
+      : []),
   ]
 
   return (

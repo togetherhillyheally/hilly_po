@@ -48,6 +48,10 @@ export interface PublicBroadcast {
   livekit_room_name: string
   sponsor_total: number
   sponsor_count: number
+  /** 토스 상품 심사 전엔 false — 후원 탭은 보이되 결제 버튼만 잠근다 */
+  sponsor_payments_enabled: boolean
+  sponsor_fee_rate: number
+  top_sponsors: SponsorPublic[]
   started_at: string
   ended_at: string | null
   host: BroadcastHost | null
@@ -60,6 +64,30 @@ export interface PublicBroadcast {
 }
 
 export type ModerateAction = "pin" | "unpin" | "delete"
+
+/** 공개 후원 한 건 — 익명은 '익명' */
+export interface SponsorPublic {
+  id?: string
+  display_name: string
+  amount: number
+  message?: string | null
+  created_at?: string
+}
+
+export const SPONSOR_PRESETS = [1000, 3000, 5000, 10000, 30000, 50000] as const
+export const SPONSOR_MIN = 1000
+export const SPONSOR_MAX = 500000
+
+export function parseSponsor(raw: unknown): SponsorPublic {
+  const r = (raw ?? {}) as Record<string, unknown>
+  return {
+    id: r.id ? String(r.id) : undefined,
+    display_name: String(r.display_name ?? "후원자"),
+    amount: Number(r.amount ?? 0),
+    message: (r.message as string | null) ?? null,
+    created_at: r.created_at ? String(r.created_at) : undefined,
+  }
+}
 
 /** 광고 자리 — 시트 머리 아래 / 채팅 15개마다 / 종료 배너 아래 */
 export type AdPlacement = "sheet_header" | "chat_inline" | "finish_banner"
@@ -147,6 +175,9 @@ export function parsePublicBroadcast(raw: unknown): PublicBroadcast | null {
     livekit_room_name: String(r.livekit_room_name ?? ""),
     sponsor_total: Number(r.sponsor_total ?? 0),
     sponsor_count: Number(r.sponsor_count ?? 0),
+    sponsor_payments_enabled: Boolean(r.sponsor_payments_enabled),
+    sponsor_fee_rate: Number(r.sponsor_fee_rate ?? 0.1),
+    top_sponsors: Array.isArray(r.top_sponsors) ? r.top_sponsors.map(parseSponsor) : [],
     started_at: String(r.started_at ?? ""),
     ended_at: (r.ended_at as string | null) ?? null,
     host: (r.host as BroadcastHost | null) ?? null,

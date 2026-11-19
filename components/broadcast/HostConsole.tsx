@@ -71,6 +71,8 @@ export default function HostConsole({
           <p className="mt-0.5 truncate text-xs text-muted-foreground">
             {broadcastUrl(broadcast).replace(/^https?:\/\//, "")}
             {" · "}응원 {broadcast.message_count}개
+            {broadcast.sponsor_count > 0 &&
+              ` · 후원 ${broadcast.sponsor_total.toLocaleString("ko-KR")}원(${broadcast.sponsor_count}명)`}
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => void share()}>
@@ -92,12 +94,22 @@ export default function HostConsole({
           }
         />
       </label>
-      <label className="flex items-center justify-between gap-3 text-sm opacity-60">
+      <label className="flex items-center justify-between gap-3 text-sm">
         <span>
           후원 받기
-          <span className="block text-xs text-muted-foreground">준비 중 — 곧 열려요</span>
+          <span className="block text-xs text-muted-foreground">
+            {broadcast.sponsor_payments_enabled
+              ? "관전 페이지에 후원 탭이 생겨요"
+              : "후원 탭은 보이지만 결제는 토스 심사 뒤에 열려요"}
+          </span>
         </span>
-        <Switch checked={false} disabled />
+        <Switch
+          checked={broadcast.sponsor_enabled}
+          disabled={busy}
+          onCheckedChange={(v) =>
+            void run(() => broadcastRepo.updateSettings(broadcast.id, { sponsor_enabled: v }))
+          }
+        />
       </label>
       <label className="flex items-center justify-between gap-3 text-sm opacity-60">
         <span>

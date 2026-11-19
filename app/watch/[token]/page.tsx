@@ -26,6 +26,7 @@ import LiveTableWide from "@/components/control/LiveTableWide"
 import RaceFinishBanner from "@/components/control/RaceFinishBanner"
 import AdCard from "@/components/broadcast/AdCard"
 import BroadcastPanel from "@/components/broadcast/BroadcastPanel"
+import SponsorPanel from "@/components/broadcast/SponsorPanel"
 import { useBroadcast } from "@/hooks/use-broadcast"
 import { useBroadcastAds } from "@/hooks/use-broadcast-ads"
 import { useFavorites } from "@/hooks/use-favorites"
@@ -150,6 +151,16 @@ function WatchView({ token }: { token: string }) {
           badge: broadcast.message_count || null,
           node: <BroadcastPanel broadcast={broadcast} isHost={isAdmin === true} />,
         },
+        ...(broadcast.sponsor_enabled
+          ? [
+              {
+                key: "sponsor",
+                label: "후원",
+                badge: broadcast.sponsor_count || null,
+                node: <SponsorPanel broadcast={broadcast} isHost={isAdmin === true} />,
+              },
+            ]
+          : []),
       ]
     : undefined
 

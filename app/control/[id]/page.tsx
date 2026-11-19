@@ -51,6 +51,7 @@ import SignalLostAlert, {
 } from "@/components/control/SignalLostAlert"
 import BroadcastPanel from "@/components/broadcast/BroadcastPanel"
 import HostConsole from "@/components/broadcast/HostConsole"
+import SponsorPanel from "@/components/broadcast/SponsorPanel"
 import { useBroadcast } from "@/hooks/use-broadcast"
 import { useEventSos } from "@/hooks/use-event-sos"
 import { broadcastRepo } from "@/lib/repos/broadcastRepo"
@@ -208,6 +209,16 @@ function ControlRoom({
           badge: broadcast.message_count || null,
           node: <BroadcastPanel broadcast={broadcast} isHost />,
         },
+        ...(broadcast.sponsor_enabled
+          ? [
+              {
+                key: "sponsor",
+                label: "후원",
+                badge: broadcast.sponsor_count || null,
+                node: <SponsorPanel broadcast={broadcast} isHost />,
+              },
+            ]
+          : []),
       ]
     : undefined
 
